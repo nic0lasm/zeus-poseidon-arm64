@@ -1,6 +1,7 @@
 #include "win32/cpu.h"
 
 #include <unicorn/unicorn.h>
+#include <cstdlib>
 
 #include <algorithm>
 #include <array>
@@ -39,7 +40,10 @@ int to_uc(Cpu::Reg r) {
 
 Cpu::Cpu() {
     check(uc_open(UC_ARCH_X86, UC_MODE_32, &uc_), "ouverture du processeur émulé");
+    // Modèle de processeur 32 bits qui connaît les pages non exécutables (voir enable_paging).
+    check(uc_ctl_set_cpu_model(uc_, UC_CPU_X86_N270), "modèle de processeur");
     check(uc_mem_map(uc_, kThunkBase, kThunkSize, UC_PROT_READ | UC_PROT_EXEC), "zone des imports");
+    code_ranges_.push_back({kThunkBase, kThunkBase + kThunkSize});
     uc_hook hook;
     check(uc_hook_add(uc_, &hook, UC_HOOK_CODE, reinterpret_cast<void*>(&Cpu::on_thunk), this,
                       kThunkBase, kThunkBase + kThunkSize - 1),
@@ -58,6 +62,60 @@ void Cpu::map(uint32_t address, uint32_t size, bool executable) {
     check(uc_mem_map(uc_, start, static_cast<size_t>(end - start),
                      executable ? UC_PROT_READ | UC_PROT_EXEC : UC_PROT_READ | UC_PROT_WRITE),
           "réservation mémoire");
+    if (executable) code_ranges_.push_back({start, static_cast<uint32_t>(end)});
+}
+
+// Active la pagination, avec une table qui fait correspondre chaque adresse à elle-même et
+// marque non exécutable tout ce qui n'est pas du code.
+//
+// Sans pagination, Unicorn tient toute page pour exécutable et fait passer chaque écriture
+// mémoire par un chemin lent qui surveille le code modifié : une écriture coûte alors une
+// trentaine de nanosecondes, contre moins d'une pour les autres instructions.
+void Cpu::enable_paging() {
+    constexpr uint32_t kTables = 0xF0040000, kLarge = 0x200000;
+    constexpr uint64_t kPresent = 1, kWritable = 2, kUser = 4, kLargePage = 0x80, kNoExecute = 1ull << 63;
+    std::vector<uint64_t> tables(5 * 512, 0);  // PDPT, puis quatre répertoires de 512 entrées
+    auto is_code = [this](uint64_t start, uint64_t end) {
+        for (const auto& [a, b] : code_ranges_)
+            if (start < b && a < end) return true;
+        return false;
+    };
+    for (uint64_t i = 0; i < 4; ++i) tables[i] = (kTables + (i + 1) * kPage) | kPresent;
+    for (uint64_t region = 0; region < 2048; ++region) {
+        const uint64_t base = region * kLarge;
+        uint64_t& entry = tables[512 + region];
+        if (!is_code(base, base + kLarge)) {
+            entry = base | kPresent | kWritable | kUser | kLargePage | kNoExecute;
+            continue;
+        }
+        // Zone qui contient du code : une table de pages de 4 Ko, pour ne laisser exécutable
+        // que le code lui-même.
+        const uint64_t table = kTables + (tables.size() / 512) * kPage;
+        entry = table | kPresent | kWritable | kUser;
+        const size_t first = tables.size();
+        tables.resize(first + 512);
+        for (uint64_t page = 0; page < 512; ++page) {
+            const uint64_t address = base + page * kPage;
+            tables[first + page] = address | kPresent | kWritable | kUser |
+                                   (is_code(address, address + kPage) ? 0 : kNoExecute);
+        }
+    }
+    check(uc_mem_map(uc_, kTables, tables.size() * 8, UC_PROT_READ | UC_PROT_WRITE), "tables de pages");
+    write(kTables, tables.data(), tables.size() * 8);
+    const uint32_t cr3 = kTables;
+    uint32_t cr4 = 0, cr0 = 0;
+    check(uc_reg_read(uc_, UC_X86_REG_CR4, &cr4), "registre CR4");
+    check(uc_reg_read(uc_, UC_X86_REG_CR0, &cr0), "registre CR0");
+    cr4 |= 1u << 5;                // PAE
+    cr0 |= 1u | 1u << 31;          // mode protégé, pagination
+    uc_x86_msr efer{};
+    efer.rid = 0xC0000080;
+    efer.value = 1u << 11;         // pages non exécutables
+    check(uc_reg_write(uc_, UC_X86_REG_CR3, &cr3), "registre CR3");
+    check(uc_reg_write(uc_, UC_X86_REG_CR4, &cr4), "registre CR4");
+    check(uc_reg_write(uc_, UC_X86_REG_MSR, &efer), "registre EFER");
+    check(uc_reg_write(uc_, UC_X86_REG_CR0, &cr0), "registre CR0");
+    paging_ = true;
 }
 
 void Cpu::write(uint32_t address, const void* data, size_t size) {
@@ -257,6 +315,7 @@ void Cpu::on_thunk(uc_struct* uc, uint64_t address, uint32_t, void* user) {
 }
 
 void Cpu::run(uint32_t start, uint32_t until) {
+    if (!paging_) enable_paging();
     uint32_t pc = start;
     while (pc != until) {
         redirect_ = false;

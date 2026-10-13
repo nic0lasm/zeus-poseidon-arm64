@@ -34,8 +34,7 @@ Ce qui fonctionne aujourd'hui : menus, profils de dirigeant, tutoriels, une vill
 sauvegarde et chargement, musiques, ambiances, bruitages et vidéo d'introduction. Les sauvegardes sont au format du jeu et restent compatibles avec
 l'original.
 
-Limites connues : pas encore de spatialisation 3D du son ; le jeu est gourmand (un cœur du processeur
-est occupé en permanence) et les commandes peuvent sembler légèrement en retard ; seule
+Limites connues : pas encore de spatialisation 3D du son ; seule
 l'édition GOG en anglais a été essayée.
 
 Détail : [docs/roadmap.md](docs/roadmap.md) (en anglais).

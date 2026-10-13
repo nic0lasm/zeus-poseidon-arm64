@@ -32,8 +32,7 @@ construction, time, treasury), map scrolling, save and load, music, ambience, so
 Save files are the game's own
 format and stay compatible with the original.
 
-Known limits: no 3D sound positioning yet; the game is CPU-hungry (one core is always busy) and
-input can feel slightly laggy; tested with the English GOG edition only.
+Known limits: no 3D sound positioning yet; tested with the English GOG edition only.
 
 Details: [docs/roadmap.md](docs/roadmap.md).
 

@@ -21,6 +21,7 @@ struct State {
     bool shown = false;
     int cursor_count = 0;
     uint32_t next_message_id = 0xC000;
+    uint32_t last_idle_poll = 0;  // instant de la dernière interrogation d'une file vide
 };
 
 void write_message(Cpu& cpu, uint32_t address, const Message& m) {
@@ -205,7 +206,7 @@ void install_user32(Process& p) {
     def("RegisterWindowMessageA", 1, [st] { return st->next_message_id++; });
 
     // --- messages ----------------------------------------------------------------------
-    def("PeekMessageA", 5, [&p, &cpu, pump] {
+    def("PeekMessageA", 5, [&p, &cpu, st, pump] {
         pump();
         Desktop& d = p.desktop();
         const uint32_t low = p.arg(2), high = p.arg(3);
@@ -218,6 +219,14 @@ void install_user32(Process& p) {
             if (p.arg(4) & 1) d.queue.erase(it);  // PM_REMOVE
             return 1u;
         }
+        // La boucle du jeu interroge sa file sans jamais attendre et redessine à chaque tour.
+        // Rien à lire : on limite la boucle à 60 tours par seconde, ce qui libère le processeur
+        // sans retard sensible des entrées ; le jeu règle sa vitesse sur l'horloge, pas sur ses
+        // tours, et n'affiche de toute façon que 20 images par seconde.
+        constexpr uint32_t kTurn = 16;  // millisecondes
+        const uint32_t now = p.ticks();
+        if (now - st->last_idle_poll < kTurn) d.wait(static_cast<int>(kTurn - (now - st->last_idle_poll)));
+        st->last_idle_poll = p.ticks();
         return 0u;
     });
     def("GetMessageA", 4, [&p, &cpu, pump] {

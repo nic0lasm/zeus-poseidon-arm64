@@ -1,6 +1,7 @@
 // Hôte du code d'origine du jeu : charge Zeus.exe dans un processeur émulé cloisonné.
 //
 //   zeus-run --selftest        vérifie le processeur émulé et l'appel de fonctions hôtes
+//   zeus-run --bench           mesure le processeur émulé et le coût d'un appel de fonction hôte
 //   zeus-run --inspect EXE     charge l'exécutable sans rien exécuter et liste ses imports
 //   zeus-run --app             mode application (aussi sans argument) : demande le dossier du jeu
 //                              au premier lancement, range sauvegardes et réglages dans
@@ -22,6 +23,7 @@
 //     --script "T:ACTION; …"   joue des actions à T secondes : click X,Y ; rclick X,Y ;
 //                              move X,Y ; key CODE ; char CODE ; shot SORTIE.bmp
 
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -97,6 +99,63 @@ int inspect(const char* path) {
     for (const auto& s : image.sections)
         if (image.entry_point >= s.address && image.entry_point < s.address + s.virtual_size)
             std::printf("le point d'entrée est dans la section %s\n", s.name.c_str());
+    return 0;
+}
+
+// Mesure du processeur émulé : une boucle de calcul avec écritures mémoire réparties sur 256
+// pages, avec ou sans appel d'une fonction hôte à chaque tour.
+int bench() {
+    using Clock = std::chrono::steady_clock;
+    // Variante : même boucle, écritures toujours dans la même page, puis sans écriture.
+    for (int variant = 0; variant < 2; ++variant) {
+        Cpu cpu;
+        cpu.map(0x00001000, 0x1000, true);
+        cpu.map(0x00100000, 0x100000);
+        const uint32_t n = 20000000;
+        std::vector<uint8_t> code = {0xB9, 0, 0, 0, 0, 0x31, 0xDB,
+                                     0x89, 0xD8, 0x25, 0x00, 0x00, 0x00, 0x00};
+        if (variant == 0) code.insert(code.end(), {0x89, 0x88, 0x00, 0x00, 0x10, 0x00});
+        else code.insert(code.end(), {0x8D, 0x80, 0x00, 0x00, 0x10, 0x00});  // lea, sans écriture
+        code.insert(code.end(), {0x81, 0xC3, 0x00, 0x10, 0x00, 0x00});
+        code.insert(code.end(), {0x49, 0x75, static_cast<uint8_t>(-static_cast<int>(code.size() - 7 + 3))});
+        std::memcpy(&code[1], &n, 4);
+        cpu.write(0x1000, code.data(), code.size());
+        const auto start = Clock::now();
+        cpu.run(0x1000, 0x1000 + static_cast<uint32_t>(code.size()));
+        std::printf("%s : %.1f ns par tour\n", variant == 0 ? "écriture, même page" : "sans écriture      ",
+                    std::chrono::duration<double>(Clock::now() - start).count() / n * 1e9);
+    }
+    const uint32_t turns = 2000000;
+    double seconds[2] = {0, 0};
+    for (int with_call = 0; with_call < 2; ++with_call) {
+        Cpu cpu;
+        cpu.map(0x00001000, 0x1000, true);
+        cpu.map(0x00002000, 0x3000);
+        cpu.map(0x00100000, 0x100000);  // zone d'écriture
+        const uint32_t nothing = cpu.add_host_function({"bench", 0, [](Cpu&) { return 0u; }});
+        cpu.write_u32(0x3000, nothing);
+        std::vector<uint8_t> code = {
+            0xB9, 0, 0, 0, 0,                    // mov ecx, tours
+            0x31, 0xDB,                          // xor ebx, ebx
+            // boucle :
+            0x89, 0xD8,                          // mov eax, ebx
+            0x25, 0x00, 0xF0, 0x0F, 0x00,        // and eax, 0xFF000
+            0x89, 0x88, 0x00, 0x00, 0x10, 0x00,  // mov [eax+0x100000], ecx
+            0x81, 0xC3, 0x00, 0x10, 0x00, 0x00,  // add ebx, 0x1000
+        };
+        if (with_call) code.insert(code.end(), {0xFF, 0x15, 0x00, 0x30, 0x00, 0x00});  // call [0x3000]
+        const int back = -static_cast<int>(code.size() - 7 + 3);
+        code.insert(code.end(), {0x49, 0x75, static_cast<uint8_t>(back)});  // dec ecx ; jnz boucle
+        std::memcpy(&code[1], &turns, 4);
+        cpu.write(0x1000, code.data(), code.size());
+        cpu.set_reg(Cpu::Reg::ESP, 0x4800);
+        const auto start = Clock::now();
+        cpu.run(0x1000, 0x1000 + static_cast<uint32_t>(code.size()));
+        seconds[with_call] = std::chrono::duration<double>(Clock::now() - start).count();
+    }
+    std::printf("boucle seule      : %.0f ns par tour\n", seconds[0] / turns * 1e9);
+    std::printf("avec appel hôte   : %.0f ns par tour\n", seconds[1] / turns * 1e9);
+    std::printf("coût d'un appel   : %.0f ns\n", (seconds[1] - seconds[0]) / turns * 1e9);
     return 0;
 }
 
@@ -257,6 +316,7 @@ int main(int argc, char** argv) {
             return run(o);
         }
         if (argc == 2 && !std::strcmp(argv[1], "--selftest")) return selftest();
+        if (argc == 2 && !std::strcmp(argv[1], "--bench")) return bench();
         if (argc == 3 && !std::strcmp(argv[1], "--inspect")) return inspect(argv[2]);
         std::fprintf(stderr, "usage : zeus-run [--app] | --selftest | --inspect EXE | --run EXE [options]\n");
         return 2;

@@ -70,8 +70,17 @@ reachable through the `FS` segment (the Visual C++ 6 runtime uses it for excepti
 Unicorn cannot set the `FS` base directly in 32-bit mode, so the host installs a small GDT.
 
 Only the code sections of the executable are mapped executable, and read-only: the game never
-writes to its own code. This matters for speed, because the emulator sends every write to an
-executable region through a slow path that watches for self-modifying code.
+writes to its own code.
+
+The emulated processor runs with paging enabled: an identity page table that marks everything
+except code as non-executable. This is purely for speed. Without paging, the emulator treats
+every page as executable and sends each memory write through a slow path that watches for
+self-modifying code; a write then costs about 30 ns against under 1 ns for other instructions.
+With non-executable data pages, writes take the fast path. `zeus-run --bench` measures this.
+
+The game's main loop polls its message queue without ever waiting and redraws on every turn.
+When the queue is empty the host paces the loop at 60 turns per second, which frees the
+processor; the game keeps time from the clock, not from its loop count.
 
 ### Files
 

@@ -52,6 +52,7 @@ but has not been tried.
 cmake -S . -B build -G Ninja
 cmake --build build
 ./build/zeus-run --selftest      # checks the emulator and the host-call mechanism
+./build/zeus-run --bench         # measures the emulator
 ```
 
 ## Play

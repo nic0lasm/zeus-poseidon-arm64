@@ -9,6 +9,7 @@
 #include <functional>
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 struct uc_struct;
@@ -74,6 +75,9 @@ public:
     uint64_t instructions_run() const { return instructions_; }
 
 private:
+    void enable_paging();
+    std::vector<std::pair<uint32_t, uint32_t>> code_ranges_;  // zones exécutables [début, fin[
+    bool paging_ = false;
     static void on_thunk(uc_struct* uc, uint64_t address, uint32_t size, void* user);
 
     uc_struct* uc_ = nullptr;

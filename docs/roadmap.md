@@ -42,8 +42,8 @@ is far less work than a rewrite.
 
 - Sound: reverb, filters and 3D positioning are ignored.
 - Video: audio and picture are paced independently, so they may drift slightly.
-- **Performance**: one CPU core is always busy and input can lag slightly. The game's own loop
-  never sleeps and the emulator is the bottleneck. The game itself caps its display rate.
+- **Performance**: a running city uses about half of one CPU core; loading screens use a full
+  core. The game itself caps its display rate at 20 frames per second.
 - `CompareStringW`, `RaiseException`, `RtlUnwind` and several DirectDraw methods are not
   written; no play session has needed them so far.
 - Tested with the English GOG edition only.
@@ -51,9 +51,11 @@ is far less work than a rewrite.
 ## Milestone 4 — plan
 
 1. Performance: reproducible measurement (frames, loop iterations, input latency), then
-   emulator tuning. First step done: mapping only code as executable raised the number of
-   game-loop iterations in a fixed 95-second scripted run from about 7,900 to 11,000–13,800.
-   Remaining cost: the emulator is restarted at every system call.
+   emulator tuning — done. In a fixed 95-second scripted run the game loop went from about
+   7,900 turns to 35,000 with an identical game state, by mapping only code as executable
+   and running the guest with non-executable data pages. The loop is now paced at 60 turns
+   per second; a running city uses about half of one core instead of all of it. A system call
+   costs about 4 µs, which is negligible.
 2. ~~A report file and a clear message when the game stops on a missing function~~ — done.
 3. ~~A self-contained application bundle that asks for the game folder on first launch~~ —
    done (`tools/make_app.py`), for personal use.
