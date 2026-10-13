@@ -1,0 +1,13 @@
+# Fichiers du jeu original : propriété de l'éditeur, jamais versionnés
+/original/*
+!/original/.gitkeep
+/assets-extracted/
+# Bases Ghidra (volumineuses, binaires) ; on versionne les exports/notes
+/analysis/ghidra/*
+!/analysis/ghidra/.gitkeep
+/build/
+/*.zip
+.DS_Store
+*.o
+*.dSYM/
+__pycache__/
