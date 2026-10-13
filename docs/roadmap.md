@@ -54,7 +54,19 @@ is far less work than a rewrite.
    the character table and the placement of accented letters are taken from the French build.
 2. ~~Typing accented letters~~ — done. A full French play session: to be reported.
 3. ~~Language choice in the application~~ — done.
-4. Wider resolutions.
+4. Wider resolutions: the game's own 1024×768 mode works (Options → Display options). Going
+   wider is not a setting: see below.
+
+### Wide screens
+
+The game picks its screen size in one place (`0x0050BCC9`–`0x0050BD07`: 640×480, 800×600 or
+1024×768, stored at `0x00F2A6B4` and `0x00F2A6B0`). Replacing 1024×768 there by 1280×800 does
+switch the mode, but the layout does not follow: the map view stays small and the control panel
+sits in the middle of the screen. About 80 places read the screen size and many compare it to
+800 or 1024. A wide mode means adapting each of them; it is a project of its own.
+
+The game's "Windowed screen" option answers "Cannot set Windows mode" and carries on; use ⌘F
+to switch between window and full screen instead.
 
 ## Milestone 4 — done
 

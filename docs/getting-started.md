@@ -64,7 +64,8 @@ cmake --build build
 ![The main menu](images/menu.png)
 
 The game opens in an 800×600 window. **⌘F** or **⌘↩** switches to full screen and back; the
-picture keeps its 4:3 proportions and stays sharp at any size. Saves and settings are written to `run/zeus/`.
+picture keeps its 4:3 proportions and stays sharp at any size. For a larger view of the city,
+choose *Options → Display options → 1024 x 768* in the game. Saves and settings are written to `run/zeus/`.
 
 The intro video plays first; press Esc to skip it.
 
