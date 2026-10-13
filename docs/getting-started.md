@@ -65,6 +65,21 @@ picture keeps its 4:3 proportions and stays sharp at any size. Saves and setting
 
 The intro video plays first; press Esc to skip it.
 
+## Build the application
+
+```bash
+python3 tools/make_app.py
+open "build/Zeus Poseidon.app"
+```
+
+This assembles a self-contained `Zeus Poseidon.app`: the program plus the libraries it needs,
+signed locally. On first launch it asks for the game folder (the one that contains `Zeus.exe`,
+or the folder the GOG installer was unpacked into) and remembers it. Saves and settings go to
+`~/Library/Application Support/Zeus Poseidon/`. The bundle contains no game files.
+
+The bundle is meant for your own Mac. It embeds Homebrew's FFmpeg build, whose licence terms
+differ from Unicorn's: do not redistribute it as is.
+
 ## Options
 
 | Option | Effect |

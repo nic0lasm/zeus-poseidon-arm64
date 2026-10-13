@@ -54,7 +54,8 @@ cmake -S . -B build -G Ninja && cmake --build build
 ./build/zeus-run --run original/gog/app/Zeus.exe
 ```
 
-Press **⌘F** (or **⌘↩**) to switch between window and full screen. The game folder is never modified: everything the game writes (saves, settings) goes to
+Press **⌘F** (or **⌘↩**) to switch between window and full screen. `python3 tools/make_app.py` builds a double-clickable `Zeus Poseidon.app` that asks for the game
+folder on first launch. The game folder is never modified: everything the game writes (saves, settings) goes to
 `run/zeus/`. Full instructions and troubleshooting: [docs/getting-started.md](docs/getting-started.md).
 
 ## How it works

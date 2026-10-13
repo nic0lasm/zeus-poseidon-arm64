@@ -2,6 +2,9 @@
 //
 //   zeus-run --selftest        vérifie le processeur émulé et l'appel de fonctions hôtes
 //   zeus-run --inspect EXE     charge l'exécutable sans rien exécuter et liste ses imports
+//   zeus-run --app             mode application (aussi sans argument) : demande le dossier du jeu
+//                              au premier lancement, range sauvegardes et réglages dans
+//                              ~/Library/Application Support/Zeus Poseidon
 //   zeus-run --run EXE [options]
 //                              exécute le programme dans le processeur émulé
 //     --write-dir DOSSIER      reçoit les écritures du jeu (défaut : run/zeus) ; l'installation
@@ -20,6 +23,7 @@
 //                              move X,Y ; key CODE ; char CODE ; shot SORTIE.bmp
 
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <ctime>
 #include <filesystem>
@@ -166,10 +170,66 @@ int run(const RunOptions& o) {
     return code;
 }
 
+// Lance une commande et renvoie sa sortie, sans le saut de ligne final.
+std::string command_output(const std::string& command) {
+    std::string out;
+    if (FILE* pipe = popen(command.c_str(), "r")) {
+        char buffer[512];
+        while (std::fgets(buffer, sizeof buffer, pipe)) out += buffer;
+        pclose(pipe);
+    }
+    while (!out.empty() && (out.back() == '\n' || out.back() == '\r')) out.pop_back();
+    return out;
+}
+
+// Cherche Zeus.exe dans un dossier du jeu, ou dans son sous-dossier « app » (installateur GOG déballé).
+std::string find_game(const std::filesystem::path& folder) {
+    namespace fs = std::filesystem;
+    for (const fs::path& dir : {folder, folder / "app"}) {
+        std::error_code error;
+        for (const auto& entry : fs::directory_iterator(dir, error)) {
+            std::string name = entry.path().filename().string();
+            for (char& c : name) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+            if (name == "zeus.exe") return entry.path().string();
+        }
+    }
+    return {};
+}
+
+// Mode application : le dossier du jeu est demandé une fois, puis retenu.
+int run_app() {
+    namespace fs = std::filesystem;
+    const char* forced = std::getenv("ZEUS_SUPPORT_DIR");
+    const char* home = std::getenv("HOME");
+    if (!forced && !home) throw std::runtime_error("dossier personnel introuvable");
+    const fs::path support = forced ? fs::path(forced) : fs::path(home) / "Library/Application Support/Zeus Poseidon";
+    fs::create_directories(support);
+    const fs::path memo = support / "dossier-du-jeu.txt";
+    std::string folder;
+    if (std::ifstream in{memo}) std::getline(in, folder);
+    std::string exe = folder.empty() ? std::string() : find_game(folder);
+    while (exe.empty()) {
+        folder = command_output(
+            "/usr/bin/osascript -e 'POSIX path of (choose folder with prompt \"Zeus + Poseidon : choisissez le dossier du "
+            "jeu (celui qui contient Zeus.exe)\")' 2>/dev/null");
+        if (folder.empty()) return 0;  // annulé
+        exe = find_game(folder);
+        if (exe.empty())
+            command_output("/usr/bin/osascript -e 'display alert \"Zeus.exe est introuvable dans ce dossier.\" message "
+                           "\"Choisissez le dossier où le jeu a été déballé.\"' >/dev/null 2>&1");
+    }
+    std::ofstream(memo) << folder << "\n";
+    RunOptions o;
+    o.exe = exe;
+    o.write_dir = (support / "Jeu").string();
+    return run(o);
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
     try {
+        if (argc == 1 || (argc == 2 && !std::strcmp(argv[1], "--app"))) return run_app();
         if (argc >= 3 && !std::strcmp(argv[1], "--run")) {
             RunOptions o;
             o.exe = argv[2];
@@ -198,7 +258,7 @@ int main(int argc, char** argv) {
         }
         if (argc == 2 && !std::strcmp(argv[1], "--selftest")) return selftest();
         if (argc == 3 && !std::strcmp(argv[1], "--inspect")) return inspect(argv[2]);
-        std::fprintf(stderr, "usage : zeus-run --selftest | --inspect EXE | --run EXE [--trace]\n");
+        std::fprintf(stderr, "usage : zeus-run [--app] | --selftest | --inspect EXE | --run EXE [options]\n");
         return 2;
     } catch (const std::exception& e) {
         std::fprintf(stderr, "zeus-run : %s\n", e.what());

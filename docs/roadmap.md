@@ -55,8 +55,11 @@ is far less work than a rewrite.
    game-loop iterations in a fixed 95-second scripted run from about 7,900 to 11,000–13,800.
    Remaining cost: the emulator is restarted at every system call.
 2. ~~A report file and a clear message when the game stops on a missing function~~ — done.
-3. A self-contained application bundle that asks for the game folder on first launch.
-4. Automated build on every change; a first published release.
+3. ~~A self-contained application bundle that asks for the game folder on first launch~~ —
+   done (`tools/make_app.py`), for personal use.
+4. A redistributable build: FFmpeg reduced to the Bink decoders under LGPL terms, so that the
+   bundle can be published alongside Unicorn (GPL-2.0).
+5. Automated build on every change; a first published release.
 
 ## Earlier work
 
