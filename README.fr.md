@@ -1,5 +1,7 @@
 # Zeus + Poséidon sur Mac Apple Silicon
 
+[![build](https://github.com/nic0lasm/zeus-poseidon-arm64/actions/workflows/build.yml/badge.svg)](https://github.com/nic0lasm/zeus-poseidon-arm64/actions/workflows/build.yml)
+
 **Jouer à *Zeus : Le Maître de l'Olympe* et à son extension *Poséidon* sur un Mac Apple
 Silicon — la logique d'origine du jeu, au pixel près, sans Windows, sans Wine et sans machine
 virtuelle.**

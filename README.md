@@ -1,5 +1,7 @@
 # Zeus + Poseidon on Apple Silicon
 
+[![build](https://github.com/nic0lasm/zeus-poseidon-arm64/actions/workflows/build.yml/badge.svg)](https://github.com/nic0lasm/zeus-poseidon-arm64/actions/workflows/build.yml)
+
 **Play *Zeus: Master of Olympus* and its *Poseidon* expansion on an Apple Silicon Mac — the
 original game logic, pixel for pixel, with no Windows, no Wine and no virtual machine.**
 

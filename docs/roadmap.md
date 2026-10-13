@@ -61,7 +61,7 @@ is far less work than a rewrite.
    done (`tools/make_app.py`), for personal use.
 4. ~~A redistributable build: FFmpeg reduced to the Bink decoders under LGPL terms, so that
    the bundle can be published alongside Unicorn (GPL-2.0)~~ — done (`tools/build_ffmpeg.py`).
-5. Automated build on every change; a first published release.
+5. ~~Automated build on every change~~ — done. A first published release: next.
 
 ## Earlier work
 
