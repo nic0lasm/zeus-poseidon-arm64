@@ -320,6 +320,21 @@ void install_kernel32(Process& p) {
         return a < b ? 1u : a == b ? 2u : 3u;
     });
 
+    def("CompareStringW", 6, [&p, &cpu] {
+        // Même comparaison, sur des caractères de 16 bits ; seule la casse ASCII est ignorée.
+        auto text = [&](uint32_t address, uint32_t count) {
+            std::u16string s;
+            for (uint32_t i = 0; count == 0xFFFFFFFF ? i < (1u << 20) : i < count; ++i) {
+                const char16_t c = cpu.read_u16(address + 2 * i);
+                if (count == 0xFFFFFFFF && !c) break;
+                s += (p.arg(1) & 1) && c >= u'A' && c <= u'Z' ? static_cast<char16_t>(c + 0x20) : c;
+            }
+            return s;
+        };
+        const std::u16string a = text(p.arg(2), p.arg(3)), b = text(p.arg(4), p.arg(5));
+        return a < b ? 1u : a == b ? 2u : 3u;
+    });
+
     // --- temps -------------------------------------------------------------------------
     def("GetTickCount", 0, [ticks] { return ticks(); });
     def("QueryPerformanceFrequency", 1, [&p, &cpu] {

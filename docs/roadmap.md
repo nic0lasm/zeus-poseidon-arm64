@@ -36,7 +36,10 @@ is far less work than a rewrite.
   the mixer output is non-silent.
 - Video, scripted run: the intro plays at 24 frames per second in 640×480, Esc skips it, and
   the main menu follows in 800×600.
-- A hands-on play session of several thousand frames without hitting a missing function.
+- Hands-on play sessions of tens of thousands of frames, in English and in French, without
+  hitting a missing function.
+- Scripted soak run in the first adventure (*Zeus and Europa*): every tab of the control
+  panel, building attempts, 19,566 frames and 2.2 million system calls without a stop.
 
 ## Known limits
 
@@ -44,8 +47,8 @@ is far less work than a rewrite.
 - Video: audio and picture are paced independently, so they may drift slightly.
 - **Performance**: a running city uses about half of one CPU core; loading screens use a full
   core. The game itself caps its display rate at 20 frames per second.
-- `CompareStringW`, `RaiseException`, `RtlUnwind` and several DirectDraw methods are not
-  written; no play session has needed them so far.
+- `RaiseException`, `RtlUnwind` and several DirectDraw methods are not written; no play
+  session has needed them so far.
 - Tested with the English GOG edition only.
 
 ## Milestone 6 — in progress

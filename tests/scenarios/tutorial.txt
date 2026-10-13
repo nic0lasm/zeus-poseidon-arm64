@@ -1,0 +1,3 @@
+5:key 27; 12:click 220,101; 17:char 78; 20:click 556,320; 27:click 644,523; 33:click 212,120; 45:rclick 300,300; 50:click 677,345; 53:click 400,385; 55:rclick 200,500; 56:key 39; 57:key 40
+# durée : 90
+# Démarrage, profil, premier didacticiel, construction d'une maison, défilement au clavier.

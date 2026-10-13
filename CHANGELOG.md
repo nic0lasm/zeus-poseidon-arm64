@@ -5,6 +5,9 @@ pull request.
 
 ## Unreleased
 
+- Replayable scenarios (`tests/scenarios`, `tools/check_scenarios.py`): a tutorial and the
+  first adventure, compared frame by frame against a recorded reference.
+- `CompareStringW` is provided.
 - Guest memory owned by the host; first game functions rewritten natively, behind `--native`
   (no speed gain measured yet).
 - Time-based profiler (`--profile`) and `tools/profile_report.py`.

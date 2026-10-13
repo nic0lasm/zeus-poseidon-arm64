@@ -6,11 +6,11 @@ Produit par `tools/api_imports.py` à partir de `tools/pe_triage.py --imports` e
 Une fonction **non écrite** arrête le programme en la nommant le jour où le jeu l'appelle.
 Seules les fonctions de son et de vidéo non écrites sont sans effet et renvoient 0.
 
-Total : 202 fonctions dans 10 bibliothèques, dont 178 écrites.
+Total : 202 fonctions dans 10 bibliothèques, dont 179 écrites.
 
 | Bibliothèque | Nombre | Écrites | Rôle | Réalisation |
 |---|---|---|---|---|
-| `kernel32.dll` | 82 | 79 | fichiers, mémoire, temps, environnement | `kernel32.cpp`, fichiers par `vfs.cpp` |
+| `kernel32.dll` | 82 | 80 | fichiers, mémoire, temps, environnement | `kernel32.cpp`, fichiers par `vfs.cpp` |
 | `mss32.dll` | 50 | 30 | son : Miles Sound System | `mss.cpp` sur le mixeur de `audio.cpp` (SDL2, AudioToolbox) |
 | `user32.dll` | 45 | 45 | fenêtre, messages, souris, clavier | `user32.cpp` et `desktop.cpp` (SDL2) |
 | `binkw32.dll` | 14 | 13 | vidéos Bink | `bink.cpp`, décodage par ffmpeg |
@@ -25,7 +25,7 @@ Total : 202 fonctions dans 10 bibliothèques, dont 178 écrites.
 
 `CloseHandle`, `CompareFileTime`, `CompareStringA`, `CompareStringW`, `CopyFileA`, `CreateDirectoryA`, `CreateFileA`, `DeleteFileA`, `ExitProcess`, `FindClose`, `FindFirstFileA`, `FindNextFileA`, `FlushFileBuffers`, `FreeEnvironmentStringsA`, `FreeEnvironmentStringsW`, `GetACP`, `GetCommandLineA`, `GetCPInfo`, `GetCurrentDirectoryA`, `GetCurrentProcess`, `GetDiskFreeSpaceA`, `GetDriveTypeA`, `GetEnvironmentStrings`, `GetEnvironmentStringsW`, `GetEnvironmentVariableA`, `GetFileAttributesA`, `GetFileInformationByHandle`, `GetFileSize`, `GetFileType`, `GetFullPathNameA`, `GetLastError`, `GetLocalTime`, `GetModuleFileNameA`, `GetModuleHandleA`, `GetOEMCP`, `GetPrivateProfileStringA`, `GetProcAddress`, `GetStartupInfoA`, `GetStdHandle`, `GetStringTypeA`, `GetStringTypeW`, `GetSystemTime`, `GetTickCount`, `GetTimeZoneInformation`, `GetVersion`, `GetVersionExA`, `GetVolumeInformationA`, `HeapAlloc`, `HeapCreate`, `HeapDestroy`, `HeapFree`, `HeapReAlloc`, `HeapSize`, `IsBadCodePtr`, `IsBadReadPtr`, `IsBadWritePtr`, `LCMapStringA`, `LCMapStringW`, `LoadLibraryA`, `MultiByteToWideChar`, `OutputDebugStringA`, `QueryPerformanceCounter`, `QueryPerformanceFrequency`, `RaiseException`, `ReadFile`, `RemoveDirectoryA`, `RtlUnwind`, `SetCurrentDirectoryA`, `SetEndOfFile`, `SetEnvironmentVariableA`, `SetFileAttributesA`, `SetFilePointer`, `SetHandleCount`, `SetStdHandle`, `SetUnhandledExceptionFilter`, `Sleep`, `TerminateProcess`, `UnhandledExceptionFilter`, `VirtualAlloc`, `VirtualFree`, `WideCharToMultiByte`, `WriteFile`
 
-Non écrites : `CompareStringW`, `RaiseException`, `RtlUnwind`.
+Non écrites : `RaiseException`, `RtlUnwind`.
 
 ## `mss32.dll` (50)
 

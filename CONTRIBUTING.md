@@ -57,7 +57,11 @@ cmake --build build
 
 The capture should show the main menu.
 
-For a change that must not alter the game's behaviour, compare frame logs before and after:
-run the same `--script` with `--deterministic --frame-log` on both builds; the two files must be
-identical. Describe in the pull request what you verified and what
+For a change that must not alter the game's behaviour, replay the scenarios before and after
+(see [tests/README.md](tests/README.md)):
+
+```bash
+python3 tools/check_scenarios.py record     # before
+python3 tools/check_scenarios.py            # after: must print "ok" for each scenario
+``` Describe in the pull request what you verified and what
 remains a hypothesis, and add a line to the "Unreleased" section of `CHANGELOG.md`.
