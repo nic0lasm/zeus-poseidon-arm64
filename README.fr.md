@@ -10,7 +10,7 @@ virtuelle.**
 lancer : leur processeur est un ARM, et macOS n'exécute plus de programmes 32 bits depuis des
 années. Ce projet fait revivre le jeu en exécutant son code d'origine, non modifié, dans un
 petit émulateur x86 cloisonné, et en réécrivant en natif les fonctions Windows dont il a besoin
-(fichiers, fenêtre, souris, clavier, DirectDraw, bientôt le son et la vidéo).
+(fichiers, fenêtre, souris, clavier, DirectDraw, son, bientôt la vidéo).
 
 Le résultat est le vrai jeu — même simulation, mêmes règles, mêmes sauvegardes — et non une
 réécriture.
@@ -24,15 +24,15 @@ réécriture.
 |---|---|---|
 | 1. Le jeu démarre | le vrai menu principal dans une fenêtre Mac | fait |
 | 2. Jouable | souris, clavier, tutoriels et aventures, construction, sauvegarde et chargement | fait |
-| 3. Complet | musiques, voix, bruitages, vidéos, plein écran, application `.app` | **en cours** |
+| 3. Complet | musiques, voix, bruitages, vidéos, plein écran, application `.app` | **en cours** — musiques, ambiances et bruitages fonctionnent |
 | 4. Passage au natif | des parties du code d'origine remplacées par du code natif, à commencer par l'affichage | prévu |
 
 Ce qui fonctionne aujourd'hui : menus, profils de dirigeant, tutoriels, une ville qui vit
 (habitants, logements, construction, calendrier, trésorerie), défilement de la carte,
-sauvegarde et chargement. Les sauvegardes sont au format du jeu et restent compatibles avec
+sauvegarde et chargement, musiques, ambiances et bruitages. Les sauvegardes sont au format du jeu et restent compatibles avec
 l'original.
 
-Limites connues : pas encore de son ni de vidéos ; le jeu est gourmand (un cœur du processeur
+Limites connues : pas encore de vidéos ni de spatialisation 3D du son ; le jeu est gourmand (un cœur du processeur
 est occupé en permanence) et les commandes peuvent sembler légèrement en retard ; seule
 l'édition GOG en anglais a été essayée.
 

@@ -43,7 +43,7 @@ void Process::def(const std::string& dll, const std::string& name, uint32_t arg_
     f.arg_bytes = arg_bytes;
     f.call = [this, key = f.name, fn = std::move(fn)](Cpu&) {
         ++call_counts[key];
-        if (trace) std::fprintf(stderr, "  appel %s\n", key.c_str());
+        if (traced(key)) std::fprintf(stderr, "  appel %s\n", key.c_str());
         return fn();
     };
     functions_[f.name] = std::move(f);
@@ -55,7 +55,7 @@ uint32_t Process::host_function(const std::string& name, uint32_t arg_bytes, std
     f.arg_bytes = arg_bytes;
     f.call = [this, name, fn = std::move(fn)](Cpu&) {
         ++call_counts[name];
-        if (trace) std::fprintf(stderr, "  appel %s\n", name.c_str());
+        if (traced(name)) std::fprintf(stderr, "  appel %s\n", name.c_str());
         return fn();
     };
     return cpu_.add_host_function(std::move(f));
@@ -85,8 +85,13 @@ void Process::bind_imports() {
             if (silent && at != std::string::npos && imp.function[0] == '_') {
                 // Son ou vidéo pas encore réalisés : la fonction ne fait rien et renvoie 0.
                 f.arg_bytes = static_cast<uint32_t>(std::stoul(imp.function.substr(at + 1)));
-                f.call = [this, key](Cpu&) -> uint32_t {
+                f.call = [this, key, words = f.arg_bytes / 4](Cpu&) -> uint32_t {
                     if (++call_counts[key] == 1) std::fprintf(stderr, "[hôte] %s : sans effet pour l'instant\n", key.c_str());
+                    if (traced(key)) {
+                        std::fprintf(stderr, "  appel %s(", key.c_str());
+                        for (uint32_t i = 0; i < words; ++i) std::fprintf(stderr, i ? ", %#x" : "%#x", arg(static_cast<int>(i)));
+                        std::fprintf(stderr, ")\n");
+                    }
                     return 0;
                 };
             } else {

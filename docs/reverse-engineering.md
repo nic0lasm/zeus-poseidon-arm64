@@ -44,6 +44,9 @@ saved game is essentially a list of memory blocks.
 
 ## Tools
 
+`tools/api_imports.py` regenerates the import table of `analysis/notes/api-imports.md` from the
+executable and the host code.
+
 `tools/pe_triage.py FILE [--imports] [--strings REGEX]` gives a first look at any executable:
 headers, sections, imports, known protection markers.
 

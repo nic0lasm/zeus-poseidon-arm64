@@ -40,7 +40,9 @@ analysis/notes reverse-engineering notes kept under version control
 | `user32.cpp` | window, messages, mouse, keyboard (also GDI32, WINMM, OLE32, SHELL32) |
 | `desktop.*` | the SDL window, message queue, 16-bit frame presentation, scripted input |
 | `ddraw.cpp` | DirectDraw |
-| `media.cpp` | Miles Sound System, Bink video, Intel JPEG library |
+| `mss.cpp` | Miles Sound System (sound effects, voices, music) |
+| `audio.*` | the host mixer and audio decoders |
+| `media.cpp` | Bink video, Intel JPEG library |
 
 ### Calling from the game into the host
 
@@ -81,6 +83,15 @@ copies to the primary surface, the frame is uploaded to an SDL texture.
 
 The intro screens are JPEG files decoded through Intel's JPEG library in the original; the host
 decodes them with macOS ImageIO.
+
+### Sound
+
+The game drives the Miles Sound System: *samples* (whole WAV files handed over in memory, for
+effects and ambience) and *streams* (files opened by name, for MP3 music). The host maps both
+onto voices of a small software mixer feeding SDL's audio output. WAV data is read directly;
+MP3 files are decoded in a background thread by macOS AudioToolbox, so no extra dependency is
+needed. Volume, pan, loop counts, status polling and stream positions follow Miles semantics.
+No 3D sound provider is offered, so the game falls back to plain stereo.
 
 ### Window messages
 

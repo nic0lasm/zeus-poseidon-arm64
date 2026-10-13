@@ -9,7 +9,7 @@ original game logic, pixel for pixel, with no Windows, no Wine and no virtual ma
 they have an ARM processor, and macOS dropped 32-bit programs years ago. This project makes the
 game run again by executing its original, unmodified code inside a small sandboxed x86 emulator,
 and by re-implementing natively the Windows functions the game relies on (files, window, mouse,
-keyboard, DirectDraw, and soon sound and video).
+keyboard, DirectDraw, sound, and soon video).
 
 The result is the real game — same simulation, same rules, same save files — not a remake.
 
@@ -22,14 +22,15 @@ The result is the real game — same simulation, same rules, same save files —
 |---|---|---|
 | 1. The game starts | the real main menu in a Mac window | done |
 | 2. Playable | mouse, keyboard, tutorials and adventures, building, saving and loading | done |
-| 3. Complete | music, voices, sound effects, videos, full screen, a double-clickable `.app` | **in progress** |
+| 3. Complete | music, voices, sound effects, videos, full screen, a double-clickable `.app` | **in progress** — music, ambience and sound effects play |
 | 4. Going native | parts of the original code replaced by native code, starting with rendering | planned |
 
 What works today: menus, leader profiles, tutorials, a running city (walkers, housing,
-construction, time, treasury), map scrolling, save and load. Save files are the game's own
+construction, time, treasury), map scrolling, save and load, music, ambience and sound effects.
+Save files are the game's own
 format and stay compatible with the original.
 
-Known limits: no sound and no videos yet; the game is CPU-hungry (one core is always busy) and
+Known limits: no videos and no 3D sound positioning yet; the game is CPU-hungry (one core is always busy) and
 input can feel slightly laggy; tested with the English GOG edition only.
 
 Details: [docs/roadmap.md](docs/roadmap.md).
@@ -68,7 +69,7 @@ The game folder is never modified: everything the game writes (saves, settings) 
         │  src/win32/                │   Miles Sound · Bink · Intel JPEG
         └─────────────┬──────────────┘
                       │
-              SDL2 · macOS frameworks
+       SDL2 · macOS ImageIO and AudioToolbox
 ```
 
 The game imports 202 Windows functions. Each one is a small native function in `src/win32/`;

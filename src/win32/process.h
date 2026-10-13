@@ -68,6 +68,11 @@ public:
 
     uint32_t last_error = 0;
     bool trace = false;
+    bool mute = false;  // son mélangé mais inaudible
+    std::string trace_only;  // si non vide : ne trace que les fonctions dont le nom commence ainsi
+    bool traced(const std::string& name) const {
+        return trace && (trace_only.empty() || name.compare(0, trace_only.size(), trace_only) == 0);
+    }
     std::map<std::string, uint64_t> call_counts;
 
 private:
@@ -91,6 +96,7 @@ private:
 void install_kernel32(Process& process);
 void install_user32(Process& process);   // et GDI32, WINMM, OLE32, SHELL32
 void install_ddraw(Process& process);
-void install_media(Process& process);    // MSS32, BINKW32, IJL10
+void install_media(Process& process);    // BINKW32, IJL10
+void install_mss(Process& process);      // MSS32 : son
 
 }  // namespace zeus::win32

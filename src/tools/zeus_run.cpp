@@ -7,8 +7,10 @@
 //     --write-dir DOSSIER      reçoit les écritures du jeu (défaut : run/zeus) ; l'installation
 //                              n'est jamais modifiée
 //     --trace                  affiche chaque appel système
+//     --trace-only PRÉFIXE     ne trace que les fonctions dont le nom commence ainsi (mss32.dll)
 //     --counts                 affiche à la fin le nombre d'appels de chaque fonction
-//     --headless               fenêtre cachée
+//     --headless               fenêtre cachée, son coupé
+//     --mute                   son coupé
 //     --frames N, --seconds S  arrête après N images affichées ou S secondes
 //     --screenshot SORTIE.bmp  enregistre la dernière image affichée
 //     --script "T:ACTION; …"   joue des actions à T secondes : click X,Y ; rclick X,Y ;
@@ -88,8 +90,8 @@ int inspect(const char* path) {
 }
 
 struct RunOptions {
-    std::string exe, write_dir = "run/zeus", screenshot, script;
-    bool trace = false, headless = false, counts = false;
+    std::string exe, write_dir = "run/zeus", screenshot, script, trace_only;
+    bool trace = false, headless = false, counts = false, mute = false;
     int frames = 0;
     double seconds = 0;
 };
@@ -97,7 +99,8 @@ struct RunOptions {
 int run(const RunOptions& o) {
     namespace fs = std::filesystem;
     zeus::win32::Process process(fs::path(o.exe).parent_path(), o.write_dir);
-    process.trace = o.trace;
+    process.trace = o.trace || !o.trace_only.empty();
+    process.trace_only = o.trace_only;
     zeus::win32::Desktop& desktop = process.desktop();
     desktop.headless = o.headless;
     desktop.screenshot_path = o.screenshot;
@@ -108,6 +111,8 @@ int run(const RunOptions& o) {
     zeus::win32::install_user32(process);
     zeus::win32::install_ddraw(process);
     zeus::win32::install_media(process);
+    zeus::win32::install_mss(process);
+    process.mute = o.mute || o.headless;
     process.load(o.exe);
     int code = 0;
     std::string error;
@@ -146,8 +151,10 @@ int main(int argc, char** argv) {
                     return argv[++i];
                 };
                 if (a == "--trace") o.trace = true;
+                else if (a == "--trace-only") o.trace_only = value();
                 else if (a == "--headless") o.headless = true;
                 else if (a == "--counts") o.counts = true;
+                else if (a == "--mute") o.mute = true;
                 else if (a == "--write-dir") o.write_dir = value();
                 else if (a == "--screenshot") o.screenshot = value();
                 else if (a == "--script") o.script = value();

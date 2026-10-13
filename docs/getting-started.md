@@ -20,7 +20,7 @@ brew install cmake ninja pkgconf sdl2 unicorn innoextract
 | Package | Used for |
 |---|---|
 | `cmake`, `ninja`, `pkgconf` | build |
-| `sdl2` | window, input, display |
+| `sdl2` | window, input, display, audio output |
 | `unicorn` | x86 emulation |
 | `innoextract` | unpacking the GOG installer |
 
@@ -71,7 +71,9 @@ yet. The game carries on.
 | `--write-dir DIR` | where the game's writes go (default `run/zeus`) |
 | `--trace` | print every Windows call |
 | `--counts` | print, on exit, how many times each Windows function was called |
-| `--headless` | hidden window |
+| `--trace-only PREFIX` | trace only functions whose name starts with PREFIX, e.g. `mss32.dll` |
+| `--headless` | hidden window, sound muted |
+| `--mute` | sound muted |
 | `--frames N`, `--seconds S` | stop after N displayed frames or S seconds |
 | `--screenshot FILE.bmp` | save the last displayed frame |
 | `--script "T:ACTION; …"` | replay input at T seconds: `click X,Y`, `rclick X,Y`, `move X,Y`, `key CODE` (Windows virtual key), `char CODE`, `shot FILE.bmp` |

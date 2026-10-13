@@ -1,7 +1,7 @@
-// MSS32 (son), BINKW32 (vidéo) et IJL10 (JPEG) pour le programme émulé.
+// BINKW32 (vidéo) et IJL10 (JPEG) pour le programme émulé.
 //
-// Le son et la vidéo ne sont pas encore réalisés : leurs fonctions ne font rien, de sorte que le
-// jeu tourne en silence et saute ses vidéos. Le décodage JPEG passe par ImageIO de macOS.
+// La vidéo n'est pas encore réalisée : ses fonctions ne font rien, de sorte que le jeu saute ses
+// vidéos. Le décodage JPEG passe par ImageIO de macOS.
 
 #include <CoreGraphics/CoreGraphics.h>
 #include <ImageIO/ImageIO.h>
@@ -70,10 +70,7 @@ constexpr uint32_t kIjlOk = 0, kIjlError = 0xFFFFFFFF;  // IJL_OK, erreur géné
 
 void install_media(Process& p) {
     Cpu& cpu = p.cpu();
-    p.allow_silent_stubs("mss32.dll");
     p.allow_silent_stubs("binkw32.dll");
-    // Ouvrir la sortie audio échoue : le jeu poursuit sans son.
-    p.def("mss32.dll", "_AIL_waveOutOpen@16", 16, [] { return 1u; });
 
     p.def("ijl10.dll", "#2", 4, [] { return kIjlOk; });  // ijlInit
     p.def("ijl10.dll", "#3", 4, [] { return kIjlOk; });  // ijlFree

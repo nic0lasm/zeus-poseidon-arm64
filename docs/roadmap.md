@@ -18,11 +18,14 @@
   becomes a house and the population rises; arrow keys scroll the map; *Save adventure* writes
   a save file that the reference reader (`tools/mapfile.py check`) reads to the last byte;
   *Load adventure* lists it; *Quit* exits cleanly.
+- Sound, scripted run: menu music, button clicks, music fade-out, city music, ambient loops;
+  the mixer output is non-silent.
 - A hands-on play session of several thousand frames without hitting a missing function.
 
 ## Known limits
 
-- **No sound, no video** (milestone 3).
+- **No video** yet. Sound works (music, ambience, effects) but reverb, filters and 3D
+  positioning are ignored, and it has been checked by measurement more than by ear.
 - **Performance**: one CPU core is always busy and input can lag slightly. The game's own loop
   never sleeps and the emulator is the bottleneck. The game itself caps its display rate.
 - `CompareStringW`, `RaiseException`, `RtlUnwind` and several DirectDraw methods are not
@@ -32,7 +35,8 @@
 
 ## Milestone 3 — plan
 
-1. Miles Sound System: sound effects and voices (`.wav`), then streamed music (`.mp3`).
+1. ~~Miles Sound System: sound effects (`.wav`) and streamed music (`.mp3`)~~ — done; voices
+   and event sounds still to be checked in play.
 2. Bink: intro and event videos.
 3. Performance: idle the CPU between frames, measure input latency.
 4. Full screen and integer scaling.
