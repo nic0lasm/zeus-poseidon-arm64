@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 
+#include "win32/audio.h"
 #include "win32/cpu.h"
 #include "win32/desktop.h"
 #include "win32/pe_image.h"
@@ -50,6 +51,8 @@ public:
     Vfs& vfs() { return vfs_; }
     // Fenêtre et écran, créés à la première utilisation.
     Desktop& desktop();
+    // Sortie son, ouverte à la première utilisation ; nul si elle n'a pas pu l'être.
+    Mixer* mixer();
     // Millisecondes écoulées, base commune de GetTickCount et timeGetTime.
     uint32_t ticks() const;
 
@@ -88,6 +91,8 @@ private:
     std::multimap<uint32_t, uint32_t> free_blocks_;  // taille -> adresse
     uint32_t heap_next_ = 0;
     std::unique_ptr<Desktop> desktop_;
+    std::unique_ptr<Mixer> mixer_;
+    bool mixer_failed_ = false;
     std::chrono::steady_clock::time_point start_ = std::chrono::steady_clock::now();
     int exit_code_ = 0;
 };
@@ -96,7 +101,8 @@ private:
 void install_kernel32(Process& process);
 void install_user32(Process& process);   // et GDI32, WINMM, OLE32, SHELL32
 void install_ddraw(Process& process);
-void install_media(Process& process);    // BINKW32, IJL10
+void install_media(Process& process);    // IJL10 : images JPEG
+void install_bink(Process& process);     // BINKW32 : vidéos
 void install_mss(Process& process);      // MSS32 : son
 
 }  // namespace zeus::win32

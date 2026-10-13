@@ -112,6 +112,7 @@ int run(const RunOptions& o) {
     zeus::win32::install_ddraw(process);
     zeus::win32::install_media(process);
     zeus::win32::install_mss(process);
+    zeus::win32::install_bink(process);
     process.mute = o.mute || o.headless;
     process.load(o.exe);
     int code = 0;

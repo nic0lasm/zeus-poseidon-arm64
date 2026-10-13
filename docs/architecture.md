@@ -42,7 +42,8 @@ analysis/notes reverse-engineering notes kept under version control
 | `ddraw.cpp` | DirectDraw |
 | `mss.cpp` | Miles Sound System (sound effects, voices, music) |
 | `audio.*` | the host mixer and audio decoders |
-| `media.cpp` | Bink video, Intel JPEG library |
+| `bink.cpp` | Bink video |
+| `media.cpp` | Intel JPEG library |
 
 ### Calling from the game into the host
 
@@ -52,8 +53,8 @@ game calls one, the emulator stops, the host runs the matching C++ function, pop
 as `stdcall` would, and resumes the game at the return address.
 
 A function that has not been written stops the program and names itself. Nothing is silently
-faked, with one deliberate exception: sound and video functions that are not written yet return
-zero, so the game runs silently until that work is done.
+faked, with one deliberate exception: the few sound and video functions that are not written
+yet (3D sound, mostly) do nothing and return zero.
 
 ### Calling from the host into the game
 
@@ -92,6 +93,13 @@ onto voices of a small software mixer feeding SDL's audio output. WAV data is re
 MP3 files are decoded in a background thread by macOS AudioToolbox, so no extra dependency is
 needed. Volume, pan, loop counts, status polling and stream positions follow Miles semantics.
 No 3D sound provider is offered, so the game falls back to plain stereo.
+
+### Video
+
+The intro is a Bink file. The game asks the Bink library for one frame at a time, has it copied
+into the locked primary surface, and polls a wait function between frames. The host decodes the
+video with FFmpeg straight to 16-bit 5-5-5 pixels, paces it on the file's frame rate, and plays
+the audio track through the same mixer as the rest of the sound.
 
 ### Window messages
 

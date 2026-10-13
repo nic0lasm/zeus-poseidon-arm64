@@ -14,7 +14,7 @@ SecuROM copy protection; this project does not run them and does not circumvent 
 ## Install the build dependencies
 
 ```bash
-brew install cmake ninja pkgconf sdl2 unicorn innoextract
+brew install cmake ninja pkgconf sdl2 unicorn ffmpeg innoextract
 ```
 
 | Package | Used for |
@@ -22,6 +22,7 @@ brew install cmake ninja pkgconf sdl2 unicorn innoextract
 | `cmake`, `ninja`, `pkgconf` | build |
 | `sdl2` | window, input, display, audio output |
 | `unicorn` | x86 emulation |
+| `ffmpeg` | decoding the Bink videos |
 | `innoextract` | unpacking the GOG installer |
 
 ## Unpack the game
@@ -61,8 +62,7 @@ cmake --build build
 
 The game opens in an 800×600 window. Saves and settings are written to `run/zeus/`.
 
-At startup the terminal prints `Unable to load BINK!`: that is the intro video, not supported
-yet. The game carries on.
+The intro video plays first; press Esc to skip it.
 
 ## Options
 

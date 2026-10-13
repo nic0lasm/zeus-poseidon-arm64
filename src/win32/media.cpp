@@ -1,7 +1,4 @@
-// BINKW32 (vidéo) et IJL10 (JPEG) pour le programme émulé.
-//
-// La vidéo n'est pas encore réalisée : ses fonctions ne font rien, de sorte que le jeu saute ses
-// vidéos. Le décodage JPEG passe par ImageIO de macOS.
+// IJL10 : la bibliothèque JPEG d'Intel, réalisée avec ImageIO de macOS.
 
 #include <CoreGraphics/CoreGraphics.h>
 #include <ImageIO/ImageIO.h>
@@ -70,7 +67,6 @@ constexpr uint32_t kIjlOk = 0, kIjlError = 0xFFFFFFFF;  // IJL_OK, erreur géné
 
 void install_media(Process& p) {
     Cpu& cpu = p.cpu();
-    p.allow_silent_stubs("binkw32.dll");
 
     p.def("ijl10.dll", "#2", 4, [] { return kIjlOk; });  // ijlInit
     p.def("ijl10.dll", "#3", 4, [] { return kIjlOk; });  // ijlFree

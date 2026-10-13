@@ -13,6 +13,7 @@ find_package(SDL2 REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(UNICORN REQUIRED IMPORTED_TARGET unicorn)
+pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET libavformat libavcodec libswscale libswresample libavutil)
 
 # Lecteurs des formats de fichiers du jeu, sans dépendance à la plateforme.
 add_library(zeus_formats STATIC
@@ -41,6 +42,7 @@ target_link_libraries(zeus-map PRIVATE zeus_game zeus_platform ZLIB::ZLIB)
 # Hôte du code d'origine : processeur x86 émulé (Unicorn, GPL-2.0) et chargeur d'exécutable.
 add_library(zeus_win32 STATIC
     src/win32/audio.cpp
+    src/win32/bink.cpp
     src/win32/cpu.cpp
     src/win32/ddraw.cpp
     src/win32/desktop.cpp
@@ -52,7 +54,7 @@ add_library(zeus_win32 STATIC
     src/win32/user32.cpp
     src/win32/vfs.cpp)
 target_include_directories(zeus_win32 PUBLIC src)
-target_link_libraries(zeus_win32 PUBLIC PkgConfig::UNICORN SDL2::SDL2
+target_link_libraries(zeus_win32 PUBLIC PkgConfig::UNICORN PkgConfig::FFMPEG SDL2::SDL2
     "-framework AudioToolbox" "-framework ImageIO" "-framework CoreGraphics" "-framework CoreFoundation")
 
 add_executable(zeus-run src/tools/zeus_run.cpp)

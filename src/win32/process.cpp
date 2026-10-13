@@ -66,6 +66,19 @@ Desktop& Process::desktop() {
     return *desktop_;
 }
 
+Mixer* Process::mixer() {
+    if (!mixer_ && !mixer_failed_) {
+        try {
+            mixer_ = std::make_unique<Mixer>();
+            mixer_->muted = mute;
+        } catch (const std::exception& e) {
+            std::fprintf(stderr, "[hôte] pas de sortie son : %s\n", e.what());
+            mixer_failed_ = true;
+        }
+    }
+    return mixer_.get();
+}
+
 uint32_t Process::ticks() const {
     using namespace std::chrono;
     return static_cast<uint32_t>(100000 + duration_cast<milliseconds>(steady_clock::now() - start_).count());

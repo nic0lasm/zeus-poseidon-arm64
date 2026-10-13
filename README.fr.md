@@ -10,7 +10,7 @@ virtuelle.**
 lancer : leur processeur est un ARM, et macOS n'exécute plus de programmes 32 bits depuis des
 années. Ce projet fait revivre le jeu en exécutant son code d'origine, non modifié, dans un
 petit émulateur x86 cloisonné, et en réécrivant en natif les fonctions Windows dont il a besoin
-(fichiers, fenêtre, souris, clavier, DirectDraw, son, bientôt la vidéo).
+(fichiers, fenêtre, souris, clavier, DirectDraw, son et vidéo).
 
 Le résultat est le vrai jeu — même simulation, mêmes règles, mêmes sauvegardes — et non une
 réécriture.
@@ -24,15 +24,15 @@ réécriture.
 |---|---|---|
 | 1. Le jeu démarre | le vrai menu principal dans une fenêtre Mac | fait |
 | 2. Jouable | souris, clavier, tutoriels et aventures, construction, sauvegarde et chargement | fait |
-| 3. Complet | musiques, voix, bruitages, vidéos, plein écran, application `.app` | **en cours** — musiques, ambiances et bruitages fonctionnent |
+| 3. Complet | musiques, voix, bruitages, vidéos, plein écran, application `.app` | **en cours** — musiques, bruitages et vidéo d'introduction fonctionnent |
 | 4. Passage au natif | des parties du code d'origine remplacées par du code natif, à commencer par l'affichage | prévu |
 
 Ce qui fonctionne aujourd'hui : menus, profils de dirigeant, tutoriels, une ville qui vit
 (habitants, logements, construction, calendrier, trésorerie), défilement de la carte,
-sauvegarde et chargement, musiques, ambiances et bruitages. Les sauvegardes sont au format du jeu et restent compatibles avec
+sauvegarde et chargement, musiques, ambiances, bruitages et vidéo d'introduction. Les sauvegardes sont au format du jeu et restent compatibles avec
 l'original.
 
-Limites connues : pas encore de vidéos ni de spatialisation 3D du son ; le jeu est gourmand (un cœur du processeur
+Limites connues : fenêtre seulement, pas encore de spatialisation 3D du son ; le jeu est gourmand (un cœur du processeur
 est occupé en permanence) et les commandes peuvent sembler légèrement en retard ; seule
 l'édition GOG en anglais a été essayée.
 
@@ -44,7 +44,7 @@ Il faut : un Mac Apple Silicon, les outils en ligne de commande Xcode,
 [Homebrew](https://brew.sh) et l'édition GOG de *Zeus + Poseidon*.
 
 ```bash
-brew install cmake ninja pkgconf sdl2 unicorn innoextract
+brew install cmake ninja pkgconf sdl2 unicorn ffmpeg innoextract
 git clone https://github.com/nic0lasm/zeus-poseidon-arm64.git
 cd zeus-poseidon-arm64
 
@@ -97,4 +97,5 @@ distribue aucun exécutable, image, son, texte ou donnée du jeu, et ne contourn
 protection : il n'exécute que l'édition GOG, sans DRM, à partir des fichiers que vous
 fournissez.
 
-L'émulation x86 repose sur [Unicorn](https://www.unicorn-engine.org/) (GPL-2.0).
+L'émulation x86 repose sur [Unicorn](https://www.unicorn-engine.org/) (GPL-2.0) ; les vidéos
+sont décodées par [FFmpeg](https://ffmpeg.org/).

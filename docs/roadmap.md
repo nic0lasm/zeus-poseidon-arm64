@@ -20,12 +20,14 @@
   *Load adventure* lists it; *Quit* exits cleanly.
 - Sound, scripted run: menu music, button clicks, music fade-out, city music, ambient loops;
   the mixer output is non-silent.
+- Video, scripted run: the intro plays at 24 frames per second in 640×480, Esc skips it, and
+  the main menu follows in 800×600.
 - A hands-on play session of several thousand frames without hitting a missing function.
 
 ## Known limits
 
-- **No video** yet. Sound works (music, ambience, effects) but reverb, filters and 3D
-  positioning are ignored, and it has been checked by measurement more than by ear.
+- Sound: reverb, filters and 3D positioning are ignored.
+- Video: audio and picture are paced independently, so they may drift slightly.
 - **Performance**: one CPU core is always busy and input can lag slightly. The game's own loop
   never sleeps and the emulator is the bottleneck. The game itself caps its display rate.
 - `CompareStringW`, `RaiseException`, `RtlUnwind` and several DirectDraw methods are not
@@ -37,7 +39,7 @@
 
 1. ~~Miles Sound System: sound effects (`.wav`) and streamed music (`.mp3`)~~ — done; voices
    and event sounds still to be checked in play.
-2. Bink: intro and event videos.
+2. ~~Bink: intro video~~ — done.
 3. Performance: idle the CPU between frames, measure input latency.
 4. Full screen and integer scaling.
 5. An application bundle that asks for the game folder on first launch.

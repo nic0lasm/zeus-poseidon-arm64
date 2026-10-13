@@ -27,15 +27,9 @@ struct Handle {
 };
 
 struct State {
-    std::unique_ptr<Mixer> mixer;
+    Mixer* mixer = nullptr;  // celui du processus, une fois la sortie son ouverte
     std::map<uint32_t, Handle> handles;  // adresse émulée de la poignée -> voix
     std::map<uint32_t, uint32_t> preferences;
-    bool report = false;
-    ~State() {
-        if (report && mixer)
-            std::fprintf(stderr, "[hôte] son : %d lectures lancées, amplitude maximale %d sur 32767\n",
-                         mixer->starts.load(), mixer->peak.load());
-    }
 };
 
 std::vector<uint8_t> read_file(const std::filesystem::path& path) {
@@ -98,7 +92,7 @@ void install_mss(Process& p) {
     def("_AIL_startup@0", 0, [] { return 1u; });
     def("_AIL_shutdown@0", 0, [st] {
         st->handles.clear();
-        st->mixer.reset();
+        st->mixer = nullptr;
         return 0u;
     });
     def("_AIL_set_preference@8", 2, [&p, st] {
@@ -110,14 +104,8 @@ void install_mss(Process& p) {
     def("_AIL_serve@0", 0, [] { return 0u; });
     // AIL_waveOutOpen(pilote*, sortie*, périphérique, format) : 0 en cas de succès.
     def("_AIL_waveOutOpen@16", 4, [&p, &cpu, st] {
-        try {
-            if (!st->mixer) st->mixer = std::make_unique<Mixer>();
-            st->mixer->muted = p.mute;
-            st->report = p.trace;
-        } catch (const std::exception& e) {
-            std::fprintf(stderr, "[hôte] pas de sortie son : %s\n", e.what());
-            return 1u;
-        }
+        st->mixer = p.mixer();
+        if (!st->mixer) return 1u;
         cpu.write_u32(p.arg(0), 0x00D16000);  // poignée opaque du pilote
         return 0u;
     });

@@ -6,14 +6,14 @@ Produit par `tools/api_imports.py` à partir de `tools/pe_triage.py --imports` e
 Une fonction **non écrite** arrête le programme en la nommant le jour où le jeu l'appelle.
 Seules les fonctions de son et de vidéo non écrites sont sans effet et renvoient 0.
 
-Total : 202 fonctions dans 10 bibliothèques, dont 165 écrites.
+Total : 202 fonctions dans 10 bibliothèques, dont 178 écrites.
 
 | Bibliothèque | Nombre | Écrites | Rôle | Réalisation |
 |---|---|---|---|---|
 | `kernel32.dll` | 82 | 79 | fichiers, mémoire, temps, environnement | `kernel32.cpp`, fichiers par `vfs.cpp` |
 | `mss32.dll` | 50 | 30 | son : Miles Sound System | `mss.cpp` sur le mixeur de `audio.cpp` (SDL2, AudioToolbox) |
 | `user32.dll` | 45 | 45 | fenêtre, messages, souris, clavier | `user32.cpp` et `desktop.cpp` (SDL2) |
-| `binkw32.dll` | 14 | 0 | vidéos Bink | sans effet pour l'instant (`media.cpp`) |
+| `binkw32.dll` | 14 | 13 | vidéos Bink | `bink.cpp`, décodage par ffmpeg |
 | `gdi32.dll` | 3 | 3 | capacités d'écran, palette | `user32.cpp` |
 | `ijl10.dll` | 3 | 3 | décodage JPEG (par numéro : 2 `ijlInit`, 3 `ijlFree`, 4 `ijlRead`) | `media.cpp`, par ImageIO de macOS |
 | `ole32.dll` | 2 | 2 | initialisation COM | sans effet |
@@ -41,7 +41,7 @@ Sans effet pour l'instant (renvoient 0) : `_AIL_3D_provider_attribute@12`, `_AIL
 
 `_BinkBufferClose@4`, `_BinkClose@4`, `_BinkCopyToBuffer@28`, `_BinkDDSurfaceType@4`, `_BinkDoFrame@4`, `_BinkGetError@0`, `_BinkGetSummary@8`, `_BinkNextFrame@4`, `_BinkOpen@8`, `_BinkOpenMiles@4`, `_BinkPause@8`, `_BinkService@4`, `_BinkSetSoundSystem@8`, `_BinkWait@4`
 
-Sans effet pour l'instant (renvoient 0) : `_BinkBufferClose@4`, `_BinkClose@4`, `_BinkCopyToBuffer@28`, `_BinkDDSurfaceType@4`, `_BinkDoFrame@4`, `_BinkGetError@0`, `_BinkGetSummary@8`, `_BinkNextFrame@4`, `_BinkOpen@8`, `_BinkOpenMiles@4`, `_BinkPause@8`, `_BinkService@4`, `_BinkSetSoundSystem@8`, `_BinkWait@4`.
+Sans effet pour l'instant (renvoient 0) : `_BinkOpenMiles@4`.
 
 ## `gdi32.dll` (3)
 
