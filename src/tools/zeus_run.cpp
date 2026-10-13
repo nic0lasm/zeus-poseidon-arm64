@@ -16,6 +16,8 @@
 //     --trace                  affiche chaque appel système
 //     --trace-only PRÉFIXE     ne trace que les fonctions dont le nom commence ainsi (mss32.dll)
 //     --break-on FONCTION      arrête le programme à l'appel de cette fonction (essai du rapport)
+//     --deterministic          horloge fictive et son coupé : exécution reproductible
+//     --frame-log SORTIE.txt   empreinte de chaque image affichée
 //     --profile SORTIE.tsv     profil d'exécution du code du jeu, par bloc (ralentit beaucoup)
 //     --counts                 affiche à la fin le nombre d'appels de chaque fonction
 //     --headless               fenêtre cachée, son coupé
@@ -149,8 +151,8 @@ int bench() {
 }
 
 struct RunOptions {
-    std::string exe, write_dir = "run/zeus", profile, language, screenshot, window_shot, script, trace_only, break_on;
-    bool trace = false, headless = false, counts = false, mute = false, fullscreen = false;
+    std::string exe, write_dir = "run/zeus", profile, frame_log, language, screenshot, window_shot, script, trace_only, break_on;
+    bool trace = false, headless = false, counts = false, mute = false, fullscreen = false, deterministic = false;
     int frames = 0;
     double seconds = 0;
 };
@@ -165,6 +167,9 @@ int run(const RunOptions& o) {
     zeus::win32::Desktop& desktop = process.desktop();
     desktop.headless = o.headless;
     desktop.fullscreen = o.fullscreen;
+    desktop.virtual_time = o.deterministic;
+    desktop.frame_log_path = o.frame_log;
+    process.fixed_clock = o.deterministic;
     desktop.screenshot_path = o.screenshot;
     desktop.window_shot_path = o.window_shot;
     desktop.max_presents = o.frames;
@@ -422,6 +427,8 @@ int main(int argc, char** argv) {
                 else if (a == "--write-dir") o.write_dir = value();
                 else if (a == "--language") o.language = value();
                 else if (a == "--profile") o.profile = value();
+                else if (a == "--frame-log") o.frame_log = value();
+                else if (a == "--deterministic") o.deterministic = true;
                 else if (a == "--screenshot") o.screenshot = value();
                 else if (a == "--window-shot") o.window_shot = value();
                 else if (a == "--script") o.script = value();

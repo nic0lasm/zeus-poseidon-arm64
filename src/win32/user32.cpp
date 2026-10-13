@@ -225,6 +225,7 @@ void install_user32(Process& p) {
         // sans retard sensible des entrées ; le jeu règle sa vitesse sur l'horloge, pas sur ses
         // tours, et n'affiche de toute façon que 20 images par seconde.
         constexpr uint32_t kTurn = 16;  // millisecondes
+        if (p.fixed_clock) return 0u;
         const uint32_t now = p.ticks();
         if (now - st->last_idle_poll < kTurn) d.wait(static_cast<int>(kTurn - (now - st->last_idle_poll)));
         st->last_idle_poll = p.ticks();

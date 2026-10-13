@@ -105,6 +105,8 @@ another Mac, the first launch needs a right-click → *Open*.
 | `--write-dir DIR` | where the game's writes go (default `run/zeus`) |
 | `--language DIR` | language pack (see [languages.md](languages.md)) |
 | `--trace` | print every Windows call |
+| `--deterministic` | virtual clock and no sound: two runs of the same script give the same frames |
+| `--frame-log FILE.txt` | write a hash of every displayed frame |
 | `--profile FILE.tsv` | execution profile of the game's code, per block (slow) |
 | `--counts` | print, on exit, how many times each Windows function was called |
 | `--trace-only PREFIX` | trace only functions whose name starts with PREFIX, e.g. `mss32.dll` |

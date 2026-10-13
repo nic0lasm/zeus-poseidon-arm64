@@ -72,6 +72,11 @@ public:
     uint32_t last_error = 0;
     bool trace = false;
     bool mute = false;  // son mélangé mais inaudible
+    // Horloge fictive : chaque lecture de l'heure avance d'une milliseconde, rien n'attend et le
+    // son est coupé. Deux exécutions du même scénario donnent alors les mêmes images, ce qui
+    // permet de comparer deux versions de l'hôte image par image.
+    bool fixed_clock = false;
+    void advance_clock(uint32_t milliseconds) const { fixed_ticks_ += milliseconds; }
     std::string break_on;    // diagnostic : arrête le programme à l'appel de cette fonction
     std::string trace_only;  // si non vide : ne trace que les fonctions dont le nom commence ainsi
     bool traced(const std::string& name) const {
@@ -96,6 +101,7 @@ private:
     bool mixer_failed_ = false;
     std::chrono::steady_clock::time_point start_ = std::chrono::steady_clock::now();
     int exit_code_ = 0;
+    mutable uint32_t fixed_ticks_ = 0;
 };
 
 // Chaque module déclare les fonctions d'une bibliothèque Windows.

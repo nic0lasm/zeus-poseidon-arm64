@@ -67,6 +67,7 @@ Desktop::Desktop() : keys_(256, false) {
 }
 
 Desktop::~Desktop() {
+    if (frame_log_) std::fclose(frame_log_);
     if (upscaled_) SDL_DestroyTexture(upscaled_);
     if (texture_) SDL_DestroyTexture(texture_);
     if (renderer_) SDL_DestroyRenderer(renderer_);
@@ -113,47 +114,57 @@ void Desktop::present(const uint8_t* pixels, int width, int height, int pitch, b
         texture_h_ = height;
         texture_565_ = rgb565;
     }
-    SDL_UpdateTexture(texture_, nullptr, pixels, pitch);
+    if (!frame_log_path.empty()) {
+        if (!frame_log_) frame_log_ = std::fopen(frame_log_path.c_str(), "w");
+        uint32_t hash = 2166136261u;  // FNV-1a des pixels
+        for (int y = 0; y < height; ++y)
+            for (int x = 0; x < width * 2; ++x) hash = (hash ^ pixels[static_cast<size_t>(y) * pitch + x]) * 16777619u;
+        if (frame_log_) std::fprintf(frame_log_, "%d %dx%d %08x\n", presents_, width, height, hash);
+    }
+    // Fenêtre cachée sans capture de son contenu : rien à dessiner.
+    if (!headless || !window_shot_path.empty()) {
+        SDL_UpdateTexture(texture_, nullptr, pixels, pitch);
 
-    // L'image garde ses proportions et se centre dans la fenêtre. À un facteur entier, chaque
-    // pixel du jeu devient un carré net. Sinon on agrandit d'abord au facteur entier supérieur,
-    // sans lissage, puis on réduit avec lissage : les pixels restent nets et réguliers.
-    int out_w = 0, out_h = 0, win_w = 0, win_h = 0;
-    SDL_GetRendererOutputSize(renderer_, &out_w, &out_h);
-    SDL_GetWindowSize(window_, &win_w, &win_h);
-    const double scale = std::min(static_cast<double>(out_w) / width, static_cast<double>(out_h) / height);
-    const SDL_Rect target = {static_cast<int>((out_w - width * scale) / 2), static_cast<int>((out_h - height * scale) / 2),
-                             static_cast<int>(width * scale), static_cast<int>(height * scale)};
-    const double density = win_w > 0 ? static_cast<double>(out_w) / win_w : 1.0;
-    view_scale_ = scale / density;
-    view_x_ = target.x / density;
-    view_y_ = target.y / density;
-    const int factor = static_cast<int>(std::ceil(scale - 1e-6));
-    SDL_RenderClear(renderer_);
-    if (factor <= 1 || std::abs(scale - factor) < 1e-6) {
-        SDL_RenderCopy(renderer_, texture_, nullptr, &target);
-    } else {
-        if (!upscaled_ || upscaled_factor_ != factor) {
-            if (upscaled_) SDL_DestroyTexture(upscaled_);
-            upscaled_ = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_TARGET, width * factor,
-                                          height * factor);
-            if (!upscaled_) throw std::runtime_error(SDL_GetError());
-            SDL_SetTextureScaleMode(upscaled_, SDL_ScaleModeLinear);
-            upscaled_factor_ = factor;
+        // L'image garde ses proportions et se centre dans la fenêtre. À un facteur entier, chaque
+        // pixel du jeu devient un carré net. Sinon on agrandit d'abord au facteur entier supérieur,
+        // sans lissage, puis on réduit avec lissage : les pixels restent nets et réguliers.
+        int out_w = 0, out_h = 0, win_w = 0, win_h = 0;
+        SDL_GetRendererOutputSize(renderer_, &out_w, &out_h);
+        SDL_GetWindowSize(window_, &win_w, &win_h);
+        const double scale = std::min(static_cast<double>(out_w) / width, static_cast<double>(out_h) / height);
+        const SDL_Rect target = {static_cast<int>((out_w - width * scale) / 2), static_cast<int>((out_h - height * scale) / 2),
+                                 static_cast<int>(width * scale), static_cast<int>(height * scale)};
+        const double density = win_w > 0 ? static_cast<double>(out_w) / win_w : 1.0;
+        view_scale_ = scale / density;
+        view_x_ = target.x / density;
+        view_y_ = target.y / density;
+        const int factor = static_cast<int>(std::ceil(scale - 1e-6));
+        SDL_RenderClear(renderer_);
+        if (factor <= 1 || std::abs(scale - factor) < 1e-6) {
+            SDL_RenderCopy(renderer_, texture_, nullptr, &target);
+        } else {
+            if (!upscaled_ || upscaled_factor_ != factor) {
+                if (upscaled_) SDL_DestroyTexture(upscaled_);
+                upscaled_ = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_TARGET, width * factor,
+                                              height * factor);
+                if (!upscaled_) throw std::runtime_error(SDL_GetError());
+                SDL_SetTextureScaleMode(upscaled_, SDL_ScaleModeLinear);
+                upscaled_factor_ = factor;
+            }
+            SDL_SetRenderTarget(renderer_, upscaled_);
+            SDL_RenderCopy(renderer_, texture_, nullptr, nullptr);
+            SDL_SetRenderTarget(renderer_, nullptr);
+            SDL_RenderCopy(renderer_, upscaled_, nullptr, &target);
         }
-        SDL_SetRenderTarget(renderer_, upscaled_);
-        SDL_RenderCopy(renderer_, texture_, nullptr, nullptr);
-        SDL_SetRenderTarget(renderer_, nullptr);
-        SDL_RenderCopy(renderer_, upscaled_, nullptr, &target);
-    }
-    if (!window_shot_path.empty() && (presents_ % 30) == 0) {
-        if (SDL_Surface* shot = SDL_CreateRGBSurfaceWithFormat(0, out_w, out_h, 24, SDL_PIXELFORMAT_RGB24)) {
-            if (SDL_RenderReadPixels(renderer_, nullptr, SDL_PIXELFORMAT_RGB24, shot->pixels, shot->pitch) == 0)
-                SDL_SaveBMP(shot, window_shot_path.c_str());
-            SDL_FreeSurface(shot);
+        if (!window_shot_path.empty() && (presents_ % 30) == 0) {
+            if (SDL_Surface* shot = SDL_CreateRGBSurfaceWithFormat(0, out_w, out_h, 24, SDL_PIXELFORMAT_RGB24)) {
+                if (SDL_RenderReadPixels(renderer_, nullptr, SDL_PIXELFORMAT_RGB24, shot->pixels, shot->pitch) == 0)
+                    SDL_SaveBMP(shot, window_shot_path.c_str());
+                SDL_FreeSurface(shot);
+            }
         }
+        SDL_RenderPresent(renderer_);
     }
-    SDL_RenderPresent(renderer_);
     ++presents_;
 
     if (!screenshot_path.empty() || screenshot_wanted_) {
@@ -259,8 +270,18 @@ bool Desktop::key_down(int virtual_key) const {
 
 void Desktop::wait(int milliseconds) { SDL_Delay(static_cast<Uint32>(milliseconds)); }
 
+// Secondes écoulées depuis le lancement, sur l'horloge réelle ou sur celle du programme.
+double Desktop::elapsed(uint32_t now) {
+    if (!virtual_time) return (SDL_GetTicks64() - start_ticks_) / 1000.0;
+    if (!has_first_now_) {
+        first_now_ = now;
+        has_first_now_ = true;
+    }
+    return (now - first_now_) / 1000.0;
+}
+
 bool Desktop::pump(uint32_t now) {
-    if (max_seconds > 0 && (SDL_GetTicks64() - start_ticks_) / 1000.0 >= max_seconds) stop_ = true;
+    if (max_seconds > 0 && elapsed(now) >= max_seconds) stop_ = true;
     auto post = [&](uint32_t message, uint32_t wparam, uint32_t lparam) {
         queue.push_back({hwnd, message, wparam, lparam, now, mouse_x, mouse_y});
     };
@@ -271,8 +292,8 @@ bool Desktop::pump(uint32_t now) {
         post(message, mouse_buttons_, static_cast<uint32_t>(mouse_y) << 16 | (static_cast<uint32_t>(mouse_x) & 0xFFFF));
     };
     // Scénario de diagnostic : mêmes messages que ceux d'un joueur.
-    const double elapsed = (SDL_GetTicks64() - start_ticks_) / 1000.0;
-    for (; script_next_ < script_.size() && script_[script_next_].at <= elapsed; ++script_next_) {
+    const double since_start = elapsed(now);
+    for (; script_next_ < script_.size() && script_[script_next_].at <= since_start; ++script_next_) {
         using Kind = ScriptEvent::Kind;
         const ScriptEvent& s = script_[script_next_];
         const uint32_t vk = static_cast<uint32_t>(s.key);

@@ -329,19 +329,25 @@ void install_kernel32(Process& p) {
     });
     def("QueryPerformanceCounter", 1, [&p, &cpu, st] {
         using namespace std::chrono;
-        const uint64_t us = static_cast<uint64_t>(
-            duration_cast<microseconds>(steady_clock::now() - st->start).count());
+        const uint64_t us = p.fixed_clock ? static_cast<uint64_t>(p.ticks()) * 1000
+                                          : static_cast<uint64_t>(
+                                                duration_cast<microseconds>(steady_clock::now() - st->start).count());
         cpu.write_u32(p.arg(0), static_cast<uint32_t>(us));
         cpu.write_u32(p.arg(0) + 4, static_cast<uint32_t>(us >> 32));
         return 1u;
     });
     def("Sleep", 1, [&p] {
+        if (p.fixed_clock) {
+            p.advance_clock(p.arg(0));
+            return 0u;
+        }
         std::this_thread::sleep_for(std::chrono::milliseconds(std::min<uint32_t>(p.arg(0), 100)));
         return 0u;
     });
     auto system_time = [&p, &cpu](bool local) {
         using namespace std::chrono;
-        const auto now = system_clock::now();
+        // Horloge fictive : le 1er janvier 2001 à midi, plus le temps écoulé.
+        const auto now = p.fixed_clock ? system_clock::from_time_t(978350400) + milliseconds(p.ticks()) : system_clock::now();
         const std::time_t seconds = system_clock::to_time_t(now);
         std::tm t{};
         if (local) localtime_r(&seconds, &t);

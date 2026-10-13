@@ -253,7 +253,7 @@ void install_bink(Process& p) {
     // BinkWait : non nul tant qu'il est trop tôt pour l'image suivante.
     def("_BinkWait@4", 1, [&p, video] {
         Video* v = video(p.arg(0));
-        if (!v || !v->started || v->paused) return 0u;
+        if (!v || !v->started || v->paused || p.fixed_clock) return 0u;
         const auto due = v->start + std::chrono::duration_cast<Clock::duration>(
                                         std::chrono::duration<double>(v->shown / v->fps));
         if (Clock::now() >= due) return 0u;

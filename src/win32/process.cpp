@@ -68,6 +68,7 @@ Desktop& Process::desktop() {
 }
 
 Mixer* Process::mixer() {
+    if (fixed_clock) return nullptr;
     if (!mixer_ && !mixer_failed_) {
         try {
             mixer_ = std::make_unique<Mixer>();
@@ -81,6 +82,7 @@ Mixer* Process::mixer() {
 }
 
 uint32_t Process::ticks() const {
+    if (fixed_clock) return 100000 + ++fixed_ticks_;
     using namespace std::chrono;
     return static_cast<uint32_t>(100000 + duration_cast<milliseconds>(steady_clock::now() - start_).count());
 }

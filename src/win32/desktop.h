@@ -2,6 +2,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstdio>
 #include <deque>
 #include <string>
 #include <vector>
@@ -41,6 +42,8 @@ public:
     std::string window_shot_path; // enregistre le contenu de la fenêtre, mise à l'échelle comprise
     int max_presents = 0;         // arrête le programme après ce nombre d'images (0 = jamais)
     double max_seconds = 0;       // arrête le programme après cette durée (0 = jamais)
+    bool virtual_time = false;    // durées et scénario comptés sur l'horloge du programme
+    std::string frame_log_path;   // une ligne par image affichée : son empreinte
     // Ajoute au scénario les actions décrites par `text`, de la forme
     // « 5:click 400,300; 7:rclick 10,10; 8:move 5,5; 9:key 27; 9.5:char 65; 10:shot f.bmp ».
     void add_script(const std::string& text);
@@ -90,6 +93,10 @@ private:
     std::vector<uint8_t> last_frame_;  // RGB24 de la dernière image, pour la capture
     std::vector<bool> keys_;
     uint64_t start_ticks_ = 0;
+    uint32_t first_now_ = 0;
+    bool has_first_now_ = false;
+    double elapsed(uint32_t now);
+    std::FILE* frame_log_ = nullptr;
     std::vector<ScriptEvent> script_;  // trié par instant
     size_t script_next_ = 0;
 };
