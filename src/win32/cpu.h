@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -59,10 +60,21 @@ public:
 
     // Enregistre une fonction hôte et renvoie l'adresse émulée à placer dans une table d'import.
     uint32_t add_host_function(HostFunction function);
-    // Profil d'exécution : compte, par bloc de code, les octets d'instructions exécutés. Ralentit
-    // nettement l'émulation ; réservé au diagnostic.
+    // Profil d'exécution : temps passé, en nanosecondes, par bloc de code (du début d'un bloc au
+    // début du suivant, appels de fonctions hôtes compris). Ralentit nettement l'émulation et
+    // gonfle la part des blocs très courts ; réservé au diagnostic.
     void start_profile();
     const std::map<uint32_t, uint64_t>& profile() const { return profile_; }
+
+    // Adresse hôte d'un octet de la mémoire émulée : toute la mémoire du programme est un seul
+    // bloc de 4 Go réservé par l'hôte, dont seules les zones déclarées par map() sont utilisables.
+    uint8_t* host(uint32_t address) const { return memory_ + address; }
+
+    // Remplace une fonction du programme par une fonction de l'hôte, exécutée à sa place quand
+    // l'exécution atteint `address`. `fn` lit ses arguments par arg() et renvoie la valeur de
+    // retour (EAX), ou nullopt pour laisser le code d'origine s'exécuter cette fois-ci.
+    // `arg_bytes` : octets d'arguments dépilés par la fonction d'origine (0 en cdecl).
+    void replace_function(uint32_t address, uint32_t arg_bytes, std::function<std::optional<uint32_t>(Cpu&)> fn);
 
     // Appelle `fn` chaque fois que l'exécution atteint `address`, avant l'instruction.
     void add_code_hook(uint32_t address, std::function<void(Cpu&)> fn);
@@ -82,8 +94,12 @@ public:
     uint64_t instructions_run() const { return instructions_; }
 
 private:
+    void map_region(uint32_t start, size_t size, uint32_t permissions, const char* what);
+    uint8_t* memory_ = nullptr;
     static void on_block(uc_struct* uc, uint64_t address, uint32_t size, void* user);
-    std::map<uint32_t, uint64_t> profile_;  // adresse de bloc -> octets exécutés
+    std::map<uint32_t, uint64_t> profile_;  // adresse de bloc -> nanosecondes
+    uint32_t profile_block_ = 0;
+    uint64_t profile_since_ = 0;
     static void on_code_hook(uc_struct* uc, uint64_t address, uint32_t size, void* user);
     std::map<uint32_t, std::function<void(Cpu&)>> code_hooks_;
     void enable_paging();

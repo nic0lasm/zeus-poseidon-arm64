@@ -48,29 +48,41 @@ is far less work than a rewrite.
   written; no play session has needed them so far.
 - Tested with the English GOG edition only.
 
-## Milestone 6 — plan
+## Milestone 6 — in progress
 
-**Where the time goes.** `zeus-run --profile` counts the bytes of game code executed per block.
-Over a scripted session (start-up, menus, a tutorial city) the game went through 1,812
-functions, but 10 of them account for 77 % of the code executed, 50 for 98 % and 100 for more
-than 99 %. Those 50 functions add up to about 30 KB of machine code: the drawing loop of the
-city, the sprite blitters, a few C runtime routines.
+**Goal.** Run the game's hot code natively and leave the rest to the emulator, then decide
+whether the emulator can go.
 
-**Approach.** Rather than translating the whole game at once, translate the hot functions to
-native code and leave the rest to the emulator:
+**A rule first.** Code translated mechanically from the game's executable is still the game's
+code: it cannot be kept in this repository or shipped in a release. Native code here is
+written by hand from an understanding of what a function does, and proven against the original
+with the frame log of a deterministic run. Mechanical translation (Ghidra p-code,
+`tools/ghidra/ExportPcode.java`) is only a reading aid.
 
-1. ~~Profile and pick the targets~~ — done.
-2. Guest memory owned by the host, so that native code and the emulator share it.
-3. A translator from Ghidra's intermediate code (p-code, about thirty simple operations;
-   `tools/ghidra/ExportPcode.java` exports it) to C, starting with leaf functions that use
-   neither the floating-point unit nor indirect jumps.
-4. A bridge: emulated code entering a native function, native code calling back emulated code
-   or a Windows function.
-5. Check each translated function against the emulator on the same inputs, then measure.
-6. Widen the set until the emulator only runs cold code; only then consider removing it.
+**What has been measured.**
 
-The original code stays the reference throughout: a native function that cannot be proven
-equivalent is not used.
+- Counting executed code bytes, 10 functions account for 77 % and 50 for 98 %. That count
+  overweights copy loops, which the emulator already runs quickly.
+- Sampling the host during a running city tells more: about 39 % of the time is spent in a
+  small routine the emulator calls at the start of every block of code
+  (`helper_check_exit_request`), which cannot be turned off, and 14 % was spent looking up
+  files in the game folder (now cached).
+- Entering a native function from emulated code is not free: the emulator has to leave and
+  re-enter its translated code. Replacing a short function called very often can therefore be
+  slower than emulating it.
+
+**What exists.**
+
+- Guest memory is one 4 GB block owned by the host, shared by the emulator and native code.
+- `Cpu::replace_function` runs a host function in place of a game function;
+  `src/win32/native.cpp` holds the first two (an opaque rectangle copy and `_strcmpi`). They
+  give frame logs identical to the original over 4,092 frames. They are off by default
+  (`--native`): their effect on speed has not been established.
+- `zeus-run --profile` measures time per block; `tools/profile_report.py` sums it per function.
+
+**Next.** Measure on a quiet machine; then replace whole units entered once per frame (the
+city drawing loop and the sprite routines it calls) rather than small functions entered
+thousands of times.
 
 ## Milestone 5 — plan
 

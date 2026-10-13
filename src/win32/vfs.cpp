@@ -126,6 +126,13 @@ std::optional<fs::path> Vfs::lookup(const fs::path& root, const std::vector<std:
     return fs::exists(current, ec) ? std::optional<fs::path>(current) : std::nullopt;
 }
 
+std::optional<fs::path> Vfs::lookup_fixed(const fs::path& root, const std::vector<std::string>& parts) const {
+    const std::string key = root.string() + '\n' + join(parts);
+    const auto known = fixed_cache_.find(key);
+    if (known != fixed_cache_.end()) return known->second;
+    return fixed_cache_[key] = lookup(root, parts);
+}
+
 void Vfs::add_language_pack(const fs::path& pack) {
     pack_dir_ = pack;
     replaced_dirs_.clear();
@@ -142,10 +149,10 @@ bool Vfs::replaced(const std::vector<std::string>& parts) const {
 
 std::optional<fs::path> Vfs::lookup_base(const std::vector<std::string>& parts) const {
     if (!pack_dir_.empty()) {
-        if (auto found = lookup(pack_dir_, parts)) return found;
+        if (auto found = lookup_fixed(pack_dir_, parts)) return found;
         if (replaced(parts)) return std::nullopt;
     }
-    return lookup(game_dir_, parts);
+    return lookup_fixed(game_dir_, parts);
 }
 
 std::optional<fs::path> Vfs::find(const std::string& windows_path) const {
@@ -213,7 +220,7 @@ std::vector<VfsEntry> Vfs::list(const std::string& windows_pattern) const {
     // Du moins prioritaire au plus prioritaire : installation, pack de langue, écritures.
     for (const fs::path& root : {game_dir_, pack_dir_, write_dir_}) {
         if (root.empty() || (root == game_dir_ && replaced(*parts))) continue;
-        const auto dir = lookup(root, *parts);
+        const auto dir = root == write_dir_ ? lookup(root, *parts) : lookup_fixed(root, *parts);
         if (!dir || !fs::is_directory(*dir, ec)) continue;
         for (const auto& entry : fs::directory_iterator(*dir, ec)) {
             const std::string name = from_utf8(entry.path().filename().string());

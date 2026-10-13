@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <map>
 #include <optional>
 #include <set>
 #include <string>
@@ -52,6 +53,12 @@ private:
     std::optional<std::vector<std::string>> relative_parts(const std::string& windows_path) const;
     static std::optional<std::filesystem::path> lookup(const std::filesystem::path& root,
                                                        const std::vector<std::string>& parts);
+
+    // Comme lookup, pour un dossier qui ne change jamais (installation, pack de langue) : le
+    // résultat est retenu, car le jeu redemande sans cesse les mêmes fichiers.
+    std::optional<std::filesystem::path> lookup_fixed(const std::filesystem::path& root,
+                                                      const std::vector<std::string>& parts) const;
+    mutable std::map<std::string, std::optional<std::filesystem::path>> fixed_cache_;
 
     // Recherche dans le pack de langue puis dans l'installation.
     std::optional<std::filesystem::path> lookup_base(const std::vector<std::string>& parts) const;

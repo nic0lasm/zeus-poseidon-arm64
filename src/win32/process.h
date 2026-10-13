@@ -108,6 +108,9 @@ private:
 // Adapte l'affichage du texte à un pack de langue ; à appeler après le chargement de l'exécutable.
 void apply_language_pack(Process& process, const std::filesystem::path& pack);
 
+// Remplace les fonctions du jeu réécrites pour l'hôte ; à appeler après le chargement.
+void install_native_functions(Process& process);
+
 void install_kernel32(Process& process);
 void install_user32(Process& process);   // et GDI32, WINMM, OLE32, SHELL32
 void install_ddraw(Process& process);

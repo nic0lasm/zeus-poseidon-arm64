@@ -66,6 +66,7 @@ add_library(zeus_win32 STATIC
     src/win32/language.cpp
     src/win32/media.cpp
     src/win32/mss.cpp
+    src/win32/native.cpp
     src/win32/pe_image.cpp
     src/win32/process.cpp
     src/win32/text.cpp

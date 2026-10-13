@@ -36,6 +36,7 @@ analysis/notes reverse-engineering notes kept under version control
 | `pe_image.*` | loads the PE executable and lists its imports |
 | `process.*` | stack, heap, thread block, binding of every import to a host function |
 | `vfs.*` | the file system the game sees |
+| `native.cpp` | game functions rewritten for the host (experimental, off by default) |
 | `language.cpp` | in-memory text adjustments for language packs |
 | `text.*` | conversion between the game's Windows-1252 text and UTF-8 |
 | `kernel32.cpp` | start-up, memory, strings, time, files |
@@ -66,6 +67,10 @@ continuation. Calls can be chained, which is how a sequence of window messages i
 before a system call returns.
 
 ### Process environment
+
+The whole 32-bit address space of the game is one 4 GB block reserved by the host (pages are
+only committed when touched). The emulator and the host share it, so a host function reaches
+guest memory by plain pointer arithmetic.
 
 Heap at `0x10000000` (256 MB), stack at `0x0FE00000` (2 MB), a thread environment block
 reachable through the `FS` segment (the Visual C++ 6 runtime uses it for exception handling).

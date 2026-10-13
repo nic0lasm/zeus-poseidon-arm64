@@ -16,6 +16,7 @@
 //     --trace                  affiche chaque appel système
 //     --trace-only PRÉFIXE     ne trace que les fonctions dont le nom commence ainsi (mss32.dll)
 //     --break-on FONCTION      arrête le programme à l'appel de cette fonction (essai du rapport)
+//     --native                 remplace les fonctions du jeu réécrites pour l'hôte (à l'essai)
 //     --deterministic          horloge fictive et son coupé : exécution reproductible
 //     --frame-log SORTIE.txt   empreinte de chaque image affichée
 //     --profile SORTIE.tsv     profil d'exécution du code du jeu, par bloc (ralentit beaucoup)
@@ -152,7 +153,8 @@ int bench() {
 
 struct RunOptions {
     std::string exe, write_dir = "run/zeus", profile, frame_log, language, screenshot, window_shot, script, trace_only, break_on;
-    bool trace = false, headless = false, counts = false, mute = false, fullscreen = false, deterministic = false;
+    bool trace = false, headless = false, counts = false, mute = false, fullscreen = false, deterministic = false,
+         native = false;
     int frames = 0;
     double seconds = 0;
 };
@@ -184,6 +186,7 @@ int run(const RunOptions& o) {
     process.mute = o.mute || o.headless;
     process.load(o.exe);
     if (!o.profile.empty()) process.cpu().start_profile();
+    if (o.native) zeus::win32::install_native_functions(process);
     if (!o.language.empty()) zeus::win32::apply_language_pack(process, o.language);
     int code = 0;
     std::string error;
@@ -196,7 +199,7 @@ int run(const RunOptions& o) {
     uint64_t total = 0;
     for (const auto& [name, count] : process.call_counts) total += count;
     if (!o.profile.empty()) {
-        // Une ligne par bloc de code : adresse, octets d'instructions exécutés.
+        // Une ligne par bloc de code : adresse, nanosecondes.
         std::ofstream out(o.profile);
         for (const auto& [address, bytes] : process.cpu().profile()) out << std::hex << address << std::dec << '\t' << bytes << '\n';
     }
@@ -429,6 +432,7 @@ int main(int argc, char** argv) {
                 else if (a == "--profile") o.profile = value();
                 else if (a == "--frame-log") o.frame_log = value();
                 else if (a == "--deterministic") o.deterministic = true;
+                else if (a == "--native") o.native = true;
                 else if (a == "--screenshot") o.screenshot = value();
                 else if (a == "--window-shot") o.window_shot = value();
                 else if (a == "--script") o.script = value();

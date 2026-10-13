@@ -1,5 +1,7 @@
 #include "win32/cpu.h"
 
+#include <ctime>
+#include <sys/mman.h>
 #include <unicorn/unicorn.h>
 #include <cstdlib>
 
@@ -16,6 +18,7 @@ constexpr uint32_t kThunkBase = 0xF0000000;
 constexpr uint32_t kThunkSize = 0x00010000;
 constexpr uint32_t kThunkStride = 4;
 constexpr uint32_t kPage = 0x1000;
+constexpr size_t kAddressSpace = size_t{1} << 32;
 
 void check(uc_err err, const char* what) {
     if (err != UC_ERR_OK) throw std::runtime_error(std::string(what) + " : " + uc_strerror(err));
@@ -42,7 +45,13 @@ Cpu::Cpu() {
     check(uc_open(UC_ARCH_X86, UC_MODE_32, &uc_), "ouverture du processeur émulé");
     // Modèle de processeur 32 bits qui connaît les pages non exécutables (voir enable_paging).
     check(uc_ctl_set_cpu_model(uc_, UC_CPU_X86_N270), "modèle de processeur");
-    check(uc_mem_map(uc_, kThunkBase, kThunkSize, UC_PROT_READ | UC_PROT_EXEC), "zone des imports");
+    // Les 4 Go d'adresses du programme, réservés d'un bloc (les pages ne sont réellement
+    // allouées qu'à leur première utilisation) : l'hôte et l'émulateur partagent la même
+    // mémoire, et une fonction de l'hôte y accède par simple addition.
+    void* block = mmap(nullptr, kAddressSpace, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_NORESERVE, -1, 0);
+    if (block == MAP_FAILED) throw std::runtime_error("réservation de l'espace d'adresses impossible");
+    memory_ = static_cast<uint8_t*>(block);
+    map_region(kThunkBase, kThunkSize, UC_PROT_READ | UC_PROT_EXEC, "zone des imports");
     code_ranges_.push_back({kThunkBase, kThunkBase + kThunkSize});
     uc_hook hook;
     check(uc_hook_add(uc_, &hook, UC_HOOK_CODE, reinterpret_cast<void*>(&Cpu::on_thunk), this,
@@ -54,14 +63,18 @@ Cpu::Cpu() {
 
 Cpu::~Cpu() {
     if (uc_) uc_close(uc_);
+    if (memory_) munmap(memory_, kAddressSpace);
+}
+
+void Cpu::map_region(uint32_t start, size_t size, uint32_t permissions, const char* what) {
+    check(uc_mem_map_ptr(uc_, start, size, permissions, memory_ + start), what);
 }
 
 void Cpu::map(uint32_t address, uint32_t size, bool executable) {
     const uint32_t start = address & ~(kPage - 1);
     const uint64_t end = (static_cast<uint64_t>(address) + size + kPage - 1) & ~static_cast<uint64_t>(kPage - 1);
-    check(uc_mem_map(uc_, start, static_cast<size_t>(end - start),
-                     executable ? UC_PROT_READ | UC_PROT_EXEC : UC_PROT_READ | UC_PROT_WRITE),
-          "réservation mémoire");
+    map_region(start, static_cast<size_t>(end - start),
+               executable ? UC_PROT_READ | UC_PROT_EXEC : UC_PROT_READ | UC_PROT_WRITE, "réservation mémoire");
     if (executable) code_ranges_.push_back({start, static_cast<uint32_t>(end)});
 }
 
@@ -100,7 +113,8 @@ void Cpu::enable_paging() {
                                    (is_code(address, address + kPage) ? 0 : kNoExecute);
         }
     }
-    check(uc_mem_map(uc_, kTables, tables.size() * 8, UC_PROT_READ | UC_PROT_WRITE), "tables de pages");
+    map_region(kTables, (tables.size() * 8 + kPage - 1) & ~static_cast<size_t>(kPage - 1), UC_PROT_READ | UC_PROT_WRITE,
+               "tables de pages");
     write(kTables, tables.data(), tables.size() * 8);
     const uint32_t cr3 = kTables;
     uint32_t cr4 = 0, cr0 = 0;
@@ -204,7 +218,7 @@ void Cpu::set_fs_base(uint32_t address) {
             access, static_cast<uint8_t>(flags | ((limit >> 16) & 0x0F)), static_cast<uint8_t>(base >> 24)};
     };
     if (!gdt_ready_) {
-        check(uc_mem_map(uc_, kGdt, kPage, UC_PROT_READ | UC_PROT_WRITE), "table des segments");
+        map_region(kGdt, kPage, UC_PROT_READ | UC_PROT_WRITE, "table des segments");
         uc_x86_mmr gdtr{};
         gdtr.base = kGdt;
         gdtr.limit = kEntries * 8 - 1;
@@ -253,8 +267,25 @@ void Cpu::start_profile() {
     check(uc_hook_add(uc_, &hook, UC_HOOK_BLOCK, reinterpret_cast<void*>(&Cpu::on_block), this, 1, 0), "profil");
 }
 
-void Cpu::on_block(uc_struct*, uint64_t address, uint32_t size, void* user) {
-    static_cast<Cpu*>(user)->profile_[static_cast<uint32_t>(address)] += size;
+void Cpu::on_block(uc_struct*, uint64_t address, uint32_t, void* user) {
+    Cpu& cpu = *static_cast<Cpu*>(user);
+    const uint64_t now = clock_gettime_nsec_np(CLOCK_UPTIME_RAW);
+    if (cpu.profile_block_) cpu.profile_[cpu.profile_block_] += now - cpu.profile_since_;
+    cpu.profile_block_ = static_cast<uint32_t>(address);
+    cpu.profile_since_ = now;
+}
+
+void Cpu::replace_function(uint32_t address, uint32_t arg_bytes, std::function<std::optional<uint32_t>(Cpu&)> fn) {
+    add_code_hook(address, [arg_bytes, fn = std::move(fn)](Cpu& cpu) {
+        const std::optional<uint32_t> result = fn(cpu);
+        if (!result) return;
+        // Retour à l'appelant, comme l'aurait fait la fonction d'origine.
+        const uint32_t esp = cpu.reg(Reg::ESP);
+        const uint32_t return_address = cpu.read_u32(esp);
+        cpu.set_reg(Reg::EAX, *result);
+        cpu.set_reg(Reg::ESP, esp + 4 + arg_bytes);
+        cpu.set_reg(Reg::EIP, return_address);
+    });
 }
 
 void Cpu::add_code_hook(uint32_t address, std::function<void(Cpu&)> fn) {
