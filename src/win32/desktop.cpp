@@ -195,6 +195,9 @@ bool Desktop::pump(uint32_t now) {
         queue.push_back({hwnd, message, wparam, lparam, now, mouse_x, mouse_y});
     };
     auto mouse = [&](uint32_t message) {
+        // Comme Windows, on ne garde en file que le dernier déplacement de souris : sinon les
+        // déplacements s'accumulent plus vite que le jeu ne les lit et retardent les clics.
+        if (message == WM_MOUSEMOVE && !queue.empty() && queue.back().message == WM_MOUSEMOVE) queue.pop_back();
         post(message, mouse_buttons_, static_cast<uint32_t>(mouse_y) << 16 | (static_cast<uint32_t>(mouse_x) & 0xFFFF));
     };
     // Scénario de diagnostic : mêmes messages que ceux d'un joueur.
