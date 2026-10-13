@@ -11,6 +11,8 @@ add_compile_options(-Wall -Wextra -Wpedantic)
 
 find_package(SDL2 REQUIRED)
 find_package(ZLIB REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(UNICORN REQUIRED IMPORTED_TARGET unicorn)
 
 # Lecteurs des formats de fichiers du jeu, sans dépendance à la plateforme.
 add_library(zeus_formats STATIC
@@ -35,3 +37,13 @@ target_link_libraries(zeus-sprites PRIVATE zeus_formats zeus_platform ZLIB::ZLIB
 
 add_executable(zeus-map src/tools/map_viewer.cpp)
 target_link_libraries(zeus-map PRIVATE zeus_game zeus_platform ZLIB::ZLIB)
+
+# Hôte du code d'origine : processeur x86 émulé (Unicorn, GPL-2.0) et chargeur d'exécutable.
+add_library(zeus_win32 STATIC
+    src/win32/cpu.cpp
+    src/win32/pe_image.cpp)
+target_include_directories(zeus_win32 PUBLIC src)
+target_link_libraries(zeus_win32 PUBLIC PkgConfig::UNICORN)
+
+add_executable(zeus-run src/tools/zeus_run.cpp)
+target_link_libraries(zeus-run PRIVATE zeus_win32)
