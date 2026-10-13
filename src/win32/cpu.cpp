@@ -248,6 +248,19 @@ uint32_t Cpu::arg(int n) const {
     return read_u32(reg(Reg::ESP) + 4 + 4 * static_cast<uint32_t>(n));
 }
 
+void Cpu::add_code_hook(uint32_t address, std::function<void(Cpu&)> fn) {
+    code_hooks_[address] = std::move(fn);
+    uc_hook hook;
+    check(uc_hook_add(uc_, &hook, UC_HOOK_CODE, reinterpret_cast<void*>(&Cpu::on_code_hook), this, address, address),
+          "interception de code");
+}
+
+void Cpu::on_code_hook(uc_struct*, uint64_t address, uint32_t, void* user) {
+    Cpu& cpu = *static_cast<Cpu*>(user);
+    const auto found = cpu.code_hooks_.find(static_cast<uint32_t>(address));
+    if (found != cpu.code_hooks_.end()) found->second(cpu);
+}
+
 void Cpu::call_guest(uint32_t address, std::vector<uint32_t> args, std::function<uint32_t(uint32_t)> then) {
     pending_.address = address;
     pending_.args = std::move(args);

@@ -36,6 +36,8 @@ analysis/notes reverse-engineering notes kept under version control
 | `pe_image.*` | loads the PE executable and lists its imports |
 | `process.*` | stack, heap, thread block, binding of every import to a host function |
 | `vfs.*` | the file system the game sees |
+| `language.cpp` | in-memory text adjustments for language packs |
+| `text.*` | conversion between the game's Windows-1252 text and UTF-8 |
 | `kernel32.cpp` | start-up, memory, strings, time, files |
 | `user32.cpp` | window, messages, mouse, keyboard (also GDI32, WINMM, OLE32, SHELL32) |
 | `desktop.*` | the SDL window, message queue, 16-bit frame presentation, scripted input |
@@ -86,7 +88,9 @@ processor; the game keeps time from the clock, not from its loop count.
 
 The game believes it lives in `C:\Zeus`. Paths are resolved case-insensitively. Reads look in
 the write directory first, then in the game folder; writes only ever go to the write directory.
-The game folder is strictly read-only.
+The game folder is strictly read-only. An optional language pack sits between the two: its files
+replace those of the game folder (see [languages.md](languages.md)). File names are converted
+between the game's Windows-1252 and the host's UTF-8.
 
 ### Display
 

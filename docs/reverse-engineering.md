@@ -42,6 +42,28 @@ saved game is essentially a list of memory blocks.
   `BltFast(primary, 0, 0, backbuffer, &rectangle, 0)`, and only once an elapsed-time counter
   reaches `0x32`. *Hypothesis:* the counter is in milliseconds, giving 20 frames per second.
 
+### Text rendering and languages
+
+- **Character table** at `0x0063BE2C`: one byte per character from `0x20` to `0xFF`, giving the
+  glyph number within a font (0: no glyph). The GOG build maps Windows-1250; the French 2.1
+  executable has the same table with Windows-1252 values (`à`: 84 against 120).
+- **Fonts**: 17 groups of 134 glyphs in `Zeus_Fonts.sg3`, with the same layout and Western
+  accents in both editions. The font group array is pointed to by `0x012AFBEC` (8 bytes per
+  group, image identifier at +4).
+- **Glyph placement.** For characters from `0x80` up, a glyph is raised by its height minus a
+  line height, never less than zero. Two routines draw glyphs:
+  - `0x00508B50` (single-line text) reads the line height from `0x00F13960`, set by its caller
+    from the font: 23, 24, 9, 7 or 11 in the GOG build; the French build uses 29 for the two
+    large fonts and 10, 11, 12 or 16 for the others (its function `0x005760A9`).
+  - `0x004F59B0` (panel text) subtracts a constant 11 (at `0x004F5A33`); the French build
+    subtracts 16, except for one font (its function `0x0055BF09`).
+- **Polish exceptions.** Both GOG routines raise a fixed list of characters by 2 pixels (at
+  `0x00508C7F` and `0x004F5ACF`). In Windows-1250 these are ą, ę, ć, ń, ł, ó, ś, ź, ż; in
+  Windows-1252 the same codes are ê, æ, ñ, ó, œ… The French build has no such list.
+
+`src/win32/language.cpp` applies the values of the other edition when a language pack is
+loaded.
+
 ## Tools
 
 `tools/api_imports.py` regenerates the import table of `analysis/notes/api-imports.md` from the

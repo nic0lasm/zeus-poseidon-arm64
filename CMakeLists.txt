@@ -63,10 +63,12 @@ add_library(zeus_win32 STATIC
     src/win32/ddraw.cpp
     src/win32/desktop.cpp
     src/win32/kernel32.cpp
+    src/win32/language.cpp
     src/win32/media.cpp
     src/win32/mss.cpp
     src/win32/pe_image.cpp
     src/win32/process.cpp
+    src/win32/text.cpp
     src/win32/user32.cpp
     src/win32/vfs.cpp)
 target_include_directories(zeus_win32 PUBLIC src)

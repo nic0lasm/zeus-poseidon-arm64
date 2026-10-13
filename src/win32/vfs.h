@@ -26,6 +26,11 @@ class Vfs {
 public:
     Vfs(std::filesystem::path game_dir, std::filesystem::path write_dir, std::string guest_dir);
 
+    // Ajoute un pack de langue : un dossier dont les fichiers remplacent ceux de même nom de
+    // l'installation. Son fichier « remplace.txt » liste, un par ligne, les dossiers de
+    // premier niveau qu'il remplace en entier (ceux de l'installation deviennent invisibles).
+    void add_language_pack(const std::filesystem::path& pack);
+
     // Fichier ou dossier existant désigné par un chemin Windows, sinon nullopt.
     std::optional<std::filesystem::path> find(const std::string& windows_path) const;
     // Emplacement où écrire ce chemin (dossiers créés), ou nullopt s'il sort de l'installation.
@@ -42,12 +47,18 @@ public:
     std::string absolute(const std::string& windows_path) const;
 
 private:
-    // Éléments du chemin relatifs à l'installation, en minuscules ; nullopt si en dehors.
+    // Éléments du chemin relatifs à l'installation, en minuscules et dans le codage du jeu
+    // (Windows-1252) ; nullopt si en dehors. Les noms de fichiers de l'hôte sont en UTF-8.
     std::optional<std::vector<std::string>> relative_parts(const std::string& windows_path) const;
     static std::optional<std::filesystem::path> lookup(const std::filesystem::path& root,
                                                        const std::vector<std::string>& parts);
 
-    std::filesystem::path game_dir_, write_dir_;
+    // Recherche dans le pack de langue puis dans l'installation.
+    std::optional<std::filesystem::path> lookup_base(const std::vector<std::string>& parts) const;
+    bool replaced(const std::vector<std::string>& parts) const;
+
+    std::filesystem::path game_dir_, write_dir_, pack_dir_;
+    std::set<std::string> replaced_dirs_;  // dossiers de premier niveau fournis en entier par le pack
     std::string guest_dir_, cwd_;
     std::set<std::string> removed_;  // fichiers de l'installation supprimés par le programme
 };

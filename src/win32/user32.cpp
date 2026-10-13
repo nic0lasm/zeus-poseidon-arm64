@@ -5,6 +5,7 @@
 #include <memory>
 
 #include "win32/process.h"
+#include "win32/text.h"
 
 namespace zeus::win32 {
 namespace {
@@ -53,8 +54,8 @@ void install_user32(Process& p) {
 
     def("MessageBoxA", 4, [&p, &cpu] {
         std::fprintf(stderr, "[jeu] boîte de message « %s » : %s\n",
-                     p.arg(2) ? cpu.read_string(p.arg(2)).c_str() : "",
-                     p.arg(1) ? cpu.read_string(p.arg(1)).c_str() : "");
+                     p.arg(2) ? to_utf8(cpu.read_string(p.arg(2))).c_str() : "",
+                     p.arg(1) ? to_utf8(cpu.read_string(p.arg(1))).c_str() : "");
         return 1u;  // IDOK
     });
 
@@ -84,7 +85,7 @@ void install_user32(Process& p) {
     def("FindWindowA", 2, [] { return 0u; });  // aucune autre instance du jeu
     def("CreateWindowExA", 12, [&p, &cpu, st, show] {
         const std::string class_name = cpu.read_string(p.arg(1));
-        const std::string title = p.arg(2) ? cpu.read_string(p.arg(2)) : "Zeus";
+        const std::string title = p.arg(2) ? to_utf8(cpu.read_string(p.arg(2))) : "Zeus";
         const int32_t w = static_cast<int32_t>(p.arg(6)), h = static_cast<int32_t>(p.arg(7));
         Desktop& desktop = p.desktop();
         if (p.trace)

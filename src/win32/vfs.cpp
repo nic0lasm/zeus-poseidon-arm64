@@ -1,5 +1,9 @@
 #include "win32/vfs.h"
 
+#include "win32/text.h"
+
+#include <fstream>
+
 #include <algorithm>
 #include <cctype>
 #include <chrono>
@@ -111,7 +115,7 @@ std::optional<fs::path> Vfs::lookup(const fs::path& root, const std::vector<std:
     for (const std::string& part : parts) {
         bool found = false;
         for (const auto& entry : fs::directory_iterator(current, ec)) {
-            if (lower(entry.path().filename().string()) == part) {
+            if (lower(from_utf8(entry.path().filename().string())) == part) {
                 current = entry.path();
                 found = true;
                 break;
@@ -122,12 +126,34 @@ std::optional<fs::path> Vfs::lookup(const fs::path& root, const std::vector<std:
     return fs::exists(current, ec) ? std::optional<fs::path>(current) : std::nullopt;
 }
 
+void Vfs::add_language_pack(const fs::path& pack) {
+    pack_dir_ = pack;
+    replaced_dirs_.clear();
+    std::ifstream in(pack / "remplace.txt");
+    for (std::string line; std::getline(in, line);) {
+        while (!line.empty() && (line.back() == '\r' || line.back() == ' ')) line.pop_back();
+        if (!line.empty()) replaced_dirs_.insert(lower(line));
+    }
+}
+
+bool Vfs::replaced(const std::vector<std::string>& parts) const {
+    return !parts.empty() && replaced_dirs_.count(parts[0]);
+}
+
+std::optional<fs::path> Vfs::lookup_base(const std::vector<std::string>& parts) const {
+    if (!pack_dir_.empty()) {
+        if (auto found = lookup(pack_dir_, parts)) return found;
+        if (replaced(parts)) return std::nullopt;
+    }
+    return lookup(game_dir_, parts);
+}
+
 std::optional<fs::path> Vfs::find(const std::string& windows_path) const {
     const auto parts = relative_parts(windows_path);
     if (!parts) return std::nullopt;
     if (auto written = lookup(write_dir_, *parts)) return written;
     if (removed_.count(join(*parts))) return std::nullopt;
-    return lookup(game_dir_, *parts);
+    return lookup_base(*parts);
 }
 
 std::optional<fs::path> Vfs::writable(const std::string& windows_path, bool keep_content) {
@@ -140,13 +166,13 @@ std::optional<fs::path> Vfs::writable(const std::string& windows_path, bool keep
     const std::vector<std::string> real = split(absolute(windows_path).substr(guest_dir_.size()));
     for (size_t i = 0; i < parts->size(); ++i) {
         walked.push_back((*parts)[i]);
-        const auto existing = lookup(game_dir_, walked);
-        target /= existing ? existing->filename().string() : real[i];
+        const auto existing = lookup_base(walked);
+        target /= existing ? existing->filename().string() : to_utf8(real[i]);
     }
     std::error_code ec;
     fs::create_directories(target.parent_path(), ec);
     if (keep_content && !removed_.count(join(*parts))) {
-        if (const auto original = lookup(game_dir_, *parts); original && fs::is_regular_file(*original))
+        if (const auto original = lookup_base(*parts); original && fs::is_regular_file(*original))
             fs::copy_file(*original, target, fs::copy_options::overwrite_existing, ec);
     }
     removed_.erase(join(*parts));
@@ -159,7 +185,7 @@ bool Vfs::remove(const std::string& windows_path) {
     bool done = false;
     std::error_code ec;
     if (auto written = lookup(write_dir_, *parts)) done = fs::remove(*written, ec);
-    if (lookup(game_dir_, *parts) && !removed_.count(join(*parts))) {
+    if (lookup_base(*parts) && !removed_.count(join(*parts))) {
         removed_.insert(join(*parts));  // l'installation reste intacte : on masque le fichier
         done = true;
     }
@@ -184,15 +210,17 @@ std::vector<VfsEntry> Vfs::list(const std::string& windows_pattern) const {
     if (!parts) return result;
     std::map<std::string, VfsEntry> merged;
     std::error_code ec;
-    for (const fs::path& root : {game_dir_, write_dir_}) {  // le dossier d'écriture l'emporte
+    // Du moins prioritaire au plus prioritaire : installation, pack de langue, écritures.
+    for (const fs::path& root : {game_dir_, pack_dir_, write_dir_}) {
+        if (root.empty() || (root == game_dir_ && replaced(*parts))) continue;
         const auto dir = lookup(root, *parts);
         if (!dir || !fs::is_directory(*dir, ec)) continue;
         for (const auto& entry : fs::directory_iterator(*dir, ec)) {
-            const std::string name = entry.path().filename().string();
+            const std::string name = from_utf8(entry.path().filename().string());
             if (name == ".DS_Store" || !wildcard(pattern, lower(name))) continue;
             std::vector<std::string> key = *parts;
             key.push_back(lower(name));
-            if (root == game_dir_ && removed_.count(join(key))) continue;
+            if (root != write_dir_ && removed_.count(join(key))) continue;
             VfsEntry e;
             e.name = name;
             e.is_directory = entry.is_directory(ec);

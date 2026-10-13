@@ -13,3 +13,5 @@
 *.o
 *.dSYM/
 __pycache__/
+# Packs de langue : faits de fichiers du jeu, jamais versionnés
+/packs/

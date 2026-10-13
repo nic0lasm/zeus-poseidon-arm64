@@ -102,6 +102,7 @@ another Mac, the first launch needs a right-click → *Open*.
 | Option | Effect |
 |---|---|
 | `--write-dir DIR` | where the game's writes go (default `run/zeus`) |
+| `--language DIR` | language pack (see [languages.md](languages.md)) |
 | `--trace` | print every Windows call |
 | `--counts` | print, on exit, how many times each Windows function was called |
 | `--trace-only PREFIX` | trace only functions whose name starts with PREFIX, e.g. `mss32.dll` |

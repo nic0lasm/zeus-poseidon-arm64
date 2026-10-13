@@ -48,7 +48,15 @@ is far less work than a rewrite.
   written; no play session has needed them so far.
 - Tested with the English GOG edition only.
 
-## Milestone 4 — plan
+## Milestone 5 — plan
+
+1. ~~Check that French files can be layered over the GOG executable~~ — done: it works, once
+   the character table and the placement of accented letters are taken from the French build.
+2. Typing accented letters; voices; a full French play session.
+3. Language choice in the application.
+4. Wider resolutions.
+
+## Milestone 4 — done
 
 1. Performance: reproducible measurement (frames, loop iterations, input latency), then
    emulator tuning — done. In a fixed 95-second scripted run the game loop went from about

@@ -11,6 +11,7 @@
 //                              exécute le programme dans le processeur émulé
 //     --write-dir DOSSIER      reçoit les écritures du jeu (défaut : run/zeus) ; l'installation
 //                              n'est jamais modifiée
+//     --language DOSSIER       pack de langue : ses fichiers remplacent ceux de l'installation
 //     --trace                  affiche chaque appel système
 //     --trace-only PRÉFIXE     ne trace que les fonctions dont le nom commence ainsi (mss32.dll)
 //     --break-on FONCTION      arrête le programme à l'appel de cette fonction (essai du rapport)
@@ -145,7 +146,7 @@ int bench() {
 }
 
 struct RunOptions {
-    std::string exe, write_dir = "run/zeus", screenshot, window_shot, script, trace_only, break_on;
+    std::string exe, write_dir = "run/zeus", language, screenshot, window_shot, script, trace_only, break_on;
     bool trace = false, headless = false, counts = false, mute = false, fullscreen = false;
     int frames = 0;
     double seconds = 0;
@@ -154,6 +155,7 @@ struct RunOptions {
 int run(const RunOptions& o) {
     namespace fs = std::filesystem;
     zeus::win32::Process process(fs::path(o.exe).parent_path(), o.write_dir);
+    if (!o.language.empty()) process.vfs().add_language_pack(o.language);
     process.trace = o.trace || !o.trace_only.empty();
     process.trace_only = o.trace_only;
     process.break_on = o.break_on;
@@ -173,6 +175,7 @@ int run(const RunOptions& o) {
     zeus::win32::install_bink(process);
     process.mute = o.mute || o.headless;
     process.load(o.exe);
+    if (!o.language.empty()) zeus::win32::apply_language_pack(process, o.language);
     int code = 0;
     std::string error;
     try {
@@ -381,6 +384,7 @@ int main(int argc, char** argv) {
                 else if (a == "--mute") o.mute = true;
                 else if (a == "--fullscreen") o.fullscreen = true;
                 else if (a == "--write-dir") o.write_dir = value();
+                else if (a == "--language") o.language = value();
                 else if (a == "--screenshot") o.screenshot = value();
                 else if (a == "--window-shot") o.window_shot = value();
                 else if (a == "--script") o.script = value();

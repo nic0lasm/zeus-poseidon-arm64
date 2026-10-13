@@ -39,7 +39,8 @@ construction, time, treasury), map scrolling, save and load, music, ambience, so
 Save files are the game's own
 format and stay compatible with the original.
 
-Known limits: no 3D sound positioning yet; tested with the English GOG edition only.
+Known limits: no 3D sound positioning yet. The game runs in English out of the box; French is
+possible with a language pack built from your own French copy ([docs/languages.md](docs/languages.md)).
 
 Details: [docs/roadmap.md](docs/roadmap.md).
 
