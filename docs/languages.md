@@ -5,8 +5,8 @@ language you build a **language pack** from your own copy of the game in that la
 instance the original French CDs. The pack stays on your Mac; it is made of game files and must
 not be shared.
 
-Status: French works in scripted runs (menus, tutorials, a mission, accented text). Voices and
-long play sessions still need testing. Other Western European editions should work the same
+Status: French works (menus, tutorials, missions, accented text, typing accented names).
+Long play sessions still need testing. Other Western European editions should work the same
 way but have not been tried.
 
 ## What a pack contains
@@ -39,6 +39,11 @@ python3 tools/make_language_pack.py original/install original/gog/app packs/fr \
 # 3. Play
 ./build/zeus-run --run original/gog/app/Zeus.exe --language packs/fr
 ```
+
+With the application, put the pack in
+`~/Library/Application Support/Zeus Poseidon/Packs/` (for instance `Packs/fr`). The next launch
+asks which language to play in and remembers the answer; delete `langue.txt` in that folder to
+be asked again. Each language keeps its own saved games.
 
 The executable of the other edition is only read, to copy its character table. It is never
 run, and its copy protection is left alone.

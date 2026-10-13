@@ -52,8 +52,8 @@ is far less work than a rewrite.
 
 1. ~~Check that French files can be layered over the GOG executable~~ — done: it works, once
    the character table and the placement of accented letters are taken from the French build.
-2. Typing accented letters; voices; a full French play session.
-3. Language choice in the application.
+2. ~~Typing accented letters~~ — done. A full French play session: to be reported.
+3. ~~Language choice in the application~~ — done.
 4. Wider resolutions.
 
 ## Milestone 4 — done

@@ -1,9 +1,12 @@
 #include "win32/desktop.h"
 
+#include "win32/text.h"
+
 #include <SDL.h>
 
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 #include <sstream>
 #include <stdexcept>
 
@@ -335,8 +338,15 @@ bool Desktop::pump(uint32_t now) {
             }
             case SDL_TEXTINPUT:
                 if (SDL_GetModState() & KMOD_GUI) break;
-                for (const char* c = e.text.text; *c; ++c)
-                    if (static_cast<unsigned char>(*c) < 0x80) post(WM_CHAR, static_cast<uint8_t>(*c), 1);
+                // Le jeu attend du Windows-1252 : « é » arrive comme un seul octet. Un caractère
+                // qui n'y existe pas est ignoré.
+                for (const char* c = e.text.text; *c;) {
+                    const unsigned char lead = static_cast<unsigned char>(*c);
+                    const size_t length = lead < 0x80 ? 1 : lead < 0xE0 ? 2 : lead < 0xF0 ? 3 : 4;
+                    const std::string one = from_utf8(std::string(c, strnlen(c, length)));
+                    if (!one.empty() && (one[0] != '?' || lead == '?')) post(WM_CHAR, static_cast<uint8_t>(one[0]), 1);
+                    c += strnlen(c, length);
+                }
                 break;
             default:
                 break;

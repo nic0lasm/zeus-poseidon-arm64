@@ -5,7 +5,8 @@
 //   zeus-run --inspect EXE     charge l'exécutable sans rien exécuter et liste ses imports
 //   zeus-run --app [--installer SETUP.exe]
 //                              mode application (aussi sans argument) : demande le jeu au
-//                              premier lancement (installateur GOG ou dossier déballé), range sauvegardes et réglages dans
+//                              premier lancement (installateur GOG ou dossier déballé),
+//                              propose les packs de langue du dossier « Packs », range sauvegardes et réglages dans
 //                              ~/Library/Application Support/Zeus Poseidon
 //   zeus-run --run EXE [options]
 //                              exécute le programme dans le processeur émulé
@@ -25,6 +26,7 @@
 //     --script "T:ACTION; …"   joue des actions à T secondes : click X,Y ; rclick X,Y ;
 //                              move X,Y ; key CODE ; char CODE ; shot SORTIE.bmp
 
+#include <algorithm>
 #include <chrono>
 #include <cstdio>
 #include <mach-o/dyld.h>
@@ -358,6 +360,33 @@ int run_app(const std::string& installer) {
     RunOptions o;
     o.exe = exe;
     o.write_dir = (support / "Jeu").string();
+
+    // Packs de langue rangés dans « Packs » : la langue est demandée une fois, puis retenue
+    // dans langue.txt (ligne vide : l'anglais de l'édition GOG). Chaque langue a ses sauvegardes.
+    std::vector<std::string> packs;
+    std::error_code error;
+    for (const auto& entry : fs::directory_iterator(support / "Packs", error))
+        if (fs::exists(entry.path() / "remplace.txt")) packs.push_back(entry.path().filename().string());
+    std::sort(packs.begin(), packs.end());
+    if (!packs.empty()) {
+        const fs::path choice_file = support / "langue.txt";
+        std::string choice;
+        const bool chosen = static_cast<bool>(std::ifstream(choice_file));
+        if (std::ifstream in{choice_file}) std::getline(in, choice);
+        if (!chosen) {
+            std::string list = "\"English\"";
+            for (const std::string& pack : packs) list += ", \"" + pack + "\"";
+            const std::string answer = applescript("choose from list {" + list + "} with title \"Zeus + Poseidon\" with prompt \"" +
+                                                   tr("Langue du jeu", "Game language") + "\" default items {\"English\"}");
+            if (answer == "false") return 0;  // annulé
+            choice = answer == "English" ? "" : answer;
+            std::ofstream(choice_file) << choice << "\n";
+        }
+        if (!choice.empty() && std::find(packs.begin(), packs.end(), choice) != packs.end()) {
+            o.language = (support / "Packs" / choice).string();
+            o.write_dir = (support / ("Jeu-" + choice)).string();
+        }
+    }
     return run(o);
 }
 
