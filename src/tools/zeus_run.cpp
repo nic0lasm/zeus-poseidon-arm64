@@ -2,6 +2,14 @@
 //
 //   zeus-run --selftest        vérifie le processeur émulé et l'appel de fonctions hôtes
 //   zeus-run --inspect EXE     charge l'exécutable sans rien exécuter et liste ses imports
+//   zeus-run --run EXE [options]
+//                              exécute le programme dans le processeur émulé
+//     --write-dir DOSSIER      reçoit les écritures du jeu (défaut : run/zeus) ; l'installation
+//                              n'est jamais modifiée
+//     --trace                  affiche chaque appel système
+//     --headless               fenêtre cachée
+//     --frames N, --seconds S  arrête après N images affichées ou S secondes
+//     --screenshot SORTIE.bmp  enregistre la dernière image affichée
 
 #include <cstdio>
 #include <cstring>
@@ -11,6 +19,7 @@
 
 #include "win32/cpu.h"
 #include "win32/pe_image.h"
+#include "win32/process.h"
 
 using zeus::win32::Cpu;
 
@@ -36,8 +45,13 @@ int selftest() {
         0xFF, 0x15, 0x00, 0x30, 0x00, 0x00,  // call [0x3000]         -> fonction hôte, stdcall
         0xA3, 0x08, 0x20, 0x00, 0x00,        // mov [0x2008], eax
         0x89, 0x25, 0x0C, 0x20, 0x00, 0x00,  // mov [0x200c], esp
+        0x64, 0xA1, 0x18, 0x00, 0x00, 0x00,  // mov eax, fs:[0x18]    -> segment FS
+        0xA3, 0x10, 0x20, 0x00, 0x00,        // mov [0x2010], eax
     };
     cpu.write(0x1000, code, sizeof code);
+    cpu.map(0x00008000, 0x1000);  // bloc désigné par FS
+    cpu.write_u32(0x8018, 0xCAFE0018);
+    cpu.set_fs_base(0x8000);
     cpu.set_reg(Cpu::Reg::ESP, 0x4800);
     cpu.run(0x1000, 0x1000 + sizeof code);
     const uint32_t a = cpu.read_u32(0x2000), b = cpu.read_u32(0x2004), c = cpu.read_u32(0x2008),
@@ -45,7 +59,9 @@ int selftest() {
     std::printf("entiers : %u (attendu 36)\nflottants x87 : %u (attendu 2)\n"
                 "fonction hôte : %u (attendu 5)\npile après l'appel : %#x (attendu 0x4800)\n",
                 a, b, c, esp);
-    const bool ok = a == 36 && b == 2 && c == 5 && esp == 0x4800;
+    const uint32_t fs = cpu.read_u32(0x2010);
+    std::printf("segment FS : %#x (attendu 0xcafe0018)\n", fs);
+    const bool ok = a == 36 && b == 2 && c == 5 && esp == 0x4800 && fs == 0xCAFE0018;
     std::printf("%s\n", ok ? "autotest réussi" : "AUTOTEST EN ÉCHEC");
     return ok ? 0 : 1;
 }
@@ -68,13 +84,73 @@ int inspect(const char* path) {
     return 0;
 }
 
+struct RunOptions {
+    std::string exe, write_dir = "run/zeus", screenshot;
+    bool trace = false, headless = false;
+    int frames = 0;
+    double seconds = 0;
+};
+
+int run(const RunOptions& o) {
+    namespace fs = std::filesystem;
+    zeus::win32::Process process(fs::path(o.exe).parent_path(), o.write_dir);
+    process.trace = o.trace;
+    zeus::win32::Desktop& desktop = process.desktop();
+    desktop.headless = o.headless;
+    desktop.screenshot_path = o.screenshot;
+    desktop.max_presents = o.frames;
+    desktop.max_seconds = o.seconds;
+    zeus::win32::install_kernel32(process);
+    zeus::win32::install_user32(process);
+    zeus::win32::install_ddraw(process);
+    zeus::win32::install_media(process);
+    process.load(o.exe);
+    int code = 0;
+    std::string error;
+    try {
+        code = process.run();
+    } catch (const std::exception& e) {
+        error = e.what();
+    }
+    desktop.save_screenshot();
+    uint64_t total = 0;
+    for (const auto& [name, count] : process.call_counts) total += count;
+    std::fprintf(stderr, "%llu appels système vers %zu fonctions distinctes, %d images affichées\n",
+                 static_cast<unsigned long long>(total), process.call_counts.size(), desktop.presents());
+    if (!error.empty()) {
+        std::fprintf(stderr, "arrêt : %s\n", error.c_str());
+        return 1;
+    }
+    std::fprintf(stderr, "le programme s'est terminé avec le code %d\n", code);
+    return code;
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
     try {
+        if (argc >= 3 && !std::strcmp(argv[1], "--run")) {
+            RunOptions o;
+            o.exe = argv[2];
+            for (int i = 3; i < argc; ++i) {
+                const std::string a = argv[i];
+                auto value = [&]() -> std::string {
+                    if (i + 1 >= argc) throw std::runtime_error("valeur manquante après " + a);
+                    return argv[++i];
+                };
+                if (a == "--trace") o.trace = true;
+                else if (a == "--headless") o.headless = true;
+                else if (a == "--write-dir") o.write_dir = value();
+                else if (a == "--screenshot") o.screenshot = value();
+                else if (a == "--frames") o.frames = std::stoi(value());
+                else if (a == "--seconds") o.seconds = std::stod(value());
+                else throw std::runtime_error("option inconnue : " + a);
+            }
+            return run(o);
+        }
         if (argc == 2 && !std::strcmp(argv[1], "--selftest")) return selftest();
         if (argc == 3 && !std::strcmp(argv[1], "--inspect")) return inspect(argv[2]);
-        std::fprintf(stderr, "usage : zeus-run --selftest | --inspect EXE\n");
+        std::fprintf(stderr, "usage : zeus-run --selftest | --inspect EXE | --run EXE [--trace]\n");
         return 2;
     } catch (const std::exception& e) {
         std::fprintf(stderr, "zeus-run : %s\n", e.what());

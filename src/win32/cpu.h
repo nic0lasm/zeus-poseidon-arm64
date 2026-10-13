@@ -39,6 +39,16 @@ public:
     void read(uint32_t address, void* data, size_t size) const;
     uint32_t read_u32(uint32_t address) const;
     void write_u32(uint32_t address, uint32_t value);
+    uint16_t read_u16(uint32_t address) const;
+    void write_u16(uint32_t address, uint16_t value);
+    uint8_t read_u8(uint32_t address) const;
+    void write_u8(uint32_t address, uint8_t value);
+    // Chaîne C terminée par un octet nul (au plus `max` caractères).
+    std::string read_string(uint32_t address, size_t max = 4096) const;
+    void write_string(uint32_t address, const std::string& text);  // avec l'octet nul final
+    void fill(uint32_t address, uint8_t value, size_t size);
+    // Base du segment FS : bloc d'environnement du fil d'exécution (TEB) sous Windows.
+    void set_fs_base(uint32_t address);
 
     enum class Reg { EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI, EIP };
     uint32_t reg(Reg r) const;
@@ -48,10 +58,17 @@ public:
     uint32_t add_host_function(HostFunction function);
     // n-ième argument (à partir de 0) de la fonction hôte en cours d'appel.
     uint32_t arg(int n) const;
+    // Depuis une fonction hôte : fait appeler une fonction du programme émulé (convention
+    // stdcall) avant de rendre la main. `then` reçoit la valeur renvoyée et fournit le résultat
+    // de la fonction hôte ; elle peut à son tour demander un autre appel.
+    void call_guest(uint32_t address, std::vector<uint32_t> args, std::function<uint32_t(uint32_t)> then);
 
     // Exécute à partir de `start` jusqu'à atteindre `until`. Lève std::runtime_error sur une
     // faute (accès hors mémoire, instruction invalide).
     void run(uint32_t start, uint32_t until);
+    // À appeler depuis une fonction hôte pour arrêter l'exécution après son retour.
+    void request_stop() { stop_requested_ = true; }
+    bool stopped() const { return stop_requested_; }
     uint64_t instructions_run() const { return instructions_; }
 
 private:
@@ -59,7 +76,25 @@ private:
 
     uc_struct* uc_ = nullptr;
     std::vector<HostFunction> functions_;
+    struct PendingCall {
+        uint32_t address = 0;
+        std::vector<uint32_t> args;
+        std::function<uint32_t(uint32_t)> then;
+    };
+    struct Continuation {
+        uint32_t return_address = 0, esp = 0, arg_bytes = 0;
+        std::function<uint32_t(uint32_t)> then;
+    };
+    void start_pending_call(uint32_t esp);
+
+    bool has_pending_ = false;
+    PendingCall pending_;
+    std::vector<Continuation> continuations_;
     bool redirect_ = false;
+    bool stop_requested_ = false;
+    bool gdt_ready_ = false;
+    std::string host_error_;
+    std::string current_;
     uint32_t redirect_to_ = 0;
     uint64_t instructions_ = 0;
 };

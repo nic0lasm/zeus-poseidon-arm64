@@ -41,9 +41,17 @@ target_link_libraries(zeus-map PRIVATE zeus_game zeus_platform ZLIB::ZLIB)
 # Hôte du code d'origine : processeur x86 émulé (Unicorn, GPL-2.0) et chargeur d'exécutable.
 add_library(zeus_win32 STATIC
     src/win32/cpu.cpp
-    src/win32/pe_image.cpp)
+    src/win32/ddraw.cpp
+    src/win32/desktop.cpp
+    src/win32/kernel32.cpp
+    src/win32/media.cpp
+    src/win32/pe_image.cpp
+    src/win32/process.cpp
+    src/win32/user32.cpp
+    src/win32/vfs.cpp)
 target_include_directories(zeus_win32 PUBLIC src)
-target_link_libraries(zeus_win32 PUBLIC PkgConfig::UNICORN)
+target_link_libraries(zeus_win32 PUBLIC PkgConfig::UNICORN SDL2::SDL2
+    "-framework ImageIO" "-framework CoreGraphics" "-framework CoreFoundation")
 
 add_executable(zeus-run src/tools/zeus_run.cpp)
 target_link_libraries(zeus-run PRIVATE zeus_win32)

@@ -115,3 +115,20 @@ couverts sur 2,56, soit 94 %). Projet `wise` : bibliothèque de correctifs de l'
 Dans la 2.1, les 18 noms attribués automatiquement par Ghidra (`CSingleDocTemplate`,
 `CMultiPageDHtmlDialog`…) sont de fausses reconnaissances de bibliothèque : à ignorer.
 Fonction la plus appelée : `0x0040DF00` (648 appelants), à identifier en priorité.
+
+## Édition GOG (reçue le 2026-10-13)
+
+`original/archive/setup_zeus_and_poseidon_2.1.0.10.exe` : installateur Inno Setup de GOG
+(SHA-256 `f6f31391…`, identifiant de jeu GOG 1207659039), version anglaise 2.1. Extrait par
+`innoextract -d original/gog` (781 Mo) ; le jeu est dans `original/gog/app/` (`Adventures`,
+`Audio`, `Binks`, `DATA`, `Model`, `Save`, `Zeus.ini`, bibliothèques).
+
+`original/gog/app/Zeus.exe` : 2 527 232 octets, SHA-256
+`382bcd286192a06eb8fdc45f5c37390a19999f5db9c940c3ce2dfcd775e90a57`, compilé le 2002-01-04,
+Visual C++ 6. **Aucune section SecuROM**, point d'entrée `0x005CD620` dans `.text`, 408 appels
+directs à travers la table d'imports : vérifié par `tools/pe_triage.py`. C'est le seul exécutable
+du jeu que le projet exécute, et seulement dans le processeur émulé de `src/win32/`.
+
+Projet Ghidra `zeus`, dossier `gog` (analyse automatique complète, 133 s). La procédure de
+fenêtre n'y est pas reconnue comme fonction (elle n'est désignée que par `RegisterClassA`) :
+la lire par ses tables de sauts (`docs/reverse-engineering.md`).

@@ -6,6 +6,8 @@
 /analysis/ghidra/*
 !/analysis/ghidra/.gitkeep
 /build/
+# Fichiers écrits par le jeu émulé (sauvegardes, réglages)
+/run/
 /*.zip
 .DS_Store
 *.o
