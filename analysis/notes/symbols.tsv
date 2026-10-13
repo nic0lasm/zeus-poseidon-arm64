@@ -28,3 +28,11 @@ adresse	nom	preuve
 004d9cc1	terrain_context_fill	remplit les 8 voisins avec (terrain & masque) != 0
 004d3d28	map_tiles_set_cracks	pose le bit de terrain 2 et choisit l'image dans SPR_CRACKS (table 0x006D1220)
 0041dfc0	blit_alpha_runs	mélange (a*src + (31-a)*dst) >> 5 par composante de 5 bits
+0047a7c0	tile_is_flat_terrain	taille 1 et drapeaux de terrain limités à 0x881 (masque 0x1000CA89)
+0047a6c0	tile_hidden_by_front	vrai si la case devant (ou la suivante) est plus haute
+0047cb00	map_elevation_update_projection	recalcule la 2e grille d'altitude (0x00988F5A) selon l'orientation
+0047fdb0	map_elevation_project_tile	reporte l'altitude e d'une case sur la case située e rangs derrière
+0047ff50	map_projected_elevation_at	renvoie *(u8*)(this + case + 0xcb12)
+0047cce4	map_tiles_update_elevation_images	attribue les images de falaise ; SPR_SPACE aux cases dominées sans falaise
+0047be8d	elevation_context_lookup	motif sur les différences d'altitude des 8 voisins, entrées de 0x40 octets
+00418a00	convert_555_to_bgra	R, V, B = composante << 3, alpha 0xff

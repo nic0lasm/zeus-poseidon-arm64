@@ -131,12 +131,25 @@ Comparaison avec des captures du jeu (page GOG, galerie de masterofolympus.com) 
 - **Rivages** : conformes. Les tuiles de `SPR_WATER` contiennent le rivage rocheux arrondi ; un
   rivage horizontal à l'écran forme un escalier, comme dans le jeu. (Une première lecture avait
   conclu à tort que le jeu recalculait ces images.)
-- **Ordre de dessin du relief** : notre rendu dessine chaque image entière, du fond vers
-  l'avant. Il reste des trous noirs le long des falaises, surtout sur les cartes à plusieurs
-  niveaux. La boucle `0x0047499F` diffère certains dessins selon l'altitude des voisins
-  (`0x0047A600`, `0x0047A6C0`, drapeau `0x40000000`) : à porter.
-- **Cases `SPR_SPACE`** (noires) avec le drapeau de terrain `0x80` : ce que le jeu y affiche
-  n'est pas établi.
+- **Ordre de dessin** : porté depuis `0x0047499F` dans `src/game/terrain_view.cpp` (première
+  passe de socles, puis socles différés et parties hautes du fond vers l'avant, avec les tests
+  `0x0047A600`, `0x0047A6C0`, `0x0047A7C0`, `0x00476B90`). Les branches liées aux bâtiments et
+  aux personnages ne sont pas portées.
+- **Trous au pied de certaines falaises** (impasse au 2026-10-13) : il reste des losanges noirs
+  à l'emplacement du socle de falaises « de fond » (`E2_NW_ALT`, `E2_N`, `E2_W_N`…) quand
+  aucune case surélevée ne vient s'y projeter, typiquement le long d'un bord de plateau
+  vertical à l'écran. Constats : le jeu ne dessine jamais ce socle ; rien d'autre dans la boucle
+  de dessin ne peint cet emplacement ; la deuxième grille d'altitude (bloc 24, recalculée par
+  `0x0047CB00` et `0x0047FDB0`) vaut 0 à ces endroits, donc le jeu lui-même considère qu'aucune
+  case surélevée ne s'y projette. Or les captures du jeu ne montrent aucun trou. Pistes non
+  explorées : le positionnement exact dans `0x0064274C` et `0x0064394C` (dessin du socle et de
+  la partie haute), et les règles d'attribution des images de falaise (`0x0047CCE4`,
+  `0x0047BE8D`).
+- **Bloc 24** : pour chaque case d'altitude e, la case située e rangs derrière reçoit e : c'est
+  l'altitude de ce qui se projette à cet emplacement de l'écran (dépend de l'orientation).
+- **Cases `SPR_SPACE`** (noires) : `0x0047CCE4` attribue cette image aux cases sans falaise
+  dont un voisin est plus haut, c'est-à-dire à des cases censées être cachées. Sur les cartes
+  plates, elles portent les repères de l'éditeur. Elles restent visibles dans notre rendu.
 - **Repères d'éditeur** (points d'apparition) : affichés tels quels.
 - **Eau** : fixe ; l'animation est décrite ci-dessus mais pas portée.
 - **Sauvegardes** : elles n'ont pas de grille d'images ; les afficher demande de porter le

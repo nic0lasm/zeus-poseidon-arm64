@@ -32,7 +32,7 @@
 namespace fs = std::filesystem;
 using zeus::formats::MapFile;
 using zeus::game::ImageStore;
-using zeus::game::TerrainSprite;
+using zeus::game::DrawCommand;
 using zeus::game::TerrainView;
 
 namespace {
@@ -155,7 +155,7 @@ public:
 
     void save_screenshot(const fs::path& out) {
         zeus::platform::save_render_bmp(renderer_, out, [this] { paint(); });
-        std::printf("capture : %s (%s, zoom %.2f, %zu images dessinées, %zu cases ignorées)\n",
+        std::printf("capture : %s (%s, zoom %.2f, %zu dessins, %zu cases ignorées)\n",
                     out.string().c_str(), maps_[map_index_].filename().string().c_str(), zoom_,
                     drawn_, view_.skipped);
     }
@@ -207,15 +207,9 @@ private:
         const double right = left + out_w / zoom_, bottom = top + out_h / zoom_;
         const SDL_ScaleMode mode = zoom_ < 1.0 ? SDL_ScaleModeLinear : SDL_ScaleModeNearest;
         drawn_ = 0;
-        // Une seule passe, du fond vers l'avant, image entière. Le jeu sépare socles et parties
-        // hautes et diffère certains dessins selon l'altitude des cases voisines (0x0047499F) ;
-        // cette logique n'est pas encore portée. Dessiner tous les socles puis toutes les
-        // parties hautes sans elle donne un résultat pire : les falaises du fond passent devant
-        // les plateaux.
-        using Part = zeus::formats::SgFile::Part;
-        for (const TerrainSprite& s : view_.sprites) {
+        for (const DrawCommand& s : view_.commands) {
             if (s.x + s.width < left || s.x > right || s.y + s.height < top || s.y > bottom) continue;
-            SDL_Texture* t = texture(s.image_id, Part::Whole);
+            SDL_Texture* t = texture(s.image_id, s.part);
             if (!t) continue;
             SDL_SetTextureScaleMode(t, mode);
             // Bords arrondis de façon cohérente pour que les cases voisines restent jointives.
