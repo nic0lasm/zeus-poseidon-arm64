@@ -5,7 +5,11 @@ Le paquet embarque les bibliothèques dont le programme dépend (Unicorn, SDL, f
 depuis Homebrew et rendues relatives au paquet, puis signe le tout localement. Il ne contient
 aucun fichier du jeu : le dossier du jeu est demandé au premier lancement.
 
-Usage : python3 tools/make_app.py [SORTIE.app]     (défaut : build/Zeus Poseidon.app)
+Usage : python3 tools/make_app.py [--binary PROGRAMME] [SORTIE.app]
+        (défauts : build/zeus-run et build/Zeus Poseidon.app)
+
+Pour un paquet redistribuable, donner un programme compilé avec le FFmpeg réduit de
+tools/build_ffmpeg.py (cmake -DZEUS_FFMPEG=build/deps/ffmpeg).
 """
 import os
 import plistlib
@@ -42,10 +46,13 @@ def resolve(reference, user):
 
 
 def main(argv):
-    app = argv[1] if len(argv) > 1 else os.path.join(ROOT, "build", "Zeus Poseidon.app")
+    args = argv[1:]
     binary = os.path.join(ROOT, "build", "zeus-run")
+    if args[:1] == ["--binary"]:
+        binary, args = os.path.abspath(args[1]), args[2:]
+    app = args[0] if args else os.path.join(ROOT, "build", "Zeus Poseidon.app")
     if not os.path.exists(binary):
-        raise SystemExit("build/zeus-run est absent : compiler d'abord")
+        raise SystemExit(f"{binary} est absent : compiler d'abord")
     if os.path.exists(app):
         if not app.endswith(".app") or not os.path.exists(os.path.join(app, "Contents", "Info.plist")):
             raise SystemExit(f"{app} existe et n'est pas un paquet produit par cet outil")
@@ -108,6 +115,12 @@ def main(argv):
 
     # Les chemins de recherche hérités de Homebrew sont remplacés par le dossier du paquet :
     # c'est par eux que sdl2-compat trouve SDL3.
+    # Licences : celle du projet et la liste des bibliothèques embarquées.
+    resources = os.path.join(app, "Contents", "Resources")
+    os.makedirs(resources)
+    shutil.copy2(os.path.join(ROOT, "LICENSE"), os.path.join(resources, "LICENSE.txt"))
+    shutil.copy2(os.path.join(ROOT, "docs", "third-party.md"), os.path.join(resources, "THIRD-PARTY.md"))
+
     for library in sorted(copied.values()):
         listing = run("otool", "-l", library).splitlines()
         for i, line in enumerate(listing):

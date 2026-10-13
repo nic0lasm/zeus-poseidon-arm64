@@ -105,4 +105,4 @@ GPL-2.0-or-later — voir [LICENSE](LICENSE). Elle ne couvre que le code et la d
 ce dépôt, jamais le jeu.
 
 L'émulation x86 repose sur [Unicorn](https://www.unicorn-engine.org/) (GPL-2.0) ; les vidéos
-sont décodées par [FFmpeg](https://ffmpeg.org/).
+sont décodées par [FFmpeg](https://ffmpeg.org/). Voir [docs/third-party.md](docs/third-party.md).

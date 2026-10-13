@@ -118,4 +118,4 @@ GPL-2.0-or-later — see [LICENSE](LICENSE). This covers the code and documentat
 repository only, never the game.
 
 The x86 emulation relies on the [Unicorn engine](https://www.unicorn-engine.org/) (GPL-2.0);
-videos are decoded with [FFmpeg](https://ffmpeg.org/).
+videos are decoded with [FFmpeg](https://ffmpeg.org/). See [docs/third-party.md](docs/third-party.md).

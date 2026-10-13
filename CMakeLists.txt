@@ -13,7 +13,23 @@ find_package(SDL2 REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(UNICORN REQUIRED IMPORTED_TARGET unicorn)
-pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET libavformat libavcodec libswscale libswresample libavutil)
+# FFmpeg : celui du système par défaut ; -DZEUS_FFMPEG=DOSSIER désigne la version réduite et
+# statique produite par tools/build_ffmpeg.py, seule redistribuable avec le reste. Elle est
+# décrite à la main : pkg-config ne supporte pas les espaces dans les chemins.
+set(ZEUS_FFMPEG "" CACHE PATH "Dossier d'un FFmpeg statique (tools/build_ffmpeg.py)")
+if(ZEUS_FFMPEG)
+    get_filename_component(ZEUS_FFMPEG_DIR "${ZEUS_FFMPEG}" ABSOLUTE BASE_DIR "${CMAKE_SOURCE_DIR}")
+    add_library(zeus_ffmpeg INTERFACE)
+    target_include_directories(zeus_ffmpeg SYSTEM INTERFACE "${ZEUS_FFMPEG_DIR}/include")
+    foreach(lib avformat avcodec swscale swresample avutil)
+        target_link_libraries(zeus_ffmpeg INTERFACE "${ZEUS_FFMPEG_DIR}/lib/lib${lib}.a")
+    endforeach()
+    target_link_libraries(zeus_ffmpeg INTERFACE m "-framework CoreFoundation" "-framework CoreVideo"
+        "-framework CoreMedia")
+    add_library(PkgConfig::FFMPEG ALIAS zeus_ffmpeg)
+else()
+    pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET libavformat libavcodec libswscale libswresample libavutil)
+endif()
 
 # Lecteurs des formats de fichiers du jeu, sans dépendance à la plateforme.
 add_library(zeus_formats STATIC
