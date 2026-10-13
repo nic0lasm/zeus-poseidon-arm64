@@ -2,10 +2,15 @@
 
 [![build](https://github.com/nic0lasm/zeus-poseidon-arm64/actions/workflows/build.yml/badge.svg)](https://github.com/nic0lasm/zeus-poseidon-arm64/actions/workflows/build.yml)
 
-**Play *Zeus: Master of Olympus* and its *Poseidon* expansion on an Apple Silicon Mac — the
-original game logic, pixel for pixel, with no Windows, no Wine and no virtual machine.**
+**Play *Zeus: Master of Olympus* and its *Poseidon* expansion on an Apple Silicon Mac: the
+original game, with no Windows, no Wine and no virtual machine.**
 
 *[Version française](README.fr.md)*
+
+<p align="center">
+  <img src="docs/images/city.png" width="49%" alt="A city running in the first tutorial">
+  <img src="docs/images/tutorials.png" width="49%" alt="The tutorials screen">
+</p>
 
 *Zeus* (Impressions Games, 2000) is a 32-bit Windows game. Recent Macs can no longer run it:
 they have an ARM processor, and macOS dropped 32-bit programs years ago. This project makes the
@@ -38,7 +43,15 @@ Known limits: no 3D sound positioning yet; tested with the English GOG edition o
 
 Details: [docs/roadmap.md](docs/roadmap.md).
 
-## Quick start
+## Download
+
+A ready-made application is on the
+[releases page](https://github.com/nic0lasm/zeus-poseidon-arm64/releases). It contains no game
+file: on first launch it asks for your GOG installer of *Zeus + Poseidon* and unpacks it. The
+application is not signed by Apple, so the first time you must right-click it and choose
+*Open*.
+
+## Build from source
 
 Requirements: an Apple Silicon Mac, the Xcode command line tools, [Homebrew](https://brew.sh),
 and the GOG edition of *Zeus + Poseidon*.
@@ -98,11 +111,15 @@ for anyone building tools for the *Zeus* / *Poseidon* community:
 - **Reverse-engineering notes** — imports, symbols, engine behaviour
   ([`analysis/notes/`](analysis/notes/), [docs/reverse-engineering.md](docs/reverse-engineering.md)).
 
-## Contributing
+## Community
 
-Bug reports from real play sessions are the most useful contribution right now: if the game
-stops, the last line printed in the terminal names the missing function.
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+This is a project by and for players of the game. Come and say how it runs on your Mac, ask
+questions or share ideas in the
+[Discussions](https://github.com/nic0lasm/zeus-poseidon-arm64/discussions). Bugs go to the
+[issue tracker](https://github.com/nic0lasm/zeus-poseidon-arm64/issues).
+
+Reports from real play sessions are the most useful contribution right now. Code, format
+research and translations are welcome too: see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Legal
 

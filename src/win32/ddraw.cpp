@@ -221,10 +221,9 @@ void install_ddraw(Process& p) {
             const Surface& src = surface(p.arg(3));
             if (p.trace) {
                 const Rect r = read_rect(cpu, p.arg(4), src);
-                std::fprintf(stderr, "    BltFast vers %#x en (%d,%d) depuis %#x (%d,%d)-(%d,%d), indicateurs %#x"
-                                     " ; rectangle en %#x, retour en %#x\n",
+                std::fprintf(stderr, "    BltFast vers %#x en (%d,%d) depuis %#x (%d,%d)-(%d,%d), indicateurs %#x\n",
                              p.arg(0), static_cast<int32_t>(p.arg(1)), static_cast<int32_t>(p.arg(2)), p.arg(3), r.left,
-                             r.top, r.right, r.bottom, p.arg(5), p.arg(4), cpu.read_u32(cpu.reg(Cpu::Reg::ESP)));
+                             r.top, r.right, r.bottom, p.arg(5));
             }
             copy(dst, static_cast<int32_t>(p.arg(1)), static_cast<int32_t>(p.arg(2)), src,
                  read_rect(cpu, p.arg(4), src), (p.arg(5) & DDBLTFAST_SRCCOLORKEY) && src.has_color_key);

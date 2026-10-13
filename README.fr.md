@@ -3,10 +3,14 @@
 [![build](https://github.com/nic0lasm/zeus-poseidon-arm64/actions/workflows/build.yml/badge.svg)](https://github.com/nic0lasm/zeus-poseidon-arm64/actions/workflows/build.yml)
 
 **Jouer à *Zeus : Le Maître de l'Olympe* et à son extension *Poséidon* sur un Mac Apple
-Silicon — la logique d'origine du jeu, au pixel près, sans Windows, sans Wine et sans machine
-virtuelle.**
+Silicon : le jeu d'origine, sans Windows, sans Wine et sans machine virtuelle.**
 
 *[English version](README.md)*
+
+<p align="center">
+  <img src="docs/images/city.png" width="49%" alt="Une ville dans le premier tutoriel">
+  <img src="docs/images/tutorials.png" width="49%" alt="L'écran des tutoriels">
+</p>
 
 *Zeus* (Impressions Games, 2000) est un jeu Windows 32 bits. Les Mac récents ne peuvent plus le
 lancer : leur processeur est un ARM, et macOS n'exécute plus de programmes 32 bits depuis des
@@ -41,7 +45,15 @@ l'édition GOG en anglais a été essayée.
 
 Détail : [docs/roadmap.md](docs/roadmap.md) (en anglais).
 
-## Démarrage rapide
+## Téléchargement
+
+Une application prête à l'emploi est sur la
+[page des versions](https://github.com/nic0lasm/zeus-poseidon-arm64/releases). Elle ne contient
+aucun fichier du jeu : au premier lancement, elle demande votre installateur GOG de
+*Zeus + Poseidon* et le déballe. Elle n'est pas signée par Apple : la première fois, faites un
+clic droit dessus puis *Ouvrir*.
+
+## Compiler depuis les sources
 
 Il faut : un Mac Apple Silicon, les outils en ligne de commande Xcode,
 [Homebrew](https://brew.sh) et l'édition GOG de *Zeus + Poseidon*.
@@ -84,11 +96,15 @@ quiconque fabrique des outils pour la communauté *Zeus* / *Poséidon* :
 - **Notes de rétro-ingénierie** — imports, symboles, comportement du moteur
   ([`analysis/notes/`](analysis/notes/), [docs/reverse-engineering.md](docs/reverse-engineering.md)).
 
-## Contribuer
+## Communauté
 
-Les retours de vraies parties sont aujourd'hui la contribution la plus utile : si le jeu
-s'arrête, la dernière ligne du terminal nomme la fonction manquante.
-Voir [CONTRIBUTING.md](CONTRIBUTING.md).
+C'est un projet de joueurs, pour les joueurs. Venez dire comment le jeu tourne sur votre Mac,
+poser vos questions ou proposer des idées dans les
+[Discussions](https://github.com/nic0lasm/zeus-poseidon-arm64/discussions). Les bugs vont dans
+les [tickets](https://github.com/nic0lasm/zeus-poseidon-arm64/issues).
+
+Les retours de vraies parties sont aujourd'hui la contribution la plus utile. Le code, l'étude
+des formats et les traductions sont bienvenus aussi : voir [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Mentions légales
 

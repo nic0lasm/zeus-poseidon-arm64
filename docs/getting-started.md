@@ -61,6 +61,8 @@ cmake --build build
 ./build/zeus-run --run original/gog/app/Zeus.exe
 ```
 
+![The main menu](images/menu.png)
+
 The game opens in an 800×600 window. **⌘F** or **⌘↩** switches to full screen and back; the
 picture keeps its 4:3 proportions and stays sharp at any size. Saves and settings are written to `run/zeus/`.
 

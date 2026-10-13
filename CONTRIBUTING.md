@@ -1,7 +1,7 @@
 # Contributing
 
-Thank you for your interest. The project is young; the most valuable help today is **playing
-and reporting**.
+The most valuable help today is **playing and reporting**. Questions and ideas are welcome in
+the [Discussions](https://github.com/nic0lasm/zeus-poseidon-arm64/discussions).
 
 ## Reporting a problem
 
@@ -36,6 +36,15 @@ ideal (see [docs/getting-started.md](docs/getting-started.md)).
 - Identifiers are in English. Comments, notes and messages are historically in French;
   either language is welcome in contributions.
 - A host function that is not implemented must fail loudly, not return a made-up value.
+
+## Where help is wanted
+
+- **Play sessions**: adventures played through, with what worked and what did not.
+- **Other editions**: does your copy (other language, other store) start? Send the SHA-256 of
+  its `Zeus.exe` and what happens.
+- **Missing Windows functions**: each one is small and self-contained (`src/win32/`).
+- **3D sound, reverb and filters** in `src/win32/mss.cpp`, currently ignored.
+- **File formats**: anything not yet described in `formats/`.
 
 ## Before opening a pull request
 
