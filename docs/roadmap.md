@@ -98,13 +98,25 @@ number of blocks the emulator runs, and only removing whole loops from it reduce
 4. Wider resolutions: the game's own 1024×768 mode works (Options → Display options). Going
    wider is not a setting: see below.
 
-### Wide screens
+### Wide screens — in progress
 
-The game picks its screen size in one place (`0x0050BCC9`–`0x0050BD07`: 640×480, 800×600 or
-1024×768, stored at `0x00F2A6B4` and `0x00F2A6B0`). Replacing 1024×768 there by 1280×800 does
-switch the mode, but the layout does not follow: the map view stays small and the control panel
-sits in the middle of the screen. About 80 places read the screen size and many compare it to
-800 or 1024. A wide mode means adapting each of them; it is a project of its own.
+How the game handles its screen size (GOG executable):
+
+- `0x0050BCC0` sets the size from a mode number: 640×480, 800×600 or 1024×768, stored at
+  `0x00F2A6B4` (width) and `0x00F2A6B0` (height). 68 functions read these two variables.
+- Part of the layout is generic (positions computed from the width), part is chosen by
+  comparing the width with 640, 800 or 1024, usually in a chain after a single read.
+- `0x0058E280` sets the position of the control panel from the width: 478, 598 or 838, that
+  is width − 186 for 1024 (`0x010DFF34`), and a second position at width − 66 (`0x010DFF30`).
+
+Experiment at 1280×800, in memory only: replacing the size of the third mode, the twelve
+comparisons with 1024 or 768 found in those 68 functions, and the two panel positions puts the
+control panel at the right edge and stretches the top bar's contents. Still wrong: the map
+view keeps its 1024-mode size (838×738), the top bar background stops at 838, and the bottom
+of the screen is not filled. Each of these is one more place to find and adapt.
+
+So a wide mode is reachable by cataloguing such places one by one, checking each step with a
+capture. It will be offered as an option of the host, never as a change to the game's files.
 
 The game's "Windowed screen" option answers "Cannot set Windows mode" and carries on; use ⌘F
 to switch between window and full screen instead.
