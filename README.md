@@ -30,8 +30,8 @@ The result is the real game — same simulation, same rules, same save files —
 | 1. The game starts | the real main menu in a Mac window | done |
 | 2. Playable | mouse, keyboard, tutorials and adventures, building, saving and loading | done |
 | 3. Complete | music, sound effects, videos, full screen | done |
-| 4. Ready to share | performance, a self-contained `.app`, automated builds, a first release | **next** |
-| 5. French edition | French texts and voices taken from your own original CDs; wider resolutions | planned |
+| 4. Ready to share | performance, a self-contained `.app`, automated builds, a first release | done |
+| 5. French edition | French texts and voices taken from your own original CDs; wider resolutions | **next** |
 | 6. No emulator | the game's code translated once to native code | planned |
 
 What works today: menus, leader profiles, tutorials, a running city (walkers, housing,

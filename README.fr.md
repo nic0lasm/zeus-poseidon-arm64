@@ -31,8 +31,8 @@ réécriture.
 | 1. Le jeu démarre | le vrai menu principal dans une fenêtre Mac | fait |
 | 2. Jouable | souris, clavier, tutoriels et aventures, construction, sauvegarde et chargement | fait |
 | 3. Complet | musiques, bruitages, vidéos, plein écran | fait |
-| 4. Diffusable | performances, application `.app` autonome, compilation automatique, première version publiée | **à venir** |
-| 5. Édition française | textes et voix français tirés de vos propres CD d'origine ; résolutions larges | prévu |
+| 4. Diffusable | performances, application `.app` autonome, compilation automatique, première version publiée | fait |
+| 5. Édition française | textes et voix français tirés de vos propres CD d'origine ; résolutions larges | **à venir** |
 | 6. Sans émulateur | le code du jeu traduit une fois pour toutes en code natif | prévu |
 
 Ce qui fonctionne aujourd'hui : menus, profils de dirigeant, tutoriels, une ville qui vit

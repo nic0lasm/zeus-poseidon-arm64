@@ -8,8 +8,8 @@
 | 1 | The game starts | the real main menu in a Mac window | done |
 | 2 | Playable | mouse, keyboard, load and save, a tutorial can be played | done |
 | 3 | Complete | music, sound effects, intro video, full screen | done |
-| 4 | Ready to share | performance, self-contained `.app`, automated builds, first release | next |
-| 5 | French edition | French texts and voices from the player's own CDs; wider resolutions | planned |
+| 4 | Ready to share | performance, self-contained `.app`, automated builds, first release | done |
+| 5 | French edition | French texts and voices from the player's own CDs; wider resolutions | next |
 | 6 | No emulator | static recompilation of the game's code to native arm64 | planned |
 
 ### Why this order
@@ -61,7 +61,7 @@ is far less work than a rewrite.
    done (`tools/make_app.py`), for personal use.
 4. ~~A redistributable build: FFmpeg reduced to the Bink decoders under LGPL terms, so that
    the bundle can be published alongside Unicorn (GPL-2.0)~~ — done (`tools/build_ffmpeg.py`).
-5. ~~Automated build on every change~~ — done. A first published release: next.
+5. ~~Automated build on every change~~ — done. ~~A first published release~~ — done (v0.1).
 
 ## Earlier work
 
