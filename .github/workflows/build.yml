@@ -1,0 +1,24 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  macos-arm64:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependencies
+        run: brew install cmake ninja pkgconf sdl2 unicorn ffmpeg
+      - name: Build
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_COMPILE_WARNING_AS_ERROR=ON
+          cmake --build build
+      - name: Emulator self-test
+        run: ./build/zeus-run --selftest
+      - name: Emulator benchmark
+        run: ./build/zeus-run --bench
+      - name: Python tools
+        run: python3 -m py_compile tools/*.py
