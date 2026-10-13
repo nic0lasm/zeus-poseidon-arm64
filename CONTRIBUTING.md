@@ -8,7 +8,7 @@ and reporting**.
 When the game needs a Windows function the host does not provide yet, it stops and the last
 line in the terminal names it. Open an issue with:
 
-- that last line;
+- that last line, or the `dernier-arret.txt` report saved in the write directory;
 - what you were doing in the game;
 - your Mac model and macOS version;
 - the SHA-256 of your `Zeus.exe` (`shasum -a 256 original/gog/app/Zeus.exe`).

@@ -58,6 +58,8 @@ public:
     void present(const uint8_t* pixels, int width, int height, int pitch, bool rgb565);
     int presents() const { return presents_; }
     void save_screenshot();
+    // Boîte de message de l'hôte (sans effet si la fenêtre est cachée).
+    void alert(const std::string& title, const std::string& text);
     void save_screenshot_to(const std::string& path);
 
     // Convertit les événements SDL en messages Windows. Renvoie faux quand il faut s'arrêter.

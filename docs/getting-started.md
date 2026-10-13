@@ -96,7 +96,10 @@ A Windows function that the host does not provide yet stops the program with a m
 arrêt : kernel32.dll!CompareStringW : fonction système non fournie
 ```
 
-Please open an issue with that line and what you were doing. Messages are currently in French;
+A message box says so, and a short report is saved as `dernier-arret.txt` in the write directory
+(`run/zeus/` by default). It contains the cause and a few counters, nothing personal.
+
+Please open an issue with that report and what you were doing. Messages are currently in French;
 "fonction système non fournie" means "system function not provided".
 
 ## The other tools

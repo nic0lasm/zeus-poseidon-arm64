@@ -229,6 +229,12 @@ void Desktop::add_script(const std::string& text) {
     screenshot_wanted_ = !script_.empty();
 }
 
+void Desktop::alert(const std::string& title, const std::string& text) {
+    if (headless) return;
+    if (fullscreen) toggle_fullscreen();
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, title.c_str(), text.c_str(), window_);
+}
+
 void Desktop::save_screenshot() { save_screenshot_to(screenshot_path); }
 
 void Desktop::save_screenshot_to(const std::string& path) {

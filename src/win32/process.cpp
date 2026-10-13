@@ -44,6 +44,7 @@ void Process::def(const std::string& dll, const std::string& name, uint32_t arg_
     f.call = [this, key = f.name, fn = std::move(fn)](Cpu&) {
         ++call_counts[key];
         if (traced(key)) std::fprintf(stderr, "  appel %s\n", key.c_str());
+        if (!break_on.empty() && key == break_on) throw std::runtime_error("arrêt demandé");
         return fn();
     };
     functions_[f.name] = std::move(f);

@@ -8,6 +8,7 @@
 //                              n'est jamais modifiée
 //     --trace                  affiche chaque appel système
 //     --trace-only PRÉFIXE     ne trace que les fonctions dont le nom commence ainsi (mss32.dll)
+//     --break-on FONCTION      arrête le programme à l'appel de cette fonction (essai du rapport)
 //     --counts                 affiche à la fin le nombre d'appels de chaque fonction
 //     --headless               fenêtre cachée, son coupé
 //     --mute                   son coupé
@@ -20,6 +21,9 @@
 
 #include <cstdio>
 #include <cstring>
+#include <ctime>
+#include <filesystem>
+#include <fstream>
 #include <map>
 #include <stdexcept>
 #include <string>
@@ -93,7 +97,7 @@ int inspect(const char* path) {
 }
 
 struct RunOptions {
-    std::string exe, write_dir = "run/zeus", screenshot, window_shot, script, trace_only;
+    std::string exe, write_dir = "run/zeus", screenshot, window_shot, script, trace_only, break_on;
     bool trace = false, headless = false, counts = false, mute = false, fullscreen = false;
     int frames = 0;
     double seconds = 0;
@@ -104,6 +108,7 @@ int run(const RunOptions& o) {
     zeus::win32::Process process(fs::path(o.exe).parent_path(), o.write_dir);
     process.trace = o.trace || !o.trace_only.empty();
     process.trace_only = o.trace_only;
+    process.break_on = o.break_on;
     zeus::win32::Desktop& desktop = process.desktop();
     desktop.headless = o.headless;
     desktop.fullscreen = o.fullscreen;
@@ -137,6 +142,24 @@ int run(const RunOptions& o) {
                  static_cast<unsigned long long>(total), process.call_counts.size(), desktop.presents());
     if (!error.empty()) {
         std::fprintf(stderr, "arrêt : %s\n", error.c_str());
+        // Rapport à joindre à un signalement : il ne contient rien de personnel.
+        std::error_code ignored;
+        fs::create_directories(o.write_dir, ignored);
+        const fs::path report = fs::path(o.write_dir) / "dernier-arret.txt";
+        if (std::ofstream out{report}) {
+            char date[32] = "";
+            const std::time_t now = std::time(nullptr);
+            std::strftime(date, sizeof date, "%Y-%m-%d %H:%M:%S", std::localtime(&now));
+            out << "Zeus + Poseidon sur Mac : arrêt du jeu\n"
+                << "date : " << date << "\n"
+                << "cause : " << error << "\n"
+                << "images affichées : " << desktop.presents() << "\n"
+                << "appels système : " << total << " vers " << process.call_counts.size() << " fonctions\n";
+        }
+        desktop.alert("Zeus + Poseidon",
+                      "Le jeu s'est arrêté : il a besoin d'une fonction que ce programme ne fournit pas encore.\n\n" +
+                          error + "\n\nRapport enregistré dans :\n" + report.string() +
+                          "\n\nMerci de le signaler sur la page du projet.");
         return 1;
     }
     std::fprintf(stderr, "le programme s'est terminé avec le code %d\n", code);
@@ -158,6 +181,7 @@ int main(int argc, char** argv) {
                 };
                 if (a == "--trace") o.trace = true;
                 else if (a == "--trace-only") o.trace_only = value();
+                else if (a == "--break-on") o.break_on = value();
                 else if (a == "--headless") o.headless = true;
                 else if (a == "--counts") o.counts = true;
                 else if (a == "--mute") o.mute = true;

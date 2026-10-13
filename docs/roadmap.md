@@ -54,7 +54,7 @@ is far less work than a rewrite.
    emulator tuning. First step done: mapping only code as executable raised the number of
    game-loop iterations in a fixed 95-second scripted run from about 7,900 to 11,000–13,800.
    Remaining cost: the emulator is restarted at every system call.
-2. A log file and a clear message when the game stops on a missing function.
+2. ~~A report file and a clear message when the game stops on a missing function~~ — done.
 3. A self-contained application bundle that asks for the game folder on first launch.
 4. Automated build on every change; a first published release.
 

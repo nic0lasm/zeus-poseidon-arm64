@@ -72,6 +72,7 @@ public:
     uint32_t last_error = 0;
     bool trace = false;
     bool mute = false;  // son mélangé mais inaudible
+    std::string break_on;    // diagnostic : arrête le programme à l'appel de cette fonction
     std::string trace_only;  // si non vide : ne trace que les fonctions dont le nom commence ainsi
     bool traced(const std::string& name) const {
         return trace && (trace_only.empty() || name.compare(0, trace_only.size(), trace_only) == 0);
