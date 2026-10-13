@@ -59,6 +59,11 @@ public:
 
     // Enregistre une fonction hôte et renvoie l'adresse émulée à placer dans une table d'import.
     uint32_t add_host_function(HostFunction function);
+    // Profil d'exécution : compte, par bloc de code, les octets d'instructions exécutés. Ralentit
+    // nettement l'émulation ; réservé au diagnostic.
+    void start_profile();
+    const std::map<uint32_t, uint64_t>& profile() const { return profile_; }
+
     // Appelle `fn` chaque fois que l'exécution atteint `address`, avant l'instruction.
     void add_code_hook(uint32_t address, std::function<void(Cpu&)> fn);
     // n-ième argument (à partir de 0) de la fonction hôte en cours d'appel.
@@ -77,6 +82,8 @@ public:
     uint64_t instructions_run() const { return instructions_; }
 
 private:
+    static void on_block(uc_struct* uc, uint64_t address, uint32_t size, void* user);
+    std::map<uint32_t, uint64_t> profile_;  // adresse de bloc -> octets exécutés
     static void on_code_hook(uc_struct* uc, uint64_t address, uint32_t size, void* user);
     std::map<uint32_t, std::function<void(Cpu&)>> code_hooks_;
     void enable_paging();

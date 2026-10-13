@@ -9,8 +9,8 @@
 | 2 | Playable | mouse, keyboard, load and save, a tutorial can be played | done |
 | 3 | Complete | music, sound effects, intro video, full screen | done |
 | 4 | Ready to share | performance, self-contained `.app`, automated builds, first release | done |
-| 5 | French edition | French texts and voices from the player's own CDs; wider resolutions | next |
-| 6 | No emulator | static recompilation of the game's code to native arm64 | planned |
+| 5 | French edition | French texts and voices from the player's own CDs | done; widescreen left open |
+| 6 | No emulator | the game's hot code translated to native arm64, then the rest | started |
 
 ### Why this order
 
@@ -47,6 +47,30 @@ is far less work than a rewrite.
 - `CompareStringW`, `RaiseException`, `RtlUnwind` and several DirectDraw methods are not
   written; no play session has needed them so far.
 - Tested with the English GOG edition only.
+
+## Milestone 6 — plan
+
+**Where the time goes.** `zeus-run --profile` counts the bytes of game code executed per block.
+Over a scripted session (start-up, menus, a tutorial city) the game went through 1,812
+functions, but 10 of them account for 77 % of the code executed, 50 for 98 % and 100 for more
+than 99 %. Those 50 functions add up to about 30 KB of machine code: the drawing loop of the
+city, the sprite blitters, a few C runtime routines.
+
+**Approach.** Rather than translating the whole game at once, translate the hot functions to
+native code and leave the rest to the emulator:
+
+1. ~~Profile and pick the targets~~ — done.
+2. Guest memory owned by the host, so that native code and the emulator share it.
+3. A translator from Ghidra's intermediate code (p-code, about thirty simple operations;
+   `tools/ghidra/ExportPcode.java` exports it) to C, starting with leaf functions that use
+   neither the floating-point unit nor indirect jumps.
+4. A bridge: emulated code entering a native function, native code calling back emulated code
+   or a Windows function.
+5. Check each translated function against the emulator on the same inputs, then measure.
+6. Widen the set until the emulator only runs cold code; only then consider removing it.
+
+The original code stays the reference throughout: a native function that cannot be proven
+equivalent is not used.
 
 ## Milestone 5 — plan
 

@@ -82,6 +82,10 @@ tools/ghidra/headless.sh zeus/gog -process Zeus.exe -noanalysis -readOnly \
     -postScript Xrefs.java OUT.tsv ADDRESS[:LENGTH]…
 ```
 
+`ExportPcode.java OUT.txt ADDRESS…` writes the raw p-code of the functions containing the given
+addresses, and `ExportFunctions.java OUT.tsv` the list of functions; together with
+`zeus-run --profile` they tell which functions matter.
+
 Addresses are hexadecimal without the `0x` prefix. Ghidra does not always create a reference
 for accesses of the form `[base + index*4]`; searching the four little-endian bytes of an
 address in `.text` finds them.

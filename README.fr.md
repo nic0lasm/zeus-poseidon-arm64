@@ -32,8 +32,8 @@ réécriture.
 | 2. Jouable | souris, clavier, tutoriels et aventures, construction, sauvegarde et chargement | fait |
 | 3. Complet | musiques, bruitages, vidéos, plein écran | fait |
 | 4. Diffusable | performances, application `.app` autonome, compilation automatique, première version publiée | fait |
-| 5. Édition française | textes et voix français tirés de vos propres CD d'origine ; résolutions larges | **à venir** |
-| 6. Sans émulateur | le code du jeu traduit une fois pour toutes en code natif | prévu |
+| 5. Édition française | textes et voix français tirés de vos propres CD d'origine | fait |
+| 6. Sans émulateur | le code le plus sollicité du jeu traduit en natif, puis le reste | **commencé** |
 
 Ce qui fonctionne aujourd'hui : menus, profils de dirigeant, tutoriels, une ville qui vit
 (habitants, logements, construction, calendrier, trésorerie), défilement de la carte,

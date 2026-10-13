@@ -248,6 +248,15 @@ uint32_t Cpu::arg(int n) const {
     return read_u32(reg(Reg::ESP) + 4 + 4 * static_cast<uint32_t>(n));
 }
 
+void Cpu::start_profile() {
+    uc_hook hook;
+    check(uc_hook_add(uc_, &hook, UC_HOOK_BLOCK, reinterpret_cast<void*>(&Cpu::on_block), this, 1, 0), "profil");
+}
+
+void Cpu::on_block(uc_struct*, uint64_t address, uint32_t size, void* user) {
+    static_cast<Cpu*>(user)->profile_[static_cast<uint32_t>(address)] += size;
+}
+
 void Cpu::add_code_hook(uint32_t address, std::function<void(Cpu&)> fn) {
     code_hooks_[address] = std::move(fn);
     uc_hook hook;

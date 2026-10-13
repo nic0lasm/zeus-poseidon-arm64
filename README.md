@@ -31,8 +31,8 @@ The result is the real game — same simulation, same rules, same save files —
 | 2. Playable | mouse, keyboard, tutorials and adventures, building, saving and loading | done |
 | 3. Complete | music, sound effects, videos, full screen | done |
 | 4. Ready to share | performance, a self-contained `.app`, automated builds, a first release | done |
-| 5. French edition | French texts and voices taken from your own original CDs; wider resolutions | **next** |
-| 6. No emulator | the game's code translated once to native code | planned |
+| 5. French edition | French texts and voices taken from your own original CDs | done |
+| 6. No emulator | the game's hot code translated to native code, then the rest | **started** |
 
 What works today: menus, leader profiles, tutorials, a running city (walkers, housing,
 construction, time, treasury), map scrolling, save and load, music, ambience, sound effects and the intro video.

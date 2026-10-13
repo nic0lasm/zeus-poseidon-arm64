@@ -16,6 +16,7 @@
 //     --trace                  affiche chaque appel système
 //     --trace-only PRÉFIXE     ne trace que les fonctions dont le nom commence ainsi (mss32.dll)
 //     --break-on FONCTION      arrête le programme à l'appel de cette fonction (essai du rapport)
+//     --profile SORTIE.tsv     profil d'exécution du code du jeu, par bloc (ralentit beaucoup)
 //     --counts                 affiche à la fin le nombre d'appels de chaque fonction
 //     --headless               fenêtre cachée, son coupé
 //     --mute                   son coupé
@@ -148,7 +149,7 @@ int bench() {
 }
 
 struct RunOptions {
-    std::string exe, write_dir = "run/zeus", language, screenshot, window_shot, script, trace_only, break_on;
+    std::string exe, write_dir = "run/zeus", profile, language, screenshot, window_shot, script, trace_only, break_on;
     bool trace = false, headless = false, counts = false, mute = false, fullscreen = false;
     int frames = 0;
     double seconds = 0;
@@ -177,6 +178,7 @@ int run(const RunOptions& o) {
     zeus::win32::install_bink(process);
     process.mute = o.mute || o.headless;
     process.load(o.exe);
+    if (!o.profile.empty()) process.cpu().start_profile();
     if (!o.language.empty()) zeus::win32::apply_language_pack(process, o.language);
     int code = 0;
     std::string error;
@@ -188,6 +190,11 @@ int run(const RunOptions& o) {
     desktop.save_screenshot();
     uint64_t total = 0;
     for (const auto& [name, count] : process.call_counts) total += count;
+    if (!o.profile.empty()) {
+        // Une ligne par bloc de code : adresse, octets d'instructions exécutés.
+        std::ofstream out(o.profile);
+        for (const auto& [address, bytes] : process.cpu().profile()) out << std::hex << address << std::dec << '\t' << bytes << '\n';
+    }
     if (o.counts)
         for (const auto& [name, count] : process.call_counts)
             std::fprintf(stderr, "%10llu  %s\n", static_cast<unsigned long long>(count), name.c_str());
@@ -414,6 +421,7 @@ int main(int argc, char** argv) {
                 else if (a == "--fullscreen") o.fullscreen = true;
                 else if (a == "--write-dir") o.write_dir = value();
                 else if (a == "--language") o.language = value();
+                else if (a == "--profile") o.profile = value();
                 else if (a == "--screenshot") o.screenshot = value();
                 else if (a == "--window-shot") o.window_shot = value();
                 else if (a == "--script") o.script = value();
