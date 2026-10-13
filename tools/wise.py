@@ -71,6 +71,114 @@ def destinations(script):
     return names
 
 
+class PatchError(Exception):
+    pass
+
+
+def _varint(src, pos, value, steps=3):
+    """Suite d'un entier à longueur variable : jusqu'à 2 octets de 7 bits puis 1 octet de 8 bits.
+
+    pos désigne le dernier octet déjà lu ; chaque octet lu dont le bit 7 est à 1 annonce le suivant.
+    """
+    for step in range(steps):
+        if not src[pos] & 0x80 and step:
+            break
+        pos += 1
+        value = (value << 8 | src[pos]) if step == steps - 1 else (value << 7 | src[pos] & 0x7F)
+        if step == steps - 1:
+            break
+    return value, pos
+
+
+def _delta(src, pos, old, limit):
+    """Applique un flux de commandes Wise (lu dans src à partir de pos) à old.
+
+    Chaque commande insère des octets littéraux puis copie une plage de l'ancien fichier.
+    Format établi d'après la bibliothèque de correctifs de l'installateur (fonction 0x100017a1).
+    """
+    cmd_len, = struct.unpack_from("<I", src, pos)
+    cmd = pos + 4
+    cmd_end = lit = cmd + cmd_len
+    out = bytearray()
+    old_pos = 0
+    while len(out) < limit and cmd < cmd_end:
+        b = src[cmd]
+        offset = 0
+        if not b & 0x80:  # forme courte : 4 bits de littéraux, 4 bits de copie
+            n_copy, n_lit = b & 0x0F, b >> 4
+            cmd += 1
+        else:
+            n_lit, p = b & 0x3F, cmd
+            if b & 0x40:
+                n_lit, p = _varint(src, cmd, n_lit)
+            b2 = src[p + 1]
+            n_copy, q = b2 & 0x3F, p + 1
+            if b2 & 0x80:
+                n_copy, q = _varint(src, p + 1, n_copy)
+            cmd = q + 1
+            if not b2 & 0x40:  # déplacement relatif signé dans l'ancien fichier
+                c = src[cmd]
+                offset = c & 0x7F
+                if offset > 0x3F:
+                    offset -= 0x80
+                if c & 0x80:
+                    offset, cmd = _varint(src, cmd, offset)
+                cmd += 1
+        n_copy += 3
+        if n_lit:
+            if lit + n_lit > len(src):
+                raise PatchError("littéraux manquants")
+            out += src[lit:lit + n_lit]
+            lit += n_lit
+            old_pos += n_lit
+        if len(out) < limit:
+            old_pos += offset
+            if old_pos < 0 or old_pos + n_copy > len(old):
+                raise PatchError(f"copie hors de l'ancien fichier ({old_pos}+{n_copy})")
+            out += old[old_pos:old_pos + n_copy]
+            old_pos += n_copy
+    return bytes(out)
+
+
+def patch_info(patch):
+    """En-tête d'un correctif : (crc, taille) du nouveau fichier et [(offset, crc, taille)] des anciens."""
+    count = patch[0]
+    new_crc, new_size = struct.unpack_from("<II", patch, 5)
+    versions = [struct.unpack_from("<III", patch, 13 + 12 * k) for k in range(count)]
+    return (new_crc, new_size), versions
+
+
+def is_patch_for(patch, old):
+    """Vrai si patch est un correctif Wise dont old est une version connue (ancienne ou nouvelle)."""
+    if len(patch) < 25 or not 1 <= patch[0] <= 32 or len(patch) < 13 + 12 * patch[0]:
+        return False
+    new, versions = patch_info(patch)
+    me = (zlib.crc32(old), len(old))
+    return me == new or any(me == (crc, size) for _, crc, size in versions)
+
+
+def apply_patch(patch, old):
+    """Nouveau fichier obtenu en appliquant patch à old ; CRC-32 et taille vérifiés."""
+    (new_crc, new_size), versions = patch_info(patch)
+    me = (zlib.crc32(old), len(old))
+    if me == (new_crc, new_size):
+        return old
+    for k, (offset, crc, size) in enumerate(versions):
+        if me == (crc, size):
+            break
+    else:
+        raise PatchError("ce fichier n'est pas une version connue du correctif")
+    if versions[0][0] == 0:  # le correctif contient le fichier complet
+        new = patch[13 + 12 * len(versions):]
+    elif k == 0:
+        new = _delta(patch, offset, old, new_size)
+    else:  # version plus ancienne : son flux se déduit d'abord du correctif lui-même
+        new = _delta(_delta(patch, offset, patch, 0x7FFFFFFF), 0, old, new_size)
+    if len(new) != new_size or zlib.crc32(new) != new_crc:
+        raise PatchError("résultat incorrect (taille ou CRC-32)")
+    return new
+
+
 def describe(d):
     found = streams(d)
     names = destinations(found[1][2])

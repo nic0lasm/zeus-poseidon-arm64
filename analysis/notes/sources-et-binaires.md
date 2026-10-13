@@ -25,39 +25,54 @@ Les 9 fichiers du téléchargement correspondent aux tailles et CRC-32 du réper
 Dans l'archive Poséidon, 1293 entrées n'ont pas de données : ce sont les fichiers copiés tels
 quels depuis le CD (`Audio/`, `Binks/`…).
 
-## Ce qui manque pour reconstituer l'installation finale (2.1)
+## Correctifs binaires Wise (format décodé)
 
-Les mises à jour Wise livrent certains fichiers sous forme de **correctif binaire** (flux
-commençant par `01`), à appliquer sur le fichier déjà installé. Sont concernés :
+Les mises à jour livrent certains fichiers sous forme de correctif à appliquer au fichier déjà
+installé (10 fichiers en 1.1, 4 en 2.1, dont `Zeus.exe`). Format établi en décompilant la
+bibliothèque de correctifs de l'installateur (flux n°3, fonctions `0x1000124b` et `0x100017a1`)
+et **vérifié** : les 14 correctifs produisent un fichier dont la taille et le CRC-32 sont ceux
+annoncés. Implémentation : `tools/wise.py` (`apply_patch`).
 
-- 1.1 : `Zeus.exe`, `Zeus_MM.eng`, `Zeus_Text.eng`, 4 `.pak`, `Zeus_Interface.555/.sg3`, `Zeus eventmsg.txt`
-- 2.1 : `Zeus.exe` (2 768 159 o de correctif), `Zeus_MM.eng`, `sierra.inf`, `Zeus event message categories.txt`
+| Offset | Taille | Champ |
+|---|---|---|
+| 0x00 | 1 | nombre N d'anciennes versions acceptées |
+| 0x01 | 2+2 | date et heure DOS à donner au nouveau fichier |
+| 0x05 | 4+4 | CRC-32 et taille du nouveau fichier |
+| 0x0D | 12×N | par ancienne version : offset de son flux, CRC-32, taille (offset 0 = fichier complet stocké après la table) |
 
-Format du correctif, partiellement décodé :
+Un flux = `u32` longueur des commandes, les commandes, puis les octets littéraux. Chaque commande
+donne un nombre de littéraux à insérer puis une copie depuis l'ancien fichier :
 
-| Offset | Taille | Champ | Statut |
-|---|---|---|---|
-| 0x00 | 1 | type = 1 | vérifié |
-| 0x01 | 2+2 | date et heure DOS du nouveau fichier | hypothèse |
-| 0x05 | 4 | CRC-32 du nouveau fichier | hypothèse |
-| 0x09 | 4 | taille du nouveau fichier | hypothèse |
-| 0x0D | 4 | 0x19 (constant) | inconnu |
-| 0x11 | 4 | CRC-32 de l'ancien fichier | vérifié sur 3 fichiers |
-| 0x15 | 4 | taille de l'ancien fichier | vérifié sur 3 fichiers |
-| 0x19 | 4 | longueur N du flux de commandes | vérifié sur 3 fichiers |
-| 0x1D | N | commandes (copie depuis l'ancien / insertion) | codage non décodé ; `0x80+n` = n octets littéraux (hypothèse) |
-| 0x1D+N | … | octets littéraux | vérifié |
+- octet < 0x80 : 4 bits hauts = littéraux, 4 bits bas = longueur de copie ;
+- sinon : littéraux sur 6 bits (prolongés si bit 6), puis un octet de copie (6 bits, prolongé si
+  bit 7 ; bit 6 à 0 = un déplacement relatif signé suit) ;
+- la longueur de copie est toujours augmentée de 3 ; insérer des littéraux avance aussi la
+  position de lecture dans l'ancien fichier.
+
+## Installation finale reconstituée
+
+`tools/build_install.py` rejoue les quatre installateurs dans l'ordre et produit
+`original/install/` : 1124 fichiers, 549,8 Mo. Le détail est dans `original/install-journal.tsv`.
+Les musiques, voix et vidéos restent sur les CD (`original/cd-*/Audio`, `Binks`) : hypothèse, le
+jeu les lit depuis le CD ou les copie selon le type d'installation, à confirmer dans le code.
 
 ## Exécutables
 
-| | Zeus 1.0 (`cab-zeus/Zeus.exe`) | Poséidon 2.0 (`cab-poseidon/Zeus.exe`) |
-|---|---|---|
-| SHA-256 | 1a800a59…aabaf3745 | 03bc3372…2290d33c4c |
-| Taille | 2 971 779 | 2 857 091 |
-| Compilé le | 2000-10-22 | 2001-07-30 |
-| Outil | MSVC 6 (linker 6.0), i386 | idem |
-| `.text` | 2 195 456 o | 1 929 216 o |
-| `.data` virtuelle | 15,2 Mo | 16,9 Mo (état du jeu en variables globales) |
+| | Zeus 1.0 | Poséidon 2.0 | **Poséidon 2.1 (référence)** |
+|---|---|---|---|
+| Fichier | `cab-zeus/Zeus.exe` | `cab-poseidon/Zeus.exe` | `install/Zeus.exe` |
+| SHA-256 | 1a800a59…aabaf3745 | 03bc3372…2290d33c4c | acb0dcbc…1405b0d02f |
+| Taille | 2 971 779 | 2 857 091 | 3 512 483 |
+| Compilé le | 2000-10-22 | 2001-07-30 | 2001-10-31 |
+| `.text` | 2 195 456 o | 1 929 216 o | 2 560 000 o |
+| prologues `push ebp; mov ebp,esp` | 7143 | 115 | 8093 |
+| SecuROM | 4.10.00 | 4.52.00 | présent (`.cms_t`, `AddD`) |
+| case du répartiteur d'API | `0x014AE2F0` | `0x01624300` | `0x016C02F8` |
+| sites `call [case]` | 523 | 370 | 489 |
+
+Tous : MSVC 6 (linker 6.0), i386, `.data` virtuelle de 15 à 17 Mo (état du jeu en variables
+globales). La 2.1 contient `inflate 1.0.7` (zlib) et la chaîne `Version 1.11`. La 2.0 est
+compilée sans pointeur de pile (code plus dense), la 2.1 avec : elle se décompile mieux.
 
 Imports : `DDRAW` (DirectDrawCreate seul), `MSS32` (Miles Sound System, 50 fonctions),
 `BINKW32` (vidéo Bink, 14), `IJL10` (JPEG Intel), `USER32`, `GDI32`, `KERNEL32`, `WINMM`
@@ -65,10 +80,17 @@ Imports : `DDRAW` (DirectDrawCreate seul), `MSS32` (Miles Sound System, 50 fonct
 
 **Protection : SecuROM 4** (4.10.00 sur 1.0, 4.52.00 sur 2.0). Preuves : sections `.cms_t`
 (entropie 7,3) et `.cms_d`, point d'entrée dans `.cms_t`, bloc `AddD` + numéro de version après
-le PE. Le code du jeu (`.text`) n'est pas chiffré dans son ensemble (entropie 5,7 à 7,3 par
-bloc de 64 Ko, dizaines de milliers de `call`/`ret`), mais aucun appel `FF 15` vers la table
-d'import n'y figure : le lien entre code et imports passe par la protection (hypothèse).
-On ne contourne pas SecuROM.
+le PE. Le code du jeu (`.text`) est en clair : dans la 2.0, 25 065 `call rel32` retombent dans
+`.text`, et 25 000 accès absolus visent `.data`.
+
+Seuls les appels aux API Windows sont masqués : aucun `call [IAT]` dans `.text` ; à la place,
+tous les appels externes passent par **une seule case** de `.cms_d` (contenu statique
+`0xAAAAAAAA`, remplie au lancement par SecuROM) :
+
+Le répartiteur choisit l'API d'après l'adresse de retour. Décision (2026-10-13) : on garde
+l'exécutable du CD comme référence et on **ne contourne pas SecuROM**. L'API de chaque site est
+identifiée par son contexte (nombre d'arguments dépilés, constantes, usage du résultat) parmi
+les 201 imports déclarés, et consignée dans `analysis/notes/`.
 
 ## Données du jeu à décoder (hors démos et bandes-annonces)
 
@@ -82,3 +104,14 @@ On ne contourne pas SecuROM.
 | `.eng` | 5 | textes de l'interface |
 | `.jpg`, `.bmp` | 38, 11 | écrans fixes |
 | `.bik` | 2 par CD | vidéos Bink |
+
+## Ghidra
+
+Ghidra 12.1.4, lancé par `tools/ghidra/headless.sh` (réglages et cache confinés dans
+`analysis/ghidra/`). Projet `zeus` : `Zeus.exe` 2.0 à la racine (4902 fonctions, 1,45 Mo de code
+couvert sur 1,93), `Zeus.exe` 2.1 dans le dossier `2.1` (8397 fonctions dans `.text`, 2,41 Mo
+couverts sur 2,56, soit 94 %). Projet `wise` : bibliothèque de correctifs de l'installateur.
+
+Dans la 2.1, les 18 noms attribués automatiquement par Ghidra (`CSingleDocTemplate`,
+`CMultiPageDHtmlDialog`…) sont de fausses reconnaissances de bibliothèque : à ignorer.
+Fonction la plus appelée : `0x0040DF00` (648 appelants), à identifier en priorité.
