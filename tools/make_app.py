@@ -5,7 +5,7 @@ Le paquet embarque les bibliothèques dont le programme dépend (Unicorn, SDL, f
 depuis Homebrew et rendues relatives au paquet, puis signe le tout localement. Il ne contient
 aucun fichier du jeu : le dossier du jeu est demandé au premier lancement.
 
-Usage : python3 tools/make_app.py [--binary PROGRAMME] [SORTIE.app]
+Usage : python3 tools/make_app.py [--binary PROGRAMME] [--version X.Y] [SORTIE.app]
         (défauts : build/zeus-run et build/Zeus Poseidon.app)
 
 Pour un paquet redistribuable, donner un programme compilé avec le FFmpeg réduit de
@@ -48,8 +48,11 @@ def resolve(reference, user):
 def main(argv):
     args = argv[1:]
     binary = os.path.join(ROOT, "build", "zeus-run")
+    version = "0.0"
     if args[:1] == ["--binary"]:
         binary, args = os.path.abspath(args[1]), args[2:]
+    if args[:1] == ["--version"]:
+        version, args = args[1], args[2:]
     app = args[0] if args else os.path.join(ROOT, "build", "Zeus Poseidon.app")
     if not os.path.exists(binary):
         raise SystemExit(f"{binary} est absent : compiler d'abord")
@@ -120,8 +123,8 @@ def main(argv):
             "CFBundleIdentifier": "community.zeus-poseidon.mac",
             "CFBundleExecutable": "zeus-poseidon",
             "CFBundlePackageType": "APPL",
-            "CFBundleShortVersionString": "0.1",
-            "CFBundleVersion": "1",
+            "CFBundleShortVersionString": version,
+            "CFBundleVersion": version,
             "LSMinimumSystemVersion": "12.0",
             "LSApplicationCategoryType": "public.app-category.simulation-games",
             "NSHighResolutionCapable": True,
