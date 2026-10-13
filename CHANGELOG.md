@@ -5,7 +5,8 @@ pull request.
 
 ## Unreleased
 
-- Guest memory owned by the host; first game functions rewritten natively, behind `--native`.
+- Guest memory owned by the host; first game functions rewritten natively, behind `--native`
+  (no speed gain measured yet).
 - Time-based profiler (`--profile`) and `tools/profile_report.py`.
 - File lookups in the game folder are cached.
 - Deterministic runs (`--deterministic`) and per-frame hashes (`--frame-log`), to prove that a

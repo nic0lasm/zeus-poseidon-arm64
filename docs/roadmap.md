@@ -76,13 +76,15 @@ with the frame log of a deterministic run. Mechanical translation (Ghidra p-code
 - Guest memory is one 4 GB block owned by the host, shared by the emulator and native code.
 - `Cpu::replace_function` runs a host function in place of a game function;
   `src/win32/native.cpp` holds the first two (an opaque rectangle copy and `_strcmpi`). They
-  give frame logs identical to the original over 4,092 frames. They are off by default
-  (`--native`): their effect on speed has not been established.
+  give frame logs identical to the original over 4,092 frames. Measured on a quiet machine, they
+  bring no gain: 39.4 s against 39.7 s for the reference scenario, best of three runs each
+  (single runs fall into two groups, around 40 s and around 50 s, whatever the mode). They
+  stay off by default (`--native`).
 - `zeus-run --profile` measures time per block; `tools/profile_report.py` sums it per function.
 
-**Next.** Measure on a quiet machine; then replace whole units entered once per frame (the
-city drawing loop and the sprite routines it calls) rather than small functions entered
-thousands of times.
+**Next.** Replace whole units entered once per frame (the city drawing loop and the sprite
+routines it calls) rather than small functions entered thousands of times: what costs is the
+number of blocks the emulator runs, and only removing whole loops from it reduces that.
 
 ## Milestone 5 — plan
 
