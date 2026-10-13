@@ -195,7 +195,16 @@ const std::vector<uint8_t>& SgFile::pixel_file(const SgImage& image) {
     fail("fichier de pixels introuvable : " + key);
 }
 
-Pixels SgFile::decode(size_t index) {
+bool SgFile::has_top(size_t index) const {
+    const SgImage& requested = images_.at(index);
+    const SgImage& src = requested.invert_offset
+                             ? images_.at(static_cast<size_t>(static_cast<int64_t>(index) +
+                                                              requested.invert_offset))
+                             : requested;
+    return src.type == 30 && src.length > src.uncompressed_length;
+}
+
+Pixels SgFile::decode(size_t index, Part part) {
     const SgImage& requested = images_.at(index);
     const bool mirrored = requested.invert_offset != 0;
     const SgImage& src =
@@ -221,10 +230,13 @@ Pixels SgFile::decode(size_t index) {
 
     if (src.type == 30) {
         if (src.uncompressed_length > src.length) fail("socle plus long que l'image");
-        decode_iso_base(result.rgba, w, h, pix, src.uncompressed_length, src);
-        if (src.length > src.uncompressed_length)
+        if (part != Part::Top)
+            decode_iso_base(result.rgba, w, h, pix, src.uncompressed_length, src);
+        if (part != Part::Footprint && src.length > src.uncompressed_length)
             decode_runs(result.rgba, total, pix + src.uncompressed_length,
                         src.length - src.uncompressed_length);
+    } else if (part == Part::Top) {
+        return result;  // image non isométrique : pas de partie haute
     } else if (src.fully_compressed) {
         decode_runs(result.rgba, total, pix, src.length);
     } else {

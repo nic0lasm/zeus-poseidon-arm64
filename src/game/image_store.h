@@ -26,7 +26,9 @@ public:
     static std::string collection_name(uint32_t collection);
 
     // Image décodée ; lève std::runtime_error si l'identifiant ne désigne aucune image.
-    formats::Pixels decode(uint32_t image_id);
+    formats::Pixels decode(uint32_t image_id,
+                           formats::SgFile::Part part = formats::SgFile::Part::Whole);
+    bool has_top(uint32_t image_id);
     const formats::SgImage& info(uint32_t image_id);
 
 private:

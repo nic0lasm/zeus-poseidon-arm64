@@ -88,8 +88,12 @@ du haut vers le bas : la rangée r contient r + 1 cases puis décroît, chaque c
 
 ## Reste à établir
 
-- Rendu fidèle : le jeu affichait en 16 bits ; il faut retrouver dans le code comment l'alpha
-  5 bits est mélangé, pour reproduire exactement le résultat et non une approximation.
+- Mélange alpha du jeu (**vérifié**, routine `0x0041DFC0`) : par composante de 5 bits,
+  `(a × source + (31 − a) × fond) >> 5`. Non encore appliqué : `zeus-map` utilise le mélange
+  8 bits de SDL.
+- Rang des groupes : `image_id_from_group` reçoit `collection × 512 + rang`, le rang comptant
+  les seuls groupes non vides du fichier, dans l'ordre (**vérifié** : voir
+  `tools/annotate_groups.py`).
 - Signification des types 1, 10, 12, 13, 20 (ils se décodent, mais leur rôle n'est pas établi).
 - Champs inconnus listés ci-dessus, en particulier les octets 24 à 28 (position dans le bitmap
   source ?) et le champ 64.

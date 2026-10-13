@@ -18,6 +18,11 @@ constexpr int kTileStepY = 15;
 // Rang des blocs de la carte (adresses correspondantes dans Zeus.exe 2.1 entre parenthèses).
 constexpr size_t kImageGridChunk = 4;  // u32 par case : identifiant d'image (0x01216248)
 constexpr size_t kEdgeGridChunk = 5;   // u8 par case : bit 0x40 = case de dessin (0x01209738)
+constexpr size_t kElevationGridChunk = 23;  // u8 par case : altitude, de 0 à 6
+
+// Une case est dessinée 30 pixels plus haut par niveau d'altitude (boucle de dessin 0x0047499F
+// de Zeus.exe 2.1 : « y - altitude * 0x1e »).
+constexpr int kElevationStep = 30;
 
 // Les cartes antérieures à Poséidon numérotent les collections sans les deux collections
 // insérées depuis (Zeus_Unloaded et Poseidon_Unloaded) : le terrain y est la collection 3 et
@@ -30,6 +35,7 @@ struct TerrainSprite {
     uint32_t image_id;
     int tile_x, tile_y;
     int x, y, width, height;  // rectangle à l'écran, dans le repère de la carte
+    bool has_top;             // l'image a une partie haute, dessinée après tous les socles
 };
 
 struct TerrainView {

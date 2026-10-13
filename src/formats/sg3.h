@@ -43,8 +43,14 @@ public:
     const std::vector<SgBitmap>& bitmaps() const { return bitmaps_; }
     const std::filesystem::path& path() const { return path_; }
 
+    // Partie d'une image isométrique : le jeu dessine tous les socles de la carte, puis toutes
+    // les parties hautes. Pour une image non isométrique, tout est dans le socle.
+    enum class Part { Whole, Footprint, Top };
+
     // Lève std::runtime_error si les données sont absentes ou incohérentes.
-    Pixels decode(size_t index);
+    Pixels decode(size_t index, Part part = Part::Whole);
+    // Vrai si l'image a une partie haute distincte du socle.
+    bool has_top(size_t index) const;
 
 private:
     const std::vector<uint8_t>& pixel_file(const SgImage& image);

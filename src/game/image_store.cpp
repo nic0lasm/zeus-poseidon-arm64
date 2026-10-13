@@ -59,11 +59,18 @@ const formats::SgImage& ImageStore::info(uint32_t image_id) {
     return sg.image(index);
 }
 
-formats::Pixels ImageStore::decode(uint32_t image_id) {
+formats::Pixels ImageStore::decode(uint32_t image_id, formats::SgFile::Part part) {
     info(image_id);  // valide l'identifiant
     const uint32_t collection = image_id / kImagesPerCollection;
     const uint32_t number = image_id % kImagesPerCollection;
-    return file(collection).decode(number + (collection == 0 ? 0 : kSystemImages));
+    return file(collection).decode(number + (collection == 0 ? 0 : kSystemImages), part);
+}
+
+bool ImageStore::has_top(uint32_t image_id) {
+    info(image_id);
+    const uint32_t collection = image_id / kImagesPerCollection;
+    const uint32_t number = image_id % kImagesPerCollection;
+    return file(collection).has_top(number + (collection == 0 ? 0 : kSystemImages));
 }
 
 }  // namespace zeus::game

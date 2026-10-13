@@ -80,16 +80,64 @@ partir du terrain et des bâtiments. On y trouve notamment (rangs dans une sauve
 Coin haut-gauche du losange de la case (x, y) : `((x − y) × 30, (x + y) × 15)`. Les cases sont
 dessinées par diagonales croissantes `x + y`. Une image de `n` cases de côté (largeur 60n − 2)
 est posée avec son socle de 30n lignes calé en bas, la case de dessin étant son coin gauche.
-C'est la convention des jeux précédents du studio : **hypothèse**, cohérente avec le rendu des
-cartes mais pas encore lue dans la routine de dessin.
+**Vérifié** dans `0x00476240` : pour un élément de taille n, le jeu décale le point de dessin de
+`+30(n−1), −15(n−1)` depuis la case de dessin, ce qui revient au même. La taille vient des
+4 bits bas de la grille 7 (taille − 1), pas de la largeur de l'image.
+
+## Relief
+
+- Bloc 23 des `.map` : altitude de chaque case, de 0 à 6 (**vérifié** : la fonction `0x0040E5D0`
+  lit l'octet `objet + 2 + case`, et l'objet `0x0097C448` de la 2.1 correspond à l'adresse du
+  bloc 23 moins 2). Le bloc 24 a la même forme ; son rôle n'est pas établi.
+- La boucle de dessin `0x0047499F` dessine une case à `y − altitude × 30` (**vérifié** dans le
+  code, et visible au rendu : les plateaux sont surélevés).
+- Drapeau de terrain `0x200` : case de falaise. Elle porte l'altitude du niveau **bas**.
+- Le jeu dessine les socles puis les parties hautes, et ne dessine jamais le socle de 40 groupes
+  de falaises (table `0x00692F38`, test `0x00476B90`) : ce sont les falaises orientées N, O et
+  NO, dont le socle est entièrement en vert `0x03E0`. Ce vert n'est donc pas une couleur-clé du
+  moteur ; ne pas le dessiner revient au même pour ces images.
+- Les falaises orientées E, S, SE et SO ont un vrai socle.
+
+## Drapeaux de terrain (bloc 6)
+
+Disposition héritée des jeux précédents du studio, recoupée avec le code et les comptages :
+
+| Bit | Sens | Preuve |
+|---|---|---|
+| `0x1` | arbre | 3 521 cases sur la carte d'Atlantide pour 3 499 images d'arbres |
+| `0x2` | fissures (avec le bit `0x80` de la grille 7) | `0x004D3D28` pose le bit et choisit dans `SPR_CRACKS` |
+| `0x4` | eau | 7 144 cases pour 7 305 images d'eau ; animation dans `0x004743EA` |
+| `0x8` | bâtiment | tests de la boucle de dessin |
+| `0x200` | falaise | voir Relief |
+| `0x4000000` | eau profonde : animation sur les 90 images de `SPR_WATER_ANIMS` (6 étapes de 15) | `0x004743EA` |
+
+Les autres bits (`0x80`, `0x800`, `0x80000`, `0x400000`…) ne sont pas établis.
+
+## Choix des images de terrain
+
+Les fonctions `0x004D3D28` à `0x004D9DA0` recalculent l'image d'une case d'après ses 8 voisins
+(N, NE, E, SE, S, SO, O, NO : décalages −228, −227, +1, +229, +228, +227, −1, −229). La
+recherche `0x004E3616` parcourt une table d'enregistrements de 20 octets : 8 octets de motif
+(0 = voisin absent exigé, 1 = présent exigé, 2 = indifférent), 4 décalages de groupe (un par
+orientation de la vue), puis nombre de variantes et compteur ; la variante est tirée de la
+grille aléatoire. Tables repérées : `0x006D1220` (17 entrées, fissures), `0x006CF600`,
+`0x006CFD80`, `0x006CF240`, `0x006D1378`, `0x006D1BF0`, `0x006D1E70`, `0x006D0E60`,
+`0x006D16D8`, `0x006D1830`. Non porté : les `.map` contiennent déjà les images calculées.
 
 ## Écarts connus avec le jeu
 
-Les `.map` sont des cartes de l'éditeur. En les comparant à des captures officielles du jeu :
+Comparaison avec des captures du jeu (page GOG, galerie de masterofolympus.com) :
 
-- **Rivages** : le jeu affiche des plages arrondies ; la grille d'images des `.map` donne des
-  bords en dents de scie. Le jeu recalcule donc les images de terrain à partir des drapeaux
-  (bloc 6) au chargement. Ces règles sont à retrouver dans le code.
-- **Cases noires** (`SPR_SPACE`) et repères d'éditeur (points d'apparition) : remplacés en jeu.
-- **Relief** : le socle des tuiles de falaise est en vert pur (`0x03E0`), traité comme
-  transparent ; ce que le jeu dessine dessous n'est pas établi (trous noirs dans notre rendu).
+- **Rivages** : conformes. Les tuiles de `SPR_WATER` contiennent le rivage rocheux arrondi ; un
+  rivage horizontal à l'écran forme un escalier, comme dans le jeu. (Une première lecture avait
+  conclu à tort que le jeu recalculait ces images.)
+- **Ordre de dessin du relief** : notre rendu dessine chaque image entière, du fond vers
+  l'avant. Il reste des trous noirs le long des falaises, surtout sur les cartes à plusieurs
+  niveaux. La boucle `0x0047499F` diffère certains dessins selon l'altitude des voisins
+  (`0x0047A600`, `0x0047A6C0`, drapeau `0x40000000`) : à porter.
+- **Cases `SPR_SPACE`** (noires) avec le drapeau de terrain `0x80` : ce que le jeu y affiche
+  n'est pas établi.
+- **Repères d'éditeur** (points d'apparition) : affichés tels quels.
+- **Eau** : fixe ; l'animation est décrite ci-dessus mais pas portée.
+- **Sauvegardes** : elles n'ont pas de grille d'images ; les afficher demande de porter le
+  choix des images de terrain.

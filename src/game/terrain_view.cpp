@@ -25,6 +25,7 @@ TerrainView build_terrain_view(const formats::MapFile& map, ImageStore& images) 
     const uint32_t cells = static_cast<uint32_t>(kGridSide) * kGridSide;
     const formats::MapChunk& image_grid = map.chunk(kImageGridChunk, 4, cells);
     const formats::MapChunk& edge_grid = map.chunk(kEdgeGridChunk, 1, cells);
+    const formats::MapChunk& elevation_grid = map.chunk(kElevationGridChunk, 1, cells);
 
     TerrainView view;
     bool first = true;
@@ -58,9 +59,11 @@ TerrainView build_terrain_view(const formats::MapFile& map, ImageStore& images) 
             s.tile_x = x;
             s.tile_y = y;
             s.width = width;
+            s.has_top = images.has_top(id);
             s.height = height;
             s.x = tile_screen_x(x, y);
-            s.y = tile_screen_y(x, y) + kTileStepY * (size + 1) - height;
+            s.y = tile_screen_y(x, y) + kTileStepY * (size + 1) - height -
+                  kElevationStep * elevation_grid.data[cell];
             view.sprites.push_back(s);
             if (first) {
                 view.min_x = s.x;

@@ -176,12 +176,14 @@ private:
         update_title();
     }
 
-    SDL_Texture* texture(uint32_t id) {
-        auto found = textures_.find(id);
+    // Texture d'une partie d'image (socle ou partie haute), créée à la première utilisation.
+    SDL_Texture* texture(uint32_t id, zeus::formats::SgFile::Part part) {
+        const uint64_t key = static_cast<uint64_t>(id) << 2 | static_cast<uint64_t>(part);
+        auto found = textures_.find(key);
         if (found != textures_.end()) return found->second;
         SDL_Texture* t = nullptr;
         try {
-            const zeus::formats::Pixels p = images_.decode(id);
+            const zeus::formats::Pixels p = images_.decode(id, part);
             if (p.width > 0 && p.height > 0) {
                 t = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC,
                                       p.width, p.height);
@@ -192,7 +194,7 @@ private:
         } catch (const std::exception&) {
             t = nullptr;  // image illisible : la case reste vide
         }
-        textures_.emplace(id, t);
+        textures_.emplace(key, t);
         return t;
     }
 
@@ -205,9 +207,15 @@ private:
         const double right = left + out_w / zoom_, bottom = top + out_h / zoom_;
         const SDL_ScaleMode mode = zoom_ < 1.0 ? SDL_ScaleModeLinear : SDL_ScaleModeNearest;
         drawn_ = 0;
+        // Une seule passe, du fond vers l'avant, image entière. Le jeu sépare socles et parties
+        // hautes et diffère certains dessins selon l'altitude des cases voisines (0x0047499F) ;
+        // cette logique n'est pas encore portée. Dessiner tous les socles puis toutes les
+        // parties hautes sans elle donne un résultat pire : les falaises du fond passent devant
+        // les plateaux.
+        using Part = zeus::formats::SgFile::Part;
         for (const TerrainSprite& s : view_.sprites) {
             if (s.x + s.width < left || s.x > right || s.y + s.height < top || s.y > bottom) continue;
-            SDL_Texture* t = texture(s.image_id);
+            SDL_Texture* t = texture(s.image_id, Part::Whole);
             if (!t) continue;
             SDL_SetTextureScaleMode(t, mode);
             // Bords arrondis de façon cohérente pour que les cases voisines restent jointives.
@@ -284,7 +292,7 @@ private:
     TerrainView view_;
     SDL_Window* window_ = nullptr;
     SDL_Renderer* renderer_ = nullptr;
-    std::map<uint32_t, SDL_Texture*> textures_;
+    std::map<uint64_t, SDL_Texture*> textures_;
     double center_x_ = 0, center_y_ = 0, zoom_ = 1.0;
     int mouse_x_ = 0, mouse_y_ = 0;
     size_t drawn_ = 0;
