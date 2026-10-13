@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "formats/sg3.h"
+#include "platform/capture.h"
 
 namespace fs = std::filesystem;
 using zeus::formats::Pixels;
@@ -133,26 +134,9 @@ public:
     }
 
     void save_screenshot(const fs::path& out) {
-        // Dessin dans une texture : le contenu de la fenêtre n'est plus lisible après présentation.
-        int w = 0, h = 0;
-        SDL_GetRendererOutputSize(renderer_, &w, &h);
-        SDL_Texture* target = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGBA32,
-                                                SDL_TEXTUREACCESS_TARGET, w, h);
-        SDL_Surface* shot = SDL_CreateRGBSurfaceWithFormat(0, w, h, 24, SDL_PIXELFORMAT_RGB24);
-        bool ok = target && shot && SDL_SetRenderTarget(renderer_, target) == 0;
-        if (ok) {
-            paint();
-            ok = SDL_RenderReadPixels(renderer_, nullptr, SDL_PIXELFORMAT_RGB24, shot->pixels,
-                                      shot->pitch) == 0 &&
-                 SDL_SaveBMP(shot, out.string().c_str()) == 0;
-        }
-        const std::string error = ok ? "" : SDL_GetError();
-        SDL_SetRenderTarget(renderer_, nullptr);
-        if (shot) SDL_FreeSurface(shot);
-        if (target) SDL_DestroyTexture(target);
-        if (!ok) throw std::runtime_error(error);
-        std::printf("capture : %s (%dx%d, %zu sprites, images %zu à %zu)\n", out.string().c_str(), w,
-                    h, page_.size(), first_, next_ - 1);
+        zeus::platform::save_render_bmp(renderer_, out, [this] { paint(); });
+        std::printf("capture : %s (%zu sprites, images %zu à %zu)\n", out.string().c_str(),
+                    page_.size(), first_, next_ - 1);
     }
 
 private:

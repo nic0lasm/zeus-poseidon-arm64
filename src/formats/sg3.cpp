@@ -13,6 +13,7 @@ constexpr size_t kBitmapRecords = 200, kBitmapSize = 200;
 constexpr size_t kTagRecords = 300, kTagSize = 48;
 constexpr int kTileW = 58, kTileH = 30;
 constexpr size_t kTileBytes = 1800;  // 900 pixels de 16 bits
+constexpr uint16_t kIsoKey = 0x03E0;  // vert pur : pixel de socle à ne pas dessiner
 
 [[noreturn]] void fail(const std::string& message) { throw std::runtime_error(message); }
 
@@ -116,8 +117,11 @@ void decode_iso_base(std::vector<uint8_t>& out, int w, int h, const uint8_t* pix
             const int tx = x0 + k * (kTileW + 2);
             for (int y = 0; y < kTileH; ++y) {
                 const int start = y < kTileH / 2 ? kTileH - 2 * (y + 1) : 2 * y - kTileH;
-                for (int x = start; x < kTileW - start; ++x, i += 2)
-                    put(out, static_cast<size_t>(y0 + y) * w + tx + x, u16(pix + i));
+                for (int x = start; x < kTileW - start; ++x, i += 2) {
+                    const uint16_t c = u16(pix + i);
+                    // Couleur-clé : le socle des tuiles de relief laisse voir le dessous.
+                    if ((c & 0x7FFF) != kIsoKey) put(out, static_cast<size_t>(y0 + y) * w + tx + x, c);
+                }
             }
         }
     }

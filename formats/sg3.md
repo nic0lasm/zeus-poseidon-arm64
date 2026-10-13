@@ -70,13 +70,14 @@ Octets non nuls encore inexpliqués : 24, 26, 28, 32, 48, 57 à 61, 63.
 
 ## Codage des pixels
 
-Couleur : `u16`, 5 bits par composante, `0RRRRRGGGGGBBBBB`.
+Couleur : `u16`, 5 bits par composante, `0RRRRRGGGGGBBBBB`. Le bit 15 est à 1 sur une grande partie des pixels
+sans effet visible sur la couleur : son rôle n'est pas établi.
 
 | Cas | Images | Codage |
 |---|---|---|
 | non compressé (types 0, 1, 10, 12, 13) | 3 000 | largeur × hauteur `u16` ; `0xF81F` = transparent |
 | compressé (octet 51 = 1) | 65 200 | suites : `255, n` = n pixels transparents ; sinon `c` = c pixels `u16` qui suivent. Les suites franchissent les fins de ligne. |
-| isométrique (type 30) | 2 387 | socle non compressé, puis éventuelle partie haute en suites |
+| isométrique (type 30) | 2 387 | socle non compressé, puis éventuelle partie haute en suites  Dans le socle, le vert pur `0x03E0` (bit 15 ignoré) est une couleur-clé non dessinée : 84 tuiles de relief ont un socle entièrement vert. |
 | masque alpha (0xD6) | — | mêmes suites, un octet par pixel, opacité de 0 à 31 |
 
 Socle isométrique : largeur = 60 × taille − 2, hauteur du socle = 30 × taille, calé en bas de

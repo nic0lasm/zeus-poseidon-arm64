@@ -13,8 +13,25 @@ find_package(SDL2 REQUIRED)
 find_package(ZLIB REQUIRED)
 
 # Lecteurs des formats de fichiers du jeu, sans dépendance à la plateforme.
-add_library(zeus_formats STATIC src/formats/sg3.cpp)
+add_library(zeus_formats STATIC
+    src/formats/mapfile.cpp
+    src/formats/pkware.cpp
+    src/formats/sg3.cpp)
 target_include_directories(zeus_formats PUBLIC src)
 
+# Logique du jeu reconstruite depuis l'analyse, sans dépendance à la plateforme.
+add_library(zeus_game STATIC
+    src/game/image_store.cpp
+    src/game/terrain_view.cpp)
+target_link_libraries(zeus_game PUBLIC zeus_formats)
+
+# Tout ce qui remplace Win32/DirectX.
+add_library(zeus_platform STATIC src/platform/capture.cpp)
+target_include_directories(zeus_platform PUBLIC src)
+target_link_libraries(zeus_platform PUBLIC SDL2::SDL2)
+
 add_executable(zeus-sprites src/tools/sprite_viewer.cpp)
-target_link_libraries(zeus-sprites PRIVATE zeus_formats SDL2::SDL2 ZLIB::ZLIB)
+target_link_libraries(zeus-sprites PRIVATE zeus_formats zeus_platform ZLIB::ZLIB)
+
+add_executable(zeus-map src/tools/map_viewer.cpp)
+target_link_libraries(zeus-map PRIVATE zeus_game zeus_platform ZLIB::ZLIB)

@@ -18,6 +18,7 @@ BITMAP_RECORDS, BITMAP_SIZE = 200, 200
 TAG_RECORDS, TAG_SIZE = 300, 48
 TILE_W, TILE_H = 58, 30
 TILE_BYTES = 1800  # 900 pixels de 16 bits
+ISO_KEY = 0x03E0   # vert pur : pixel de socle à ne pas dessiner (tuiles de relief)
 
 
 class FormatError(Exception):
@@ -224,7 +225,9 @@ def _iso_base(out, w, h, pix, im):
             for y in range(TILE_H):
                 start = TILE_H - 2 * (y + 1) if y < TILE_H // 2 else 2 * y - TILE_H
                 for x in range(start, TILE_W - start):
-                    _put(out, (y0 + y) * w + tx + x, pix[i] | pix[i + 1] << 8)
+                    c = pix[i] | pix[i + 1] << 8
+                    if c & 0x7FFF != ISO_KEY:  # couleur-clé : le socle laisse voir le dessous
+                        _put(out, (y0 + y) * w + tx + x, c)
                     i += 2
 
 
