@@ -70,6 +70,20 @@ def main(argv):
 
     copied = {}  # chemin réel d'origine -> copie dans le paquet
     pending = [(program, binary)] + [(None, e) for e in extra]
+
+    # Outil de déballage des installateurs GOG, embarqué comme programme auxiliaire.
+    helper = None
+    for candidate in ("/opt/homebrew/bin/innoextract", "/usr/local/bin/innoextract"):
+        if os.path.exists(candidate):
+            helpers = os.path.join(app, "Contents", "Helpers")
+            os.makedirs(helpers)
+            helper = os.path.join(helpers, "innoextract")
+            shutil.copy2(os.path.realpath(candidate), helper)
+            os.chmod(helper, 0o755)
+            pending.append((helper, os.path.realpath(candidate)))
+            break
+    if helper is None:
+        print("attention : innoextract absent, le paquet ne saura pas ouvrir un installateur GOG")
     while pending:
         target, origin = pending.pop()
         if target is None:
@@ -128,6 +142,8 @@ def main(argv):
                 run("install_name_tool", "-delete_rpath", listing[i + 2].split()[1], library)
         run("install_name_tool", "-add_rpath", "@loader_path", library)
         run("codesign", "--force", "--sign", "-", library)
+    if helper:
+        run("codesign", "--force", "--sign", "-", helper)
     run("codesign", "--force", "--sign", "-", app)
 
     size = sum(os.path.getsize(os.path.join(d, f)) for d, _, files in os.walk(app) for f in files)

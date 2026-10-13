@@ -58,8 +58,8 @@ cmake -S . -B build -G Ninja && cmake --build build
 ./build/zeus-run --run original/gog/app/Zeus.exe
 ```
 
-**⌘F** (ou **⌘↩**) bascule entre fenêtre et plein écran. `python3 tools/make_app.py` fabrique une application `Zeus Poseidon.app` qui demande le dossier
-du jeu au premier lancement. Le dossier du jeu n'est jamais modifié : tout ce que le jeu écrit (sauvegardes, réglages) va
+**⌘F** (ou **⌘↩**) bascule entre fenêtre et plein écran. `python3 tools/make_app.py` fabrique une application `Zeus Poseidon.app` qui demande votre
+installateur GOG au premier lancement et le déballe. Le dossier du jeu n'est jamais modifié : tout ce que le jeu écrit (sauvegardes, réglages) va
 dans `run/zeus/`. Instructions complètes : [docs/getting-started.md](docs/getting-started.md).
 
 ## Principe

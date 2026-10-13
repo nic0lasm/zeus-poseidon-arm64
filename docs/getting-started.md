@@ -74,8 +74,9 @@ open "build/Zeus Poseidon.app"
 ```
 
 This assembles a self-contained `Zeus Poseidon.app`: the program plus the libraries it needs,
-signed locally. On first launch it asks for the game folder (the one that contains `Zeus.exe`,
-or the folder the GOG installer was unpacked into) and remembers it. Saves and settings go to
+signed locally. On first launch it asks for the game: either the GOG installer itself, which it
+unpacks (about a minute, 800 MB), or a folder where the game is already unpacked. The choice
+is remembered. Saves and settings go to
 `~/Library/Application Support/Zeus Poseidon/`. The bundle contains no game files.
 
 That bundle is meant for your own Mac: it embeds Homebrew's FFmpeg build, whose licence terms

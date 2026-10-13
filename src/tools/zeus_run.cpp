@@ -3,8 +3,9 @@
 //   zeus-run --selftest        vérifie le processeur émulé et l'appel de fonctions hôtes
 //   zeus-run --bench           mesure le processeur émulé et le coût d'un appel de fonction hôte
 //   zeus-run --inspect EXE     charge l'exécutable sans rien exécuter et liste ses imports
-//   zeus-run --app             mode application (aussi sans argument) : demande le dossier du jeu
-//                              au premier lancement, range sauvegardes et réglages dans
+//   zeus-run --app [--installer SETUP.exe]
+//                              mode application (aussi sans argument) : demande le jeu au
+//                              premier lancement (installateur GOG ou dossier déballé), range sauvegardes et réglages dans
 //                              ~/Library/Application Support/Zeus Poseidon
 //   zeus-run --run EXE [options]
 //                              exécute le programme dans le processeur émulé
@@ -25,6 +26,7 @@
 
 #include <chrono>
 #include <cstdio>
+#include <mach-o/dyld.h>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
@@ -255,27 +257,116 @@ std::string find_game(const std::filesystem::path& folder) {
     return {};
 }
 
-// Mode application : le dossier du jeu est demandé une fois, puis retenu.
-int run_app() {
+// Vrai si la langue du système est le français : les dialogues du mode application sont
+// en français ou en anglais.
+bool french() {
+    static const bool value = command_output("/usr/bin/defaults read -g AppleLanguages 2>/dev/null").find("\"fr") != std::string::npos;
+    return value;
+}
+const char* tr(const char* fr, const char* en) { return french() ? fr : en; }
+
+// Entoure un texte d'apostrophes pour le passer à l'interpréteur de commandes.
+std::string quoted(const std::string& text) {
+    std::string out = "'";
+    for (char c : text) out += c == '\'' ? std::string("'\\''") : std::string(1, c);
+    return out + "'";
+}
+
+// Exécute un script AppleScript d'une ligne et renvoie ce qu'il affiche.
+std::string applescript(const std::string& script) {
+    return command_output("/usr/bin/osascript -e " + quoted(script) + " 2>/dev/null");
+}
+
+void alert(const std::string& title, const std::string& text) {
+    applescript("display alert \"" + title + "\" message \"" + text + "\"");
+}
+
+// Outil de déballage des installateurs GOG : celui du paquet, sinon celui du système.
+std::string innoextract_path() {
+    namespace fs = std::filesystem;
+    char self[4096];
+    uint32_t size = sizeof self;
+    if (_NSGetExecutablePath(self, &size) == 0) {
+        std::error_code error;
+        const fs::path bundled = fs::canonical(self, error).parent_path().parent_path() / "Helpers" / "innoextract";
+        if (!error && fs::exists(bundled)) return bundled.string();
+    }
+    for (const char* candidate : {"/opt/homebrew/bin/innoextract", "/usr/local/bin/innoextract"})
+        if (fs::exists(candidate)) return candidate;
+    return {};
+}
+
+// Déballe un installateur GOG dans `destination` et renvoie le chemin de Zeus.exe, ou vide.
+std::string unpack_installer(const std::string& installer, const std::filesystem::path& destination) {
+    namespace fs = std::filesystem;
+    const std::string tool = innoextract_path();
+    if (tool.empty()) {
+        alert(tr("Outil de déballage introuvable", "Unpacking tool not found"),
+              tr("innoextract n'est pas installé.", "innoextract is not installed."));
+        return {};
+    }
+    if (!find_game(destination).empty()) return find_game(destination);  // déjà déballé
+    fs::create_directories(destination);
+    const std::string command = quoted(tool) + " --silent --extract --output-dir " + quoted(destination.string()) +
+                                " " + quoted(installer) + " 2>&1";
+    const std::string output = command_output(command);
+    const std::string exe = find_game(destination);
+    if (exe.empty())
+        alert(tr("Cet installateur n'a pas pu être déballé", "This installer could not be unpacked"),
+              tr("Il faut l'installateur GOG de Zeus + Poseidon (setup_zeus_and_poseidon_….exe).",
+                 "The GOG installer of Zeus + Poseidon is needed (setup_zeus_and_poseidon_….exe)."));
+    if (exe.empty() && !output.empty()) std::fprintf(stderr, "%s\n", output.c_str());
+    return exe;
+}
+
+// Mode application : le jeu est demandé une fois (installateur GOG ou dossier déjà déballé),
+// puis retenu. `installer` non vide : on le déballe sans rien demander.
+int run_app(const std::string& installer) {
     namespace fs = std::filesystem;
     const char* forced = std::getenv("ZEUS_SUPPORT_DIR");
     const char* home = std::getenv("HOME");
     if (!forced && !home) throw std::runtime_error("dossier personnel introuvable");
     const fs::path support = forced ? fs::path(forced) : fs::path(home) / "Library/Application Support/Zeus Poseidon";
     fs::create_directories(support);
-    const fs::path memo = support / "dossier-du-jeu.txt";
+    const fs::path memo = support / "dossier-du-jeu.txt", unpacked = support / "Jeu-origine";
     std::string folder;
     if (std::ifstream in{memo}) std::getline(in, folder);
     std::string exe = folder.empty() ? std::string() : find_game(folder);
+    if (!installer.empty()) {
+        exe = unpack_installer(installer, unpacked);
+        if (exe.empty()) return 1;
+        folder = unpacked.string();
+    }
     while (exe.empty()) {
-        folder = command_output(
-            "/usr/bin/osascript -e 'POSIX path of (choose folder with prompt \"Zeus + Poseidon : choisissez le dossier du "
-            "jeu (celui qui contient Zeus.exe)\")' 2>/dev/null");
-        if (folder.empty()) return 0;  // annulé
-        exe = find_game(folder);
-        if (exe.empty())
-            command_output("/usr/bin/osascript -e 'display alert \"Zeus.exe est introuvable dans ce dossier.\" message "
-                           "\"Choisissez le dossier où le jeu a été déballé.\"' >/dev/null 2>&1");
+        const std::string choice = applescript(
+            std::string("button returned of (display dialog \"") +
+            tr("Zeus + Poseidon a besoin du jeu d'origine, que vous devez posséder.\\n\\nIndiquez l'installateur GOG "
+               "(setup_zeus_and_poseidon_….exe) : il sera déballé, ce qui prend environ une minute et 800 Mo. Ou bien "
+               "indiquez un dossier où le jeu est déjà déballé.",
+               "Zeus + Poseidon needs the original game, which you must own.\\n\\nPick the GOG installer "
+               "(setup_zeus_and_poseidon_….exe): it will be unpacked, which takes about a minute and 800 MB. Or pick "
+               "a folder where the game is already unpacked.") +
+            "\" buttons {\"" + tr("Quitter", "Quit") + "\", \"" + tr("Dossier…", "Folder…") + "\", \"" +
+            tr("Installateur GOG…", "GOG installer…") + "\"} default button 3 with title \"Zeus + Poseidon\")");
+        if (choice == tr("Installateur GOG…", "GOG installer…")) {
+            const std::string file = applescript(std::string("POSIX path of (choose file with prompt \"") +
+                                                 tr("Installateur GOG de Zeus + Poseidon", "GOG installer of Zeus + Poseidon") +
+                                                 "\" of type {\"exe\"})");
+            if (file.empty()) continue;
+            exe = unpack_installer(file, unpacked);
+            folder = unpacked.string();
+        } else if (choice == tr("Dossier…", "Folder…")) {
+            folder = applescript(std::string("POSIX path of (choose folder with prompt \"") +
+                                 tr("Dossier du jeu (celui qui contient Zeus.exe)", "Game folder (the one that contains Zeus.exe)") +
+                                 "\")");
+            if (folder.empty()) continue;
+            exe = find_game(folder);
+            if (exe.empty())
+                alert(tr("Zeus.exe est introuvable dans ce dossier", "Zeus.exe was not found in this folder"),
+                      tr("Choisissez le dossier où le jeu a été déballé.", "Pick the folder the game was unpacked into."));
+        } else {
+            return 0;  // Quitter, ou dialogue fermé
+        }
     }
     std::ofstream(memo) << folder << "\n";
     RunOptions o;
@@ -288,7 +379,8 @@ int run_app() {
 
 int main(int argc, char** argv) {
     try {
-        if (argc == 1 || (argc == 2 && !std::strcmp(argv[1], "--app"))) return run_app();
+        if (argc == 1 || (argc == 2 && !std::strcmp(argv[1], "--app"))) return run_app({});
+        if (argc == 4 && !std::strcmp(argv[1], "--app") && !std::strcmp(argv[2], "--installer")) return run_app(argv[3]);
         if (argc >= 3 && !std::strcmp(argv[1], "--run")) {
             RunOptions o;
             o.exe = argv[2];
