@@ -7,8 +7,22 @@
 | 0 | Scoping | DRM-free GOG executable identified and analysed | done |
 | 1 | The game starts | the real main menu in a Mac window | done |
 | 2 | Playable | mouse, keyboard, load and save, a tutorial can be played | done |
-| 3 | Complete | music, voices, sound effects, videos, full screen, `.app` bundle | in progress |
-| 4 | Going native | original code replaced piece by piece, rendering first | planned |
+| 3 | Complete | music, sound effects, intro video, full screen | done |
+| 4 | Ready to share | performance, self-contained `.app`, automated builds, first release | next |
+| 5 | French edition | French texts and voices from the player's own CDs; wider resolutions | planned |
+| 6 | No emulator | static recompilation of the game's code to native arm64 | planned |
+
+### Why this order
+
+The game is playable; what stands between it and players is speed and packaging. Profiling a
+running city shows the whole frame time is spent inside the emulator, and more than half of
+that in its slow memory-write paths rather than in the game's code. Milestone 4 therefore
+starts with measurements and emulator tuning, then packaging.
+
+Milestone 6 replaces an earlier idea (rewriting the engine by hand, module by module).
+Fidelity is already guaranteed by running the original code; translating that code
+mechanically to native code keeps the guarantee, removes the emulator and its overhead, and
+is far less work than a rewrite.
 
 ## What has been verified
 
@@ -32,21 +46,19 @@
   never sleeps and the emulator is the bottleneck. The game itself caps its display rate.
 - `CompareStringW`, `RaiseException`, `RtlUnwind` and several DirectDraw methods are not
   written; no play session has needed them so far.
-- Windowed 800×600 only.
 - Tested with the English GOG edition only.
 
-## Milestone 3 — plan
+## Milestone 4 — plan
 
-1. ~~Miles Sound System: sound effects (`.wav`) and streamed music (`.mp3`)~~ — done; voices
-   and event sounds still to be checked in play.
-2. ~~Bink: intro video~~ — done.
-3. Performance: idle the CPU between frames, measure input latency.
-4. Full screen and integer scaling.
-5. An application bundle that asks for the game folder on first launch.
+1. Performance: reproducible measurement (frames, loop iterations, input latency), then
+   emulator tuning.
+2. A log file and a clear message when the game stops on a missing function.
+3. A self-contained application bundle that asks for the game folder on first launch.
+4. Automated build on every change; a first published release.
 
 ## Earlier work
 
 Before the current approach, the project decoded the sprite and map formats and ported the
-terrain renderer natively (`zeus-sprites`, `zeus-map`). That code is kept: it is the starting
-point of milestone 4. One known defect remains in the native terrain renderer (black diamonds
+terrain renderer natively (`zeus-sprites`, `zeus-map`). That code is kept: it is the useful as a
+reference for milestone 6. One known defect remains in the native terrain renderer (black diamonds
 at the foot of some cliffs).

@@ -36,7 +36,9 @@ public:
 
     // Réglages de diagnostic, à fixer avant le lancement du programme.
     bool headless = false;        // fenêtre cachée
+    bool fullscreen = false;      // plein écran dès l'ouverture ; ⌘F ou ⌘Entrée pour basculer
     std::string screenshot_path;  // enregistre la dernière image affichée
+    std::string window_shot_path; // enregistre le contenu de la fenêtre, mise à l'échelle comprise
     int max_presents = 0;         // arrête le programme après ce nombre d'images (0 = jamais)
     double max_seconds = 0;       // arrête le programme après cette durée (0 = jamais)
     // Ajoute au scénario les actions décrites par `text`, de la forme
@@ -72,6 +74,12 @@ private:
     SDL_Window* window_ = nullptr;
     SDL_Renderer* renderer_ = nullptr;
     SDL_Texture* texture_ = nullptr;
+    SDL_Texture* upscaled_ = nullptr;  // image agrandie d'un facteur entier, avant lissage
+    int upscaled_factor_ = 0;
+    // Rectangle de la fenêtre occupé par l'image du jeu, en points de fenêtre.
+    double view_x_ = 0, view_y_ = 0, view_scale_ = 1;
+    void to_game(int window_x, int window_y);
+    void toggle_fullscreen();
     bool texture_565_ = false;
     int width_ = kScreenWidth, height_ = kScreenHeight, texture_w_ = 0, texture_h_ = 0;
     int presents_ = 0;

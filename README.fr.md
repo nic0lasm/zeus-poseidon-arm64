@@ -24,15 +24,17 @@ réécriture.
 |---|---|---|
 | 1. Le jeu démarre | le vrai menu principal dans une fenêtre Mac | fait |
 | 2. Jouable | souris, clavier, tutoriels et aventures, construction, sauvegarde et chargement | fait |
-| 3. Complet | musiques, voix, bruitages, vidéos, plein écran, application `.app` | **en cours** — musiques, bruitages et vidéo d'introduction fonctionnent |
-| 4. Passage au natif | des parties du code d'origine remplacées par du code natif, à commencer par l'affichage | prévu |
+| 3. Complet | musiques, bruitages, vidéos, plein écran | fait |
+| 4. Diffusable | performances, application `.app` autonome, compilation automatique, première version publiée | **à venir** |
+| 5. Édition française | textes et voix français tirés de vos propres CD d'origine ; résolutions larges | prévu |
+| 6. Sans émulateur | le code du jeu traduit une fois pour toutes en code natif | prévu |
 
 Ce qui fonctionne aujourd'hui : menus, profils de dirigeant, tutoriels, une ville qui vit
 (habitants, logements, construction, calendrier, trésorerie), défilement de la carte,
 sauvegarde et chargement, musiques, ambiances, bruitages et vidéo d'introduction. Les sauvegardes sont au format du jeu et restent compatibles avec
 l'original.
 
-Limites connues : fenêtre seulement, pas encore de spatialisation 3D du son ; le jeu est gourmand (un cœur du processeur
+Limites connues : pas encore de spatialisation 3D du son ; le jeu est gourmand (un cœur du processeur
 est occupé en permanence) et les commandes peuvent sembler légèrement en retard ; seule
 l'édition GOG en anglais a été essayée.
 
@@ -55,7 +57,7 @@ cmake -S . -B build -G Ninja && cmake --build build
 ./build/zeus-run --run original/gog/app/Zeus.exe
 ```
 
-Le dossier du jeu n'est jamais modifié : tout ce que le jeu écrit (sauvegardes, réglages) va
+**⌘F** (ou **⌘↩**) bascule entre fenêtre et plein écran. Le dossier du jeu n'est jamais modifié : tout ce que le jeu écrit (sauvegardes, réglages) va
 dans `run/zeus/`. Instructions complètes : [docs/getting-started.md](docs/getting-started.md).
 
 ## Principe
@@ -96,6 +98,11 @@ Le dépôt ne contient que du code source original, des outils et de la document
 distribue aucun exécutable, image, son, texte ou donnée du jeu, et ne contourne aucune
 protection : il n'exécute que l'édition GOG, sans DRM, à partir des fichiers que vous
 fournissez.
+
+## Licence
+
+GPL-2.0-or-later — voir [LICENSE](LICENSE). Elle ne couvre que le code et la documentation de
+ce dépôt, jamais le jeu.
 
 L'émulation x86 repose sur [Unicorn](https://www.unicorn-engine.org/) (GPL-2.0) ; les vidéos
 sont décodées par [FFmpeg](https://ffmpeg.org/).

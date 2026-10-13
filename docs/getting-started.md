@@ -60,7 +60,8 @@ cmake --build build
 ./build/zeus-run --run original/gog/app/Zeus.exe
 ```
 
-The game opens in an 800×600 window. Saves and settings are written to `run/zeus/`.
+The game opens in an 800×600 window. **⌘F** or **⌘↩** switches to full screen and back; the
+picture keeps its 4:3 proportions and stays sharp at any size. Saves and settings are written to `run/zeus/`.
 
 The intro video plays first; press Esc to skip it.
 
@@ -74,8 +75,10 @@ The intro video plays first; press Esc to skip it.
 | `--trace-only PREFIX` | trace only functions whose name starts with PREFIX, e.g. `mss32.dll` |
 | `--headless` | hidden window, sound muted |
 | `--mute` | sound muted |
+| `--fullscreen` | start in full screen |
 | `--frames N`, `--seconds S` | stop after N displayed frames or S seconds |
 | `--screenshot FILE.bmp` | save the last displayed frame |
+| `--window-shot FILE.bmp` | save what the window shows, scaling included |
 | `--script "T:ACTION; …"` | replay input at T seconds: `click X,Y`, `rclick X,Y`, `move X,Y`, `key CODE` (Windows virtual key), `char CODE`, `shot FILE.bmp` |
 
 Example — reach the main menu without a window and capture it:

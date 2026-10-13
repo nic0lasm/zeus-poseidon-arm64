@@ -80,7 +80,10 @@ The game folder is strictly read-only.
 The game uses DirectDraw 16-bit surfaces (5-5-5). DirectDraw objects are COM objects: the host
 builds, in guest memory, objects whose method tables point at host functions. Surfaces live in
 guest memory, since the game locks them once and draws straight into them. Whenever the game
-copies to the primary surface, the frame is uploaded to an SDL texture.
+copies to the primary surface, the frame is uploaded to an SDL texture. The picture is scaled
+to the window with its proportions kept: at integer factors each game pixel is a crisp square;
+otherwise it is first enlarged to the next integer factor without smoothing, then reduced with
+smoothing, which keeps pixels sharp and even.
 
 The intro screens are JPEG files decoded through Intel's JPEG library in the original; the host
 decodes them with macOS ImageIO.

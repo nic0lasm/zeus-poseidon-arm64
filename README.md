@@ -22,15 +22,17 @@ The result is the real game — same simulation, same rules, same save files —
 |---|---|---|
 | 1. The game starts | the real main menu in a Mac window | done |
 | 2. Playable | mouse, keyboard, tutorials and adventures, building, saving and loading | done |
-| 3. Complete | music, voices, sound effects, videos, full screen, a double-clickable `.app` | **in progress** — music, sound effects and the intro video play |
-| 4. Going native | parts of the original code replaced by native code, starting with rendering | planned |
+| 3. Complete | music, sound effects, videos, full screen | done |
+| 4. Ready to share | performance, a self-contained `.app`, automated builds, a first release | **next** |
+| 5. French edition | French texts and voices taken from your own original CDs; wider resolutions | planned |
+| 6. No emulator | the game's code translated once to native code | planned |
 
 What works today: menus, leader profiles, tutorials, a running city (walkers, housing,
 construction, time, treasury), map scrolling, save and load, music, ambience, sound effects and the intro video.
 Save files are the game's own
 format and stay compatible with the original.
 
-Known limits: windowed only, no 3D sound positioning yet; the game is CPU-hungry (one core is always busy) and
+Known limits: no 3D sound positioning yet; the game is CPU-hungry (one core is always busy) and
 input can feel slightly laggy; tested with the English GOG edition only.
 
 Details: [docs/roadmap.md](docs/roadmap.md).
@@ -52,7 +54,7 @@ cmake -S . -B build -G Ninja && cmake --build build
 ./build/zeus-run --run original/gog/app/Zeus.exe
 ```
 
-The game folder is never modified: everything the game writes (saves, settings) goes to
+Press **⌘F** (or **⌘↩**) to switch between window and full screen. The game folder is never modified: everything the game writes (saves, settings) goes to
 `run/zeus/`. Full instructions and troubleshooting: [docs/getting-started.md](docs/getting-started.md).
 
 ## How it works
@@ -109,6 +111,11 @@ supported by Impressions Games, Sierra, Activision or GOG. *Zeus: Master of Olym
 The repository contains only original source code, tools and documentation. It ships no
 executable, artwork, sound, text or data from the game, and it does not circumvent any copy
 protection: it only runs the DRM-free GOG edition, from files you provide.
+
+## License
+
+GPL-2.0-or-later — see [LICENSE](LICENSE). This covers the code and documentation of this
+repository only, never the game.
 
 The x86 emulation relies on the [Unicorn engine](https://www.unicorn-engine.org/) (GPL-2.0);
 videos are decoded with [FFmpeg](https://ffmpeg.org/).

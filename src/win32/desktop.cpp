@@ -3,6 +3,7 @@
 #include <SDL.h>
 
 #include <algorithm>
+#include <cmath>
 #include <sstream>
 #include <stdexcept>
 
@@ -63,6 +64,7 @@ Desktop::Desktop() : keys_(256, false) {
 }
 
 Desktop::~Desktop() {
+    if (upscaled_) SDL_DestroyTexture(upscaled_);
     if (texture_) SDL_DestroyTexture(texture_);
     if (renderer_) SDL_DestroyRenderer(renderer_);
     if (window_) SDL_DestroyWindow(window_);
@@ -75,7 +77,9 @@ void Desktop::create_window(const std::string& title, int width, int height) {
         width_ = width;
         height_ = height;
     }
-    const Uint32 flags = headless ? static_cast<Uint32>(SDL_WINDOW_HIDDEN) : 0u;
+    Uint32 flags = SDL_WINDOW_ALLOW_HIGHDPI;
+    if (headless) flags |= SDL_WINDOW_HIDDEN;
+    else if (fullscreen) flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
     window_ = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width_,
                                height_, flags);
     if (!window_) throw std::runtime_error(SDL_GetError());
@@ -86,7 +90,7 @@ void Desktop::create_window(const std::string& title, int width, int height) {
 void Desktop::set_mode(int width, int height) {
     width_ = width;
     height_ = height;
-    if (window_) {
+    if (window_ && !fullscreen) {
         SDL_SetWindowSize(window_, width, height);
         SDL_SetWindowPosition(window_, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
     }
@@ -99,13 +103,53 @@ void Desktop::present(const uint8_t* pixels, int width, int height, int pitch, b
         texture_ = SDL_CreateTexture(renderer_, rgb565 ? SDL_PIXELFORMAT_RGB565 : SDL_PIXELFORMAT_RGB555,
                                      SDL_TEXTUREACCESS_STREAMING, width, height);
         if (!texture_) throw std::runtime_error(SDL_GetError());
+        SDL_SetTextureScaleMode(texture_, SDL_ScaleModeNearest);
+        if (upscaled_) SDL_DestroyTexture(upscaled_);
+        upscaled_ = nullptr;
         texture_w_ = width;
         texture_h_ = height;
         texture_565_ = rgb565;
     }
     SDL_UpdateTexture(texture_, nullptr, pixels, pitch);
+
+    // L'image garde ses proportions et se centre dans la fenêtre. À un facteur entier, chaque
+    // pixel du jeu devient un carré net. Sinon on agrandit d'abord au facteur entier supérieur,
+    // sans lissage, puis on réduit avec lissage : les pixels restent nets et réguliers.
+    int out_w = 0, out_h = 0, win_w = 0, win_h = 0;
+    SDL_GetRendererOutputSize(renderer_, &out_w, &out_h);
+    SDL_GetWindowSize(window_, &win_w, &win_h);
+    const double scale = std::min(static_cast<double>(out_w) / width, static_cast<double>(out_h) / height);
+    const SDL_Rect target = {static_cast<int>((out_w - width * scale) / 2), static_cast<int>((out_h - height * scale) / 2),
+                             static_cast<int>(width * scale), static_cast<int>(height * scale)};
+    const double density = win_w > 0 ? static_cast<double>(out_w) / win_w : 1.0;
+    view_scale_ = scale / density;
+    view_x_ = target.x / density;
+    view_y_ = target.y / density;
+    const int factor = static_cast<int>(std::ceil(scale - 1e-6));
     SDL_RenderClear(renderer_);
-    SDL_RenderCopy(renderer_, texture_, nullptr, nullptr);
+    if (factor <= 1 || std::abs(scale - factor) < 1e-6) {
+        SDL_RenderCopy(renderer_, texture_, nullptr, &target);
+    } else {
+        if (!upscaled_ || upscaled_factor_ != factor) {
+            if (upscaled_) SDL_DestroyTexture(upscaled_);
+            upscaled_ = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_TARGET, width * factor,
+                                          height * factor);
+            if (!upscaled_) throw std::runtime_error(SDL_GetError());
+            SDL_SetTextureScaleMode(upscaled_, SDL_ScaleModeLinear);
+            upscaled_factor_ = factor;
+        }
+        SDL_SetRenderTarget(renderer_, upscaled_);
+        SDL_RenderCopy(renderer_, texture_, nullptr, nullptr);
+        SDL_SetRenderTarget(renderer_, nullptr);
+        SDL_RenderCopy(renderer_, upscaled_, nullptr, &target);
+    }
+    if (!window_shot_path.empty() && (presents_ % 30) == 0) {
+        if (SDL_Surface* shot = SDL_CreateRGBSurfaceWithFormat(0, out_w, out_h, 24, SDL_PIXELFORMAT_RGB24)) {
+            if (SDL_RenderReadPixels(renderer_, nullptr, SDL_PIXELFORMAT_RGB24, shot->pixels, shot->pitch) == 0)
+                SDL_SaveBMP(shot, window_shot_path.c_str());
+            SDL_FreeSurface(shot);
+        }
+    }
     SDL_RenderPresent(renderer_);
     ++presents_;
 
@@ -129,6 +173,23 @@ void Desktop::present(const uint8_t* pixels, int width, int height, int pitch, b
         }
     }
     if (max_presents && presents_ >= max_presents) stop_ = true;
+}
+
+// Position de la souris dans l'image du jeu, à partir de sa position dans la fenêtre.
+void Desktop::to_game(int window_x, int window_y) {
+    const int x = static_cast<int>((window_x - view_x_) / view_scale_), y = static_cast<int>((window_y - view_y_) / view_scale_);
+    mouse_x = std::clamp(x, 0, std::max(texture_w_ - 1, 0));
+    mouse_y = std::clamp(y, 0, std::max(texture_h_ - 1, 0));
+}
+
+void Desktop::toggle_fullscreen() {
+    if (!window_ || headless) return;
+    fullscreen = !fullscreen;
+    SDL_SetWindowFullscreen(window_, fullscreen ? static_cast<Uint32>(SDL_WINDOW_FULLSCREEN_DESKTOP) : 0u);
+    if (!fullscreen) {
+        SDL_SetWindowSize(window_, width_, height_);
+        SDL_SetWindowPosition(window_, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+    }
 }
 
 void Desktop::add_script(const std::string& text) {
@@ -225,15 +286,13 @@ bool Desktop::pump(uint32_t now) {
                 post(WM_CLOSE, 0, 0);
                 break;
             case SDL_MOUSEMOTION:
-                mouse_x = e.motion.x;
-                mouse_y = e.motion.y;
+                to_game(e.motion.x, e.motion.y);
                 mouse(WM_MOUSEMOVE);
                 break;
             case SDL_MOUSEBUTTONDOWN:
             case SDL_MOUSEBUTTONUP: {
                 const bool down = e.type == SDL_MOUSEBUTTONDOWN;
-                mouse_x = e.button.x;
-                mouse_y = e.button.y;
+                to_game(e.button.x, e.button.y);
                 uint32_t mask = 0, message = 0;
                 if (e.button.button == SDL_BUTTON_LEFT) {
                     mask = MK_LBUTTON;
@@ -253,6 +312,12 @@ bool Desktop::pump(uint32_t now) {
             }
             case SDL_KEYDOWN:
             case SDL_KEYUP: {
+                // Les raccourcis ⌘ sont ceux de l'hôte : le jeu ne les voit pas.
+                if (e.key.keysym.mod & KMOD_GUI) {
+                    const SDL_Keycode key = e.key.keysym.sym;
+                    if (e.type == SDL_KEYDOWN && !e.key.repeat && (key == SDLK_f || key == SDLK_RETURN)) toggle_fullscreen();
+                    break;
+                }
                 const int vk = virtual_key(e.key.keysym.sym);
                 if (!vk) break;
                 const bool down = e.type == SDL_KEYDOWN;
@@ -263,6 +328,7 @@ bool Desktop::pump(uint32_t now) {
                 break;
             }
             case SDL_TEXTINPUT:
+                if (SDL_GetModState() & KMOD_GUI) break;
                 for (const char* c = e.text.text; *c; ++c)
                     if (static_cast<unsigned char>(*c) < 0x80) post(WM_CHAR, static_cast<uint8_t>(*c), 1);
                 break;

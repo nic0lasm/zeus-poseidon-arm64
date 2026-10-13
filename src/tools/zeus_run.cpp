@@ -11,8 +11,10 @@
 //     --counts                 affiche à la fin le nombre d'appels de chaque fonction
 //     --headless               fenêtre cachée, son coupé
 //     --mute                   son coupé
+//     --fullscreen             plein écran dès l'ouverture (⌘F ou ⌘Entrée pour basculer)
 //     --frames N, --seconds S  arrête après N images affichées ou S secondes
 //     --screenshot SORTIE.bmp  enregistre la dernière image affichée
+//     --window-shot SORTIE.bmp enregistre le contenu de la fenêtre, mise à l'échelle comprise
 //     --script "T:ACTION; …"   joue des actions à T secondes : click X,Y ; rclick X,Y ;
 //                              move X,Y ; key CODE ; char CODE ; shot SORTIE.bmp
 
@@ -90,8 +92,8 @@ int inspect(const char* path) {
 }
 
 struct RunOptions {
-    std::string exe, write_dir = "run/zeus", screenshot, script, trace_only;
-    bool trace = false, headless = false, counts = false, mute = false;
+    std::string exe, write_dir = "run/zeus", screenshot, window_shot, script, trace_only;
+    bool trace = false, headless = false, counts = false, mute = false, fullscreen = false;
     int frames = 0;
     double seconds = 0;
 };
@@ -103,7 +105,9 @@ int run(const RunOptions& o) {
     process.trace_only = o.trace_only;
     zeus::win32::Desktop& desktop = process.desktop();
     desktop.headless = o.headless;
+    desktop.fullscreen = o.fullscreen;
     desktop.screenshot_path = o.screenshot;
+    desktop.window_shot_path = o.window_shot;
     desktop.max_presents = o.frames;
     desktop.max_seconds = o.seconds;
     desktop.add_script(o.script);
@@ -156,8 +160,10 @@ int main(int argc, char** argv) {
                 else if (a == "--headless") o.headless = true;
                 else if (a == "--counts") o.counts = true;
                 else if (a == "--mute") o.mute = true;
+                else if (a == "--fullscreen") o.fullscreen = true;
                 else if (a == "--write-dir") o.write_dir = value();
                 else if (a == "--screenshot") o.screenshot = value();
+                else if (a == "--window-shot") o.window_shot = value();
                 else if (a == "--script") o.script = value();
                 else if (a == "--frames") o.frames = std::stoi(value());
                 else if (a == "--seconds") o.seconds = std::stod(value());
