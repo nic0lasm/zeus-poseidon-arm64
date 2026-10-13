@@ -18,6 +18,15 @@ struct Message {
     int32_t x = 0, y = 0;
 };
 
+// Action de diagnostic déclenchée à un instant donné, à la place du joueur.
+struct ScriptEvent {
+    enum class Kind { Move, LeftDown, LeftUp, RightDown, RightUp, KeyDown, KeyUp, Char, Shot };
+    double at = 0;  // secondes depuis le lancement
+    Kind kind = Kind::Move;
+    int x = 0, y = 0, key = 0;
+    std::string path;  // pour Shot : fichier BMP à écrire
+};
+
 class Desktop {
 public:
     Desktop();
@@ -30,6 +39,9 @@ public:
     std::string screenshot_path;  // enregistre la dernière image affichée
     int max_presents = 0;         // arrête le programme après ce nombre d'images (0 = jamais)
     double max_seconds = 0;       // arrête le programme après cette durée (0 = jamais)
+    // Ajoute au scénario les actions décrites par `text`, de la forme
+    // « 5:click 400,300; 7:rclick 10,10; 8:move 5,5; 9:key 27; 9.5:char 65; 10:shot f.bmp ».
+    void add_script(const std::string& text);
 
     // Taille de l'écran annoncée au programme tant qu'il n'a pas choisi de mode d'affichage.
     static constexpr int kScreenWidth = 1024, kScreenHeight = 768;
@@ -44,6 +56,7 @@ public:
     void present(const uint8_t* pixels, int width, int height, int pitch, bool rgb565);
     int presents() const { return presents_; }
     void save_screenshot();
+    void save_screenshot_to(const std::string& path);
 
     // Convertit les événements SDL en messages Windows. Renvoie faux quand il faut s'arrêter.
     bool pump(uint32_t now);
@@ -62,11 +75,13 @@ private:
     bool texture_565_ = false;
     int width_ = kScreenWidth, height_ = kScreenHeight, texture_w_ = 0, texture_h_ = 0;
     int presents_ = 0;
-    bool stop_ = false;
+    bool stop_ = false, screenshot_wanted_ = false;
     uint32_t mouse_buttons_ = 0;
     std::vector<uint8_t> last_frame_;  // RGB24 de la dernière image, pour la capture
     std::vector<bool> keys_;
     uint64_t start_ticks_ = 0;
+    std::vector<ScriptEvent> script_;  // trié par instant
+    size_t script_next_ = 0;
 };
 
 }  // namespace zeus::win32

@@ -209,6 +209,9 @@ void install_user32(Process& p) {
         pump();
         Desktop& d = p.desktop();
         const uint32_t low = p.arg(2), high = p.arg(3);
+        if (p.trace)
+            std::fprintf(stderr, "    PeekMessage fenêtre %#x, messages %#x à %#x, mode %#x, %zu en attente\n", p.arg(1),
+                         low, high, p.arg(4), d.queue.size());
         for (auto it = d.queue.begin(); it != d.queue.end(); ++it) {
             if ((low || high) && (it->message < low || it->message > high)) continue;
             write_message(cpu, p.arg(0), *it);

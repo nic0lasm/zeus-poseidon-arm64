@@ -2,6 +2,8 @@
 
 #include <SDL.h>
 
+#include <algorithm>
+#include <sstream>
 #include <stdexcept>
 
 namespace zeus::win32 {
@@ -107,7 +109,7 @@ void Desktop::present(const uint8_t* pixels, int width, int height, int pitch, b
     SDL_RenderPresent(renderer_);
     ++presents_;
 
-    if (!screenshot_path.empty()) {
+    if (!screenshot_path.empty() || screenshot_wanted_) {
         // Conversion en RGB24 selon la routine du jeu (0x00418A00) : composante << 3.
         last_frame_.resize(static_cast<size_t>(width) * height * 3);
         for (int y = 0; y < height; ++y) {
@@ -129,7 +131,47 @@ void Desktop::present(const uint8_t* pixels, int width, int height, int pitch, b
     if (max_presents && presents_ >= max_presents) stop_ = true;
 }
 
-void Desktop::save_screenshot() {
+void Desktop::add_script(const std::string& text) {
+    using Kind = ScriptEvent::Kind;
+    std::stringstream all(text);
+    std::string item;
+    while (std::getline(all, item, ';')) {
+        const size_t colon = item.find(':');
+        if (colon == std::string::npos) {
+            if (item.find_first_not_of(" \t") == std::string::npos) continue;
+            throw std::runtime_error("action sans instant : " + item);
+        }
+        ScriptEvent e;
+        e.at = std::stod(item.substr(0, colon));
+        std::stringstream rest(item.substr(colon + 1));
+        std::string verb;
+        rest >> verb;
+        auto point = [&] {
+            char comma = 0;
+            if (!(rest >> e.x >> comma >> e.y)) throw std::runtime_error("position attendue : " + item);
+        };
+        auto push = [&](Kind kind, double delay) {
+            ScriptEvent copy = e;
+            copy.kind = kind;
+            copy.at += delay;
+            script_.push_back(copy);
+        };
+        if (verb == "move") { point(); push(Kind::Move, 0); }
+        else if (verb == "click") { point(); push(Kind::Move, 0); push(Kind::LeftDown, 0.15); push(Kind::LeftUp, 0.3); }
+        else if (verb == "rclick") { point(); push(Kind::Move, 0); push(Kind::RightDown, 0.15); push(Kind::RightUp, 0.3); }
+        else if (verb == "key") { rest >> e.key; push(Kind::KeyDown, 0); push(Kind::KeyUp, 0.15); }
+        else if (verb == "char") { rest >> e.key; push(Kind::Char, 0); }
+        else if (verb == "shot") { rest >> e.path; push(Kind::Shot, 0); }
+        else throw std::runtime_error("action inconnue : " + item);
+    }
+    std::stable_sort(script_.begin(), script_.end(), [](const ScriptEvent& a, const ScriptEvent& b) { return a.at < b.at; });
+    screenshot_wanted_ = !script_.empty();
+}
+
+void Desktop::save_screenshot() { save_screenshot_to(screenshot_path); }
+
+void Desktop::save_screenshot_to(const std::string& path) {
+    const std::string& screenshot_path = path;
     if (screenshot_path.empty() || last_frame_.empty()) return;
     SDL_Surface* shot = SDL_CreateRGBSurfaceWithFormatFrom(last_frame_.data(), texture_w_, texture_h_, 24,
                                                            texture_w_ * 3, SDL_PIXELFORMAT_RGB24);
@@ -155,6 +197,24 @@ bool Desktop::pump(uint32_t now) {
     auto mouse = [&](uint32_t message) {
         post(message, mouse_buttons_, static_cast<uint32_t>(mouse_y) << 16 | (static_cast<uint32_t>(mouse_x) & 0xFFFF));
     };
+    // Scénario de diagnostic : mêmes messages que ceux d'un joueur.
+    const double elapsed = (SDL_GetTicks64() - start_ticks_) / 1000.0;
+    for (; script_next_ < script_.size() && script_[script_next_].at <= elapsed; ++script_next_) {
+        using Kind = ScriptEvent::Kind;
+        const ScriptEvent& s = script_[script_next_];
+        const uint32_t vk = static_cast<uint32_t>(s.key);
+        switch (s.kind) {
+            case Kind::Move: mouse_x = s.x; mouse_y = s.y; mouse(WM_MOUSEMOVE); break;
+            case Kind::LeftDown: mouse_buttons_ |= MK_LBUTTON; mouse(WM_LBUTTONDOWN); break;
+            case Kind::LeftUp: mouse_buttons_ &= ~MK_LBUTTON; mouse(WM_LBUTTONUP); break;
+            case Kind::RightDown: mouse_buttons_ |= MK_RBUTTON; mouse(WM_RBUTTONDOWN); break;
+            case Kind::RightUp: mouse_buttons_ &= ~MK_RBUTTON; mouse(WM_RBUTTONUP); break;
+            case Kind::KeyDown: if (vk < 256) keys_[vk] = true; post(WM_KEYDOWN, vk, 1); break;
+            case Kind::KeyUp: if (vk < 256) keys_[vk] = false; post(WM_KEYUP, vk, 0xC0000001u); break;
+            case Kind::Char: post(WM_CHAR, vk, 1); break;
+            case Kind::Shot: save_screenshot_to(s.path); break;
+        }
+    }
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
         switch (e.type) {

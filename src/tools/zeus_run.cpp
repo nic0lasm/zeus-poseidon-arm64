@@ -7,9 +7,12 @@
 //     --write-dir DOSSIER      reçoit les écritures du jeu (défaut : run/zeus) ; l'installation
 //                              n'est jamais modifiée
 //     --trace                  affiche chaque appel système
+//     --counts                 affiche à la fin le nombre d'appels de chaque fonction
 //     --headless               fenêtre cachée
 //     --frames N, --seconds S  arrête après N images affichées ou S secondes
 //     --screenshot SORTIE.bmp  enregistre la dernière image affichée
+//     --script "T:ACTION; …"   joue des actions à T secondes : click X,Y ; rclick X,Y ;
+//                              move X,Y ; key CODE ; char CODE ; shot SORTIE.bmp
 
 #include <cstdio>
 #include <cstring>
@@ -85,8 +88,8 @@ int inspect(const char* path) {
 }
 
 struct RunOptions {
-    std::string exe, write_dir = "run/zeus", screenshot;
-    bool trace = false, headless = false;
+    std::string exe, write_dir = "run/zeus", screenshot, script;
+    bool trace = false, headless = false, counts = false;
     int frames = 0;
     double seconds = 0;
 };
@@ -100,6 +103,7 @@ int run(const RunOptions& o) {
     desktop.screenshot_path = o.screenshot;
     desktop.max_presents = o.frames;
     desktop.max_seconds = o.seconds;
+    desktop.add_script(o.script);
     zeus::win32::install_kernel32(process);
     zeus::win32::install_user32(process);
     zeus::win32::install_ddraw(process);
@@ -115,6 +119,9 @@ int run(const RunOptions& o) {
     desktop.save_screenshot();
     uint64_t total = 0;
     for (const auto& [name, count] : process.call_counts) total += count;
+    if (o.counts)
+        for (const auto& [name, count] : process.call_counts)
+            std::fprintf(stderr, "%10llu  %s\n", static_cast<unsigned long long>(count), name.c_str());
     std::fprintf(stderr, "%llu appels système vers %zu fonctions distinctes, %d images affichées\n",
                  static_cast<unsigned long long>(total), process.call_counts.size(), desktop.presents());
     if (!error.empty()) {
@@ -140,8 +147,10 @@ int main(int argc, char** argv) {
                 };
                 if (a == "--trace") o.trace = true;
                 else if (a == "--headless") o.headless = true;
+                else if (a == "--counts") o.counts = true;
                 else if (a == "--write-dir") o.write_dir = value();
                 else if (a == "--screenshot") o.screenshot = value();
+                else if (a == "--script") o.script = value();
                 else if (a == "--frames") o.frames = std::stoi(value());
                 else if (a == "--seconds") o.seconds = std::stod(value());
                 else throw std::runtime_error("option inconnue : " + a);
