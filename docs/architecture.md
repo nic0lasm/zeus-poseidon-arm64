@@ -69,6 +69,10 @@ Heap at `0x10000000` (256 MB), stack at `0x0FE00000` (2 MB), a thread environmen
 reachable through the `FS` segment (the Visual C++ 6 runtime uses it for exception handling).
 Unicorn cannot set the `FS` base directly in 32-bit mode, so the host installs a small GDT.
 
+Only the code sections of the executable are mapped executable, and read-only: the game never
+writes to its own code. This matters for speed, because the emulator sends every write to an
+executable region through a slow path that watches for self-modifying code.
+
 ### Files
 
 The game believes it lives in `C:\Zeus`. Paths are resolved case-insensitively. Reads look in

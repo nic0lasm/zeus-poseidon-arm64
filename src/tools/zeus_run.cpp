@@ -34,7 +34,8 @@ namespace {
 
 int selftest() {
     Cpu cpu;
-    cpu.map(0x00001000, 0x4000);  // code en 0x1000, données en 0x2000, pile en 0x4000
+    cpu.map(0x00001000, 0x1000, true);
+    cpu.map(0x00002000, 0x3000);  // code en 0x1000, données en 0x2000, pile en 0x4000
     const uint32_t add = cpu.add_host_function(
         {"test_add", 8, [](Cpu& c) { return c.arg(0) + c.arg(1); }});
     cpu.write_u32(0x3000, add);  // case d'import

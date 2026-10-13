@@ -65,9 +65,24 @@ PeImage load_pe(const std::filesystem::path& path, Cpu& cpu) {
     const uint32_t import_rva = f.u32(optional + 96 + 8);
     image.entry_point += image.image_base;
 
-    cpu.map(image.image_base, image.image_size);
-    cpu.write(image.image_base, f.at(0, header_size), header_size);
+    // L'image est réservée par tranches : exécutable pour les sections de code, en simple
+    // lecture et écriture pour le reste (en-têtes, données, intervalles entre sections).
     const size_t table = optional + f.u16(pe + 20);
+    const uint32_t page = 0x1000;
+    const uint32_t image_end = image.image_base + ((image.image_size + page - 1) & ~(page - 1));
+    uint32_t mapped = image.image_base;
+    for (size_t i = 0; i < section_count; ++i) {
+        const size_t s = table + 40 * i;
+        if (!(f.u32(s + 36) & 0x20000000)) continue;  // IMAGE_SCN_MEM_EXECUTE
+        const uint32_t start = (image.image_base + f.u32(s + 12)) & ~(page - 1);
+        const uint32_t end = std::min(image_end, (image.image_base + f.u32(s + 12) + std::max(f.u32(s + 8), f.u32(s + 16)) + page - 1) & ~(page - 1));
+        if (start < mapped || end <= start) fail("sections de code désordonnées");
+        if (start > mapped) cpu.map(mapped, start - mapped);
+        cpu.map(start, end - start, true);
+        mapped = end;
+    }
+    if (image_end > mapped) cpu.map(mapped, image_end - mapped);
+    cpu.write(image.image_base, f.at(0, header_size), header_size);
     for (size_t i = 0; i < section_count; ++i) {
         const size_t s = table + 40 * i;
         PeSection section;

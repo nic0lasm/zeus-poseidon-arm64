@@ -52,10 +52,12 @@ Cpu::~Cpu() {
     if (uc_) uc_close(uc_);
 }
 
-void Cpu::map(uint32_t address, uint32_t size) {
+void Cpu::map(uint32_t address, uint32_t size, bool executable) {
     const uint32_t start = address & ~(kPage - 1);
     const uint64_t end = (static_cast<uint64_t>(address) + size + kPage - 1) & ~static_cast<uint64_t>(kPage - 1);
-    check(uc_mem_map(uc_, start, static_cast<size_t>(end - start), UC_PROT_ALL), "réservation mémoire");
+    check(uc_mem_map(uc_, start, static_cast<size_t>(end - start),
+                     executable ? UC_PROT_READ | UC_PROT_EXEC : UC_PROT_READ | UC_PROT_WRITE),
+          "réservation mémoire");
 }
 
 void Cpu::write(uint32_t address, const void* data, size_t size) {

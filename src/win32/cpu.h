@@ -33,8 +33,10 @@ public:
     Cpu(const Cpu&) = delete;
     Cpu& operator=(const Cpu&) = delete;
 
-    // Réserve une zone de mémoire émulée (adresse et taille arrondies à la page).
-    void map(uint32_t address, uint32_t size);
+    // Réserve une zone de mémoire émulée (adresse et taille arrondies à la page). Seules les
+    // zones de code sont à déclarer exécutables : Unicorn fait passer par un chemin lent toute
+    // écriture dans une zone exécutable, pour y surveiller le code modifié.
+    void map(uint32_t address, uint32_t size, bool executable = false);
     void write(uint32_t address, const void* data, size_t size);
     void read(uint32_t address, void* data, size_t size) const;
     uint32_t read_u32(uint32_t address) const;
