@@ -69,42 +69,26 @@ CDs…*: the application builds a French pack from the images of your own CDs
 The aim: keep *Zeus* and *Poseidon* playable for as long as people want to play them — the
 original game, on the machines people own, proven identical to the original.
 
-### Next — 1.2 *Lighter*
-A running city under 20 % of one core (35 % for a small city today), so that a laptop stays cool
-and silent. [Milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/6)
+The game is playable today (1.1). The way forward is to **replace the original piece by piece with
+an engine written by hand and documented** — the way Julius did for *Caesar III*. The emulated
+original stays the reference and the judge: each rewritten part must prove, turn by turn, that it
+gives exactly the same game state. Nothing is translated mechanically. No dates are promised.
 
-- [ ] Equivalence harness first: a native function checked against the original on every call ([#26](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/26))
-- [ ] Then the second pass of the city drawing (buildings and walkers) and the simulation ([#22](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/22))
+- **1.x Playable** — keep it light and in every edition: first launch ([#55](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/55)), language packs
+  ([#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24), **testers wanted**), processor use ([#22](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/22)). [Milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/2)
+- **Phase A — Instruments** — equivalence on the full game state ([#26](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/26)); a code map and two public
+  counters: functions understood out of 8,397, and share of the computation done natively ([#69](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/69)).
+  [Milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/7)
+- **Phase B — Data** — the savegame described in full ([#70](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/70)), then maps and adventures, images,
+  texts, tables ([#30](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/30)); each format read, then written back byte for byte. [Milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/8)
+- **Phase C — Native engine** — rendering, interface, terrain, walkers, housing, economy, gods,
+  heroes and monsters, army, events, savegame, one at a time, each with a page in `docs/engine/`
+  ([#71](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/71)). [Milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/9)
+- **2.0 Native engine** — no emulator to play; Linux and Intel follow ([#25](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/25)). [Milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/3)
+- **Modding** — later, on a separate branch; `main` keeps the original game ([#72](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/72)).
+- **Exploration** — the City Building Series, on hold ([#28](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/28), [#29](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/29)).
 
-### Then — 1.3 *Every edition*
-German, Spanish, Italian, Polish, Dutch, Swedish, Czech… packs built from your own CDs.
-**Testers wanted**: if you own another edition, your report is the whole step
-([#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24)). [Milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/2)
-
-### Later — 2.0 *Everywhere*
-The same host on **Linux** (x86-64 and arm64) and **Intel Macs**. Only four small pieces are
-macOS-specific today. [Milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/3)
-
-- [ ] Portable MP3 decoding ([#37](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/37)) · JPEG decoding ([#38](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/38)) · first-launch dialogs ([#39](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/39))
-- [ ] Linux x86-64 and arm64 in the automated build, then an AppImage ([#40](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/40))
-- [ ] Then one universal Mac application, Intel and Apple Silicon ([#41](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/41))
-
-### After — 3.0 *Recompiled*
-**No emulator at all.** Your own `Zeus.exe` translated to native code *on your machine* — like a
-language pack, nothing from the game is ever distributed — with the emulator kept as the
-reference that proves every translated function. Faster, lighter, and the way to an iPad
-edition. [Milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/4)
-
-- [ ] First translated function, x86-32 to C ([#42](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/42))
-- [ ] The recompiler, then the whole game without an emulator ([#27](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/27))
-
-### Exploring — the City Building Series
-*Emperor: Rise of the Middle Kingdom* was built on the engine of *Zeus*. Could the same host bring
-it back — and *Pharaoh*, *Caesar III*? Measurements first
-([#28](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/28),
-[#29](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/29)).
-
-The full plan, what each step must achieve and a look back on 1.0: [docs/roadmap.md](docs/roadmap.md).
+The full plan: [docs/roadmap.md](docs/roadmap.md).
 
 ## Version history
 

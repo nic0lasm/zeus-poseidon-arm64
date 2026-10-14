@@ -5,6 +5,7 @@ pull request.
 
 ## Unreleased
 
+- **New plan.** The roadmap now leads to a hand-written, documented native engine proven against the emulated original: instruments, data, engine by subsystem, then 2.0 *Native engine*; modding later on a branch. The 3.0 *Recompiled* path is dropped. Roadmap, README and README.fr.md rewritten.
 - **Roadmap after 1.1.** New milestone 1.2 *Lighter* (equivalence harness, then the second drawing pass and the simulation, toward a city under 20 % of a core); languages become 1.3; #35 and #36 concluded without merging. Roadmap, README and README.fr.md aligned.
 
 ## 1.1 — 2026-10-14
