@@ -5,6 +5,7 @@ pull request.
 
 ## Unreleased
 
+- **`Model/*.txt` documented.** `formats/model.md` describes the difficulty tables (buildings and houses, figures and enemies, tax sentiment, monster strength) and how the game reads them; `tools/model.py` reads all 63 files of the game and checks them against a re-implementation of the game's own parser.
 - **Download in one click, honest first-launch steps.** The README (English and French) opens with a direct link to `releases/latest/download/Zeus-Poseidon-macos-arm64.zip` (`tools/publish.py release` now also writes the archive under that version-free name, same bytes), gives the exact macOS 15 steps (*Privacy & Security → Open Anyway*; right-click → *Open* no longer works), says where to get the GOG installer from a Mac, and that an Apple Silicon Mac is required ([#55](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/55)).
 - **zeus-run split by role.** `zeus_run.cpp` becomes `src/tools/zeus_run/`: command line, launch, application mode, dialogs, language packs, diagnostics; no change of behaviour or options.
 - **Contact sheet of screenshots.** `tools/contact_sheet.py OUT.bmp COLUMNS SHOT.bmp …` puts several captures, halved, in one grid, to review a scripted run at a glance (standard library only).
