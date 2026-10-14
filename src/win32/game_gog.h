@@ -47,6 +47,19 @@ constexpr uint32_t kStrcmpi = 0x005CC640;             // __strcmpi de la bibliot
 // Boucle de recherche de clé de FUN_00505770 (lecture de « Zeus eventmsg.txt ») : début et sortie.
 constexpr uint32_t kKeySearch = 0x005059F8, kKeySearchEnd = 0x00505A33;
 
+// --- Code : boucle de dessin de la ville (native_draw.cpp) ------------------------------------
+
+// FUN_00458170 parcourt les cases visibles deux fois : le sol, puis ce qui s'y dresse.
+constexpr uint32_t kCityDraw = 0x00458170;    // FUN_00458170 : dessin de la ville
+constexpr uint32_t kGroundLoop = 0x0045829D;  // dans FUN_00458170 : tête de la boucle du sol (une case)
+constexpr uint32_t kGroundCall = 0x0045862F;  // dans FUN_00458170 : appel de FUN_00457900 pour la case
+constexpr uint32_t kGroundRowEnd = 0x0045868C;  // dans FUN_00458170 : fin d'une rangée de cases
+constexpr uint32_t kGroundTile = 0x00457900;  // FUN_00457900(case, x, y, rangée impaire) : sol d'une case
+constexpr uint32_t kGroundTileEnd = 0x00458114;  // fin de FUN_00457900 et de ses tables de sauts
+constexpr uint32_t kBuildingJumps = 0x0045A254, kBuildingJumpsEnd = 0x0045A2E1;  // table de FUN_00458170
+constexpr uint32_t kAlwaysTrue = 0x0055F3D0;  // FUN_0055f3d0 : méthode +0x18 du mode de vue 0, « vrai »
+constexpr uint32_t kDrawGround = 0x00435070, kDrawGroundEnd = 0x00436249;  // FUN_00435070 : sol en losange
+
 // --- Code : cadencement (user32.cpp) ----------------------------------------------------------
 
 constexpr uint32_t kSimulationDue = 0x005168A0;  // FUN_005168a0 : un tour de simulation est-il dû ?
@@ -122,6 +135,35 @@ constexpr uint32_t kOverlay = 0x0078C570;  // couleur de surimpression, 16 bits
 // d'un bloc : écran courant (octet), sous-mode, sous-écran, objet dont +4 est l'image du fond.
 constexpr uint32_t kScreen = 0x00F2A6DD, kSubmode = 0x00781894, kSubscreen = 0x00FFA180,
                    kBackground = 0x0136F3E8;
+
+// Vue de la ville (FUN_00458170, FUN_00457900). La carte est une grille de 0x1C9 rangées de
+// 0xE7 cases ; les tableaux « par case » sont indexés par le numéro de case lu dans la grille.
+constexpr uint32_t kViewRow = 0x007D3BD4, kViewColumn = 0x007D3BD8;  // case en cours de dessin
+constexpr uint32_t kViewTile = 0x007D3BE0;     // numéro de cette case
+constexpr uint32_t kViewWidth = 0x007D3BBC;    // largeur de la vue en cases (moins 8)
+constexpr uint32_t kTileStep = 0x007D3BB0;     // pas horizontal d'une case, moins 2 pixels
+constexpr uint32_t kTileGrid = 0x007D3BEC;     // grille : numéro de case (32 bits), 0x0FFF0000 et plus : marques
+constexpr uint32_t kTileHeight = 0x008E01FA;    // par case : hauteur du sol (8 bits signés, 30 pixels par cran)
+constexpr uint32_t kTileImage = 0x00D4CFC8;     // par case : image du sol (32 bits)
+constexpr uint32_t kTileFlags = 0x00CCE128;     // par case : nature du terrain (32 bits)
+constexpr uint32_t kTileBuilding = 0x00D26E98;  // par case : bâtiment (16 bits signés, 0 aucun)
+constexpr uint32_t kTileBits = 0x00D404B8;      // par case : 0x40 la case est à dessiner
+constexpr uint32_t kTileSlope = 0x00D00D68;     // par case : pente (4 bits bas), 0x10 sol de remplacement
+constexpr uint32_t kTileHidden = 0x0083AD6C;    // par case : non nul, ses personnages ne comptent pas
+constexpr uint32_t kTileFigure = 0x00D0D878;    // par case : premier personnage (16 bits signés)
+// Personnages : fiches de 0x184 octets ; +0 suivant sur la case (16 bits), +2 type, +0x5D masqué.
+constexpr uint32_t kFigures = 0x00DBD790;
+constexpr uint32_t kBuildings = 0x0092E668;  // fiches de 0x118 octets ; +0 type (16 bits), +0xBF en rouge
+constexpr uint32_t kDrawnImage = 0x00F13A20;   // image de la case en cours de dessin
+constexpr uint32_t kViewMode = 0x00FA05F0;     // mode de vue (0 : la ville)
+constexpr uint32_t kViewModes = 0x00641C10;    // objet de chaque mode de vue
+constexpr uint32_t kHighlight = 0x00665E2C;    // 1 : FUN_0051ef30 peut changer la surimpression
+constexpr uint32_t kWaterMoves = 0x007D3B1C;   // non nul : l'eau s'anime
+constexpr uint32_t kSpriteBanks = 0x012AEBE8;  // objet des banques d'images (this de FUN_005acf50)
+constexpr uint32_t kTerrainGroups = 0x012EF940, kTerrainGroupCount = 0x012FC574;  // groupes d'images
+// Images de sol que la boucle ne dessine pas : intervalle et bits, préparés au premier passage.
+constexpr uint32_t kSkipReady = 0x00847D28, kSkipFirst = 0x0160C248, kSkipLast = 0x0160C24C,
+                   kSkipBits = 0x0160C260;
 
 // Bibliothèque C : paramètres régionaux (nul tant que setlocale n'est pas appelé, jamais par le jeu).
 constexpr uint32_t kLocale = 0x0160BFA4;

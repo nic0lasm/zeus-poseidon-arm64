@@ -93,6 +93,14 @@ public:
     // Appelle `fn` chaque fois que l'exécution atteint `address`, avant l'instruction. Une
     // adresse déjà interceptée garde sa fonction, appelée d'abord, puis `fn`.
     void add_code_hook(uint32_t address, std::function<void(Cpu&)> fn);
+
+    // Aiguillage de l'hôte dans le code du programme : chaque fois que l'exécution atteint
+    // `address`, `fn` s'exécute et renvoie l'adresse où poursuivre, ou 0 pour exécuter le code
+    // d'origine. Les `displaced` premiers octets (instructions entières, sans adresse relative, au
+    // moins 6, sur lesquels aucun saut n'arrive) sont recopiés dans un tremplin qui revient
+    // ensuite à `address + displaced`, et remplacés par « jmp [case] » : la case reçoit l'adresse
+    // choisie, sans arrêter l'émulateur. À faire avant le début de l'exécution.
+    void add_code_jump(uint32_t address, uint32_t displaced, std::function<uint32_t(Cpu&)> fn);
     // n-ième argument (à partir de 0) de la fonction hôte en cours d'appel.
     uint32_t arg(int n) const;
     // Depuis une fonction hôte : fait appeler une fonction du programme émulé (convention

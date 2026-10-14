@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "win32/audio.h"
+#include "win32/cpu.h"
 #include "win32/desktop.h"
 #include "win32/sprite_clip.h"
 #include "win32/text.h"
@@ -274,6 +275,31 @@ void test_clip() {
     CHECK(v.state == 5 && v.drawn == 0);
 }
 
+// --- aiguillage de l'hôte (Cpu::add_code_jump) ---------------------------------------------------
+
+void test_code_jump() {
+    Cpu cpu;
+    constexpr uint32_t kCode = 0x00400000, kEnd = kCode + 0x0B;
+    cpu.map(kCode, 0x1000, true);
+    const uint8_t code[] = {0xB8, 0x01, 0x00, 0x00, 0x00,  // mov eax, 1
+                            0x83, 0xC0, 0x02,              // add eax, 2
+                            0x83, 0xC0, 0x04};             // add eax, 4
+    cpu.write(kCode, code, sizeof code);
+    int passes = 0;
+    cpu.add_code_jump(kCode, 8, [&passes](Cpu& c) -> uint32_t {
+        if (++passes == 1) return 0;  // code d'origine, recopié dans le tremplin
+        c.set_reg(Cpu::Reg::EAX, 100);
+        return kCode + 8;  // les deux premières instructions sont sautées
+    });
+    CHECK(cpu.read_u8(kCode) == 0xFF && cpu.read_u8(kCode + 6) == 0x90 && cpu.read_u8(kCode + 8) == 0x83);
+    cpu.run(kCode, kEnd);
+    CHECK(cpu.reg(Cpu::Reg::EAX) == 7);
+    cpu.run(kCode, kEnd);
+    CHECK(cpu.reg(Cpu::Reg::EAX) == 104);
+    CHECK(passes == 2);
+    CHECK(throws([&] { cpu.add_code_jump(kCode + 8, 5, [](Cpu&) { return 0u; }); }));
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -284,6 +310,7 @@ int main(int argc, char** argv) {
         {"Windows-1252 et UTF-8", test_text},
         {"Vfs", [&] { test_vfs(dir / "vfs"); }},
         {"rognage des sprites", test_clip},
+        {"aiguillage de code", test_code_jump},
     };
     for (const auto& [name, test] : groups) {
         const int before = failures;

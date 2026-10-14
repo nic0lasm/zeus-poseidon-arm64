@@ -15,6 +15,7 @@
 #include <stdexcept>
 
 #include "win32/game_gog.h"
+#include "win32/native.h"
 #include "win32/process.h"
 #include "win32/sprite_clip.h"
 
@@ -255,10 +256,11 @@ uint32_t strcmpi(Cpu& cpu) {
 // FUN_00509cd0 en hauteur), puis appelle la routine de dessin qui convient. Il est appelé pour
 // chaque sprite de chaque image affichée (65 000 fois par seconde dans une grande ville).
 //
-// Seuls les deux cas qui font l'essentiel des appels sont traités ici : image compressée par
-// suites, ni rognée en largeur ni retournée, et image opaque ni rognée ni retournée. Pour tous
-// les autres, la fonction rend la main au code d'origine sans avoir rien écrit : le répartiteur
-// d'origine refait alors tout depuis ses arguments. Quand le cas est traité, les variables
+// Seuls les cas qui font l'essentiel des appels sont traités ici : image compressée par suites,
+// ni rognée en largeur ni retournée, image opaque ni rognée ni retournée, et sol en losange non
+// rogné en largeur (native_draw.cpp). Pour tous les autres, la fonction rend la main au code
+// d'origine sans avoir rien écrit : le répartiteur d'origine refait alors tout depuis ses
+// arguments. Quand le cas est traité, les variables
 // écrites sont celles qu'écrit l'original sur ce chemin, avec les mêmes largeurs.
 namespace sprite {
 
@@ -267,11 +269,8 @@ void put16(Cpu& cpu, uint32_t address, int16_t value) { std::memcpy(cpu.host(add
 void put32(Cpu& cpu, uint32_t address, int32_t value) { std::memcpy(cpu.host(address), &value, 4); }
 int16_t s16(Cpu& cpu, uint32_t address) { return static_cast<int16_t>(u16(cpu, address)); }
 
-std::optional<uint32_t> dispatch(Cpu& cpu) {
-    const uint32_t self = cpu.reg(Cpu::Reg::ECX);
-    const int32_t id = static_cast<int32_t>(cpu.arg(0)), x = static_cast<int32_t>(cpu.arg(1)),
-                  y = static_cast<int32_t>(cpu.arg(2)), mode = static_cast<int32_t>(cpu.arg(3));
-    const uint8_t mirror_arg = static_cast<uint8_t>(cpu.arg(5));
+std::optional<uint32_t> dispatch(Cpu& cpu, uint32_t self, int32_t id, int32_t x, int32_t y, int32_t mode,
+                                 uint8_t mirror_arg) {
     // Identifiant : banque * 16384 + numéro, en divisions entières signées comme l'original.
     const int32_t bank = id / 16384, number = id % 16384;
     if (number < 1 && bank == 0) return std::nullopt;
@@ -302,23 +301,33 @@ std::optional<uint32_t> dispatch(Cpu& cpu) {
                          (screen == 3 && (submode == 0x14 || submode == 0x15)) ||
                          (screen == 9 && *cpu.host(kSubscreen) == 0x14);
     if (special && static_cast<uint32_t>(id) == u32(cpu, u32(cpu, kBackground) + 4) + 0x3C000) return std::nullopt;
-    if (kind == 0x1E) return std::nullopt;
+    // Sol en losange de 58 pixels (type 0x1E) : la hauteur de l'image est ramenée à 30 avant le
+    // rognage. Les autres largeurs de ce type passent par d'autres routines.
+    int16_t height = height16;
+    if (kind == 0x1E) {
+        if (width16 != 0x3A || !ground_known()) return std::nullopt;
+        height = 0x1E;
+    }
 
     // Rognage au rectangle de dessin (FUN_00509c20 en largeur, FUN_00509cd0 en hauteur).
     const HorizontalClip h = clip_horizontal(x, width16, i32(cpu, kClipLeft), i32(cpu, kClipRight));
     const int32_t left = h.left, skip_left = h.skip_left, right = h.right, visible = h.visible;
     const uint8_t clip_x = h.state;
     const int32_t source_skip = (width16 - visible) * 2, target_skip = (i32(cpu, kRowPixels) - visible) * 2;
-    const VerticalClip v = clip_vertical(y, height16, i32(cpu, kClipTop), i32(cpu, kClipBottom));
+    const VerticalClip v = clip_vertical(y, height, i32(cpu, kClipTop), i32(cpu, kClipBottom));
     const int32_t top = v.top, rows = v.rows, skipped = v.skipped, drawn = v.drawn;
     uint8_t clip_y = v.state;
     if (clip_x == 5) clip_y = 5;
 
-    // Choix de la routine (0x005AD748 et suivantes) : seuls deux cas sont traités.
-    enum class Draw { None, Runs, Opaque } draw = Draw::None;
+    // Choix de la routine (0x005AD748 et suivantes) : seuls trois cas sont traités.
+    enum class Draw { None, Runs, Opaque, Ground } draw = Draw::None;
     if (clip_y != 5) {
-        if (mirror != 0 || clip_x != 0 || u16(cpu, kOverlay) != 0) return std::nullopt;
-        if (kind == 0) {
+        if (clip_x != 0 || u16(cpu, kOverlay) != 0) return std::nullopt;
+        if (kind == 0x1E) {
+            draw = Draw::Ground;  // FUN_00435070, sans retournement
+        } else if (mirror != 0) {
+            return std::nullopt;
+        } else if (kind == 0) {
             if (mode == 1 || *cpu.host(entry + 0x33) == 0 || u32(cpu, entry + 0x40) != 0) return std::nullopt;
             draw = Draw::Runs;
         } else {
@@ -332,7 +341,7 @@ std::optional<uint32_t> dispatch(Cpu& cpu) {
     put32(cpu, kSpriteId, id);
     put32(cpu, kSpriteImage, image);
     put16(cpu, kImageWidth, width16);
-    put16(cpu, kImageHeight, height16);
+    put16(cpu, kImageHeight, height);
     put8(cpu, kSpriteKind, kind);
     put32(cpu, kTargetX, left);
     put32(cpu, kTargetY, top);
@@ -351,8 +360,14 @@ std::optional<uint32_t> dispatch(Cpu& cpu) {
         case Draw::Runs: draw_runs_from(cpu, static_cast<uint32_t>(image), shadow); break;
         // Ni rognée ni retournée : le décalage que l'original ajoute à l'image est nul.
         case Draw::Opaque: copy_rectangle_from(cpu, static_cast<uint32_t>(image)); break;
+        case Draw::Ground: draw_ground(cpu, static_cast<uint32_t>(image), clip_y); break;
     }
     return static_cast<uint32_t>(visible);
+}
+
+std::optional<uint32_t> dispatch_call(Cpu& cpu) {
+    return dispatch(cpu, cpu.reg(Cpu::Reg::ECX), static_cast<int32_t>(cpu.arg(0)), static_cast<int32_t>(cpu.arg(1)),
+                    static_cast<int32_t>(cpu.arg(2)), static_cast<int32_t>(cpu.arg(3)), static_cast<uint8_t>(cpu.arg(5)));
 }
 
 }  // namespace sprite
@@ -405,6 +420,11 @@ constexpr Replacement kReplacements[] = {
 
 }  // namespace
 
+std::optional<uint32_t> draw_sprite(Cpu& cpu, uint32_t self, int32_t id, int32_t x, int32_t y, int32_t mode,
+                                    uint8_t mirror) {
+    return sprite::dispatch(cpu, self, id, x, y, mode, mirror);
+}
+
 void install_native_functions(Process& p) {
     Cpu& cpu = p.cpu();
     int installed = 0;
@@ -414,7 +434,7 @@ void install_native_functions(Process& p) {
         ++installed;
     }
     if (matches(cpu, kSpriteDispatch, {0x81, 0xEC, 0x14, 0x01, 0x00, 0x00, 0x8B, 0x84, 0x24, 0x1C, 0x01, 0x00, 0x00})) {
-        cpu.add_fast_path(kSpriteDispatch, 0x18, 6, sprite::dispatch);  // « SUB ESP,0x114 » déplacé
+        cpu.add_fast_path(kSpriteDispatch, 0x18, 6, sprite::dispatch_call);  // « SUB ESP,0x114 » déplacé
         ++installed;
     }
     if (matches(cpu, kKeySearch, kKeySearchBytes, sizeof kKeySearchBytes)) {
@@ -423,6 +443,7 @@ void install_native_functions(Process& p) {
         cpu.add_code_hook(kKeySearch, search_key);
         ++installed;
     }
+    installed += install_native_drawing(p);
     if (p.trace) std::fprintf(stderr, "[hôte] %d fonctions du jeu remplacées par des fonctions natives\n", installed);
 }
 
