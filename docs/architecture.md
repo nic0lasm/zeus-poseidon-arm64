@@ -23,7 +23,7 @@ src/win32/     the host: emulated CPU, process, and the Windows functions
 src/formats/   readers for the game's data files (sprites, maps)
 src/game/      native rendering experiments (sprite store, isometric terrain)
 src/platform/  small SDL helpers
-src/tools/     the three executables
+src/tools/     the executables; zeus_run/ holds zeus-run, split by role (below)
 src/tests/     zeus-tests: the host parts that do not need the game (see tests/README.md)
 tools/         Python tools: extraction, format readers, executable triage, Ghidra scripts
 formats/       file-format specifications
@@ -52,6 +52,17 @@ analysis/notes reverse-engineering notes kept under version control
 | `audio.*` | the host mixer and audio decoders |
 | `bink.cpp` | Bink video |
 | `media.cpp` | Intel JPEG library |
+
+### The launcher (`src/tools/zeus_run/`)
+
+| File | Role |
+|---|---|
+| `main.cpp` | command line and the list of options |
+| `launch.cpp` | runs the game in the emulated processor, end-of-run reports |
+| `app.cpp` | application mode: asks for the game and the language on first launch |
+| `dialogs.cpp` | system commands and AppleScript dialogs, French or English |
+| `packs.cpp` | builds a language pack from the original CDs |
+| `diagnostics.cpp` | `--selftest`, `--bench`, `--inspect`, `--check-audio` |
 
 ### Calling from the game into the host
 

@@ -79,7 +79,13 @@ target_include_directories(zeus_win32 PUBLIC src)
 target_link_libraries(zeus_win32 PUBLIC PkgConfig::UNICORN PkgConfig::FFMPEG SDL2::SDL2
     "-framework ImageIO" "-framework CoreGraphics" "-framework CoreFoundation")
 
-add_executable(zeus-run src/tools/zeus_run.cpp)
+add_executable(zeus-run
+    src/tools/zeus_run/app.cpp
+    src/tools/zeus_run/diagnostics.cpp
+    src/tools/zeus_run/dialogs.cpp
+    src/tools/zeus_run/launch.cpp
+    src/tools/zeus_run/main.cpp
+    src/tools/zeus_run/packs.cpp)
 target_link_libraries(zeus-run PRIVATE zeus_win32)
 
 # Tests des pièces de l'hôte indépendantes du jeu (aucun fichier du jeu n'est lu).
