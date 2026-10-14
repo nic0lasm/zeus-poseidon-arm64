@@ -243,6 +243,37 @@ uint32_t strcmpi(Cpu& cpu) {
     }
 }
 
+// Au démarrage, FUN_00505770 lit « Model\Zeus eventmsg.txt » et, pour chaque clé du fichier,
+// cherche son nom dans une table de plusieurs milliers d'entrées en appelant _strcmpi sur chacune :
+// 18 millions d'appels, l'essentiel du temps de démarrage. La boucle (0x005059F8 à 0x00505A33) se
+// termine avec l'indice trouvé, ou le nombre d'entrées, dans EDX et dans [ESP+0x10] ; EAX, ECX et
+// les indicateurs sont réécrits avant d'être relus. L'interception fait la même recherche avant
+// la première instruction de la boucle, remplacée par un saut à sa sortie.
+constexpr uint32_t kKeySearch = 0x005059F8, kKeySearchEnd = 0x00505A33;
+constexpr uint8_t kKeySearchBytes[] = {0x8B, 0x43, 0x0C, 0x33, 0xD2, 0x85, 0xC0, 0x89, 0x54, 0x24, 0x10,
+                                       0x7E, 0x2E, 0xEB, 0x04, 0x8B, 0x54, 0x24, 0x10, 0x8B, 0x0B, 0x57,
+                                       0x8B, 0x54, 0xD1, 0x04, 0x52, 0xE8, 0x28, 0x6C, 0x0C, 0x00};
+
+bool same_text(const uint8_t* a, const uint8_t* b) {
+    auto lower = [](uint8_t c) { return c >= 'A' && c <= 'Z' ? static_cast<uint8_t>(c + 0x20) : c; };
+    for (;; ++a, ++b) {
+        if (lower(*a) != lower(*b)) return false;
+        if (!*b) return true;
+    }
+}
+
+void search_key(Cpu& cpu) {
+    if (u32(cpu, 0x0160BFA4) != 0) throw std::runtime_error("recherche de clé : paramètres régionaux inattendus");
+    const uint32_t table = cpu.reg(Cpu::Reg::EBX);  // EBX : l'objet ; [EBX] la table, [EBX+0xC] sa taille
+    const uint8_t* key = cpu.host(cpu.reg(Cpu::Reg::EDI));
+    const int32_t count = static_cast<int32_t>(u32(cpu, table + 0x0C));
+    const uint32_t entries = u32(cpu, table);
+    int32_t found = 0;
+    while (found < count && !same_text(cpu.host(u32(cpu, entries + 8 * static_cast<uint32_t>(found) + 4)), key)) ++found;
+    cpu.set_reg(Cpu::Reg::EDX, static_cast<uint32_t>(found));
+    std::memcpy(cpu.host(cpu.reg(Cpu::Reg::ESP) + 0x10), &found, 4);
+}
+
 struct Replacement {
     uint32_t address;
     uint8_t first_bytes[5];
@@ -267,6 +298,12 @@ void install_native_functions(Process& p) {
     for (const Replacement& r : kReplacements) {
         if (std::memcmp(cpu.host(r.address), r.first_bytes, sizeof r.first_bytes) != 0) continue;
         cpu.replace_function(r.address, r.arg_bytes, r.fn);
+        ++installed;
+    }
+    if (std::memcmp(cpu.host(kKeySearch), kKeySearchBytes, sizeof kKeySearchBytes) == 0) {
+        const uint8_t jump[2] = {0xEB, static_cast<uint8_t>(kKeySearchEnd - (kKeySearch + 2))};
+        std::memcpy(cpu.host(kKeySearch), jump, sizeof jump);
+        cpu.add_code_hook(kKeySearch, search_key);
         ++installed;
     }
     if (p.trace) std::fprintf(stderr, "[hôte] %d fonctions du jeu remplacées par des fonctions natives\n", installed);

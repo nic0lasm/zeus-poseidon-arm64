@@ -49,7 +49,7 @@ is far less work than a rewrite.
   without a stop.
 - Every sound file of the game (703 WAV, 929 MP3, 311 minutes) decodes through the code paths
   of the mixer (`zeus-run --check-audio`); so do the files of a French pack.
-- The seven scenarios of `tests/scenarios` give the same frames with and without the native
+- The eight scenarios of `tests/scenarios` give the same frames with and without the native
   functions.
 
 ## Known limits
@@ -101,15 +101,20 @@ sprite dispatcher 11 %, system calls 10 %, the city drawing loop 8.7 %, `_strcmp
 | `0x00413E30` | draws a run-length compressed image blended with the background |
 | `0x0050B410` | clears the frame buffer |
 | `0x005CC640` | `_strcmpi` from the C runtime |
+| `0x005059F8` | the loop that looks up each key of `Model\Zeus eventmsg.txt` at start-up (18 million `_strcmpi` calls) |
 
-All three scenarios (16,878 frames) give the same frame logs with and without them.
+All eight scenarios (38,593 frames) give the same frame logs with and without them.
 
 **Also done on the host side.** The game reopens the same files thousands of times a minute;
 read-only game files are now kept in memory and directory listings are cached, which cut the
 time spent opening files by two thirds.
 
+The look-up loop is replaced on its own, not its whole function: a jump to the loop's exit,
+preceded by a hook that leaves registers and stack exactly as the loop would. Time to the first
+frame went from 3.5–5 s to under a second; the parsed table hashes the same with and without it.
+
 **Next.** The sprite dispatcher (`0x005ACF50`) and the city drawing loop (`0x00458170`), which
-now top the profile, and the function that calls `_strcmpi` 18 million times in 90 seconds.
+now top the profile.
 
 ## Milestone 5 — plan
 
