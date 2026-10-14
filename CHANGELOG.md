@@ -5,6 +5,8 @@ pull request.
 
 ## Unreleased
 
+## 1.1 — 2026-10-14
+
 - **Native ground drawing in the city.** The first pass of the city drawing loop (`0x00458170`), the ground of each tile (`0x00457900`) and the 58 × 30 diamond tile (`0x00435070`) run on the host for their common cases, through a new host jump (`Cpu::add_code_jump`) that hands back to the original code with the same registers and variables for every other case. A small city at the default speed went from 51–60 % to 35 % of a core with the same game speed; the large city of the last tutorial barely changes (85 % to 84 %), its cost being in the second pass and the simulation. The eight scenarios give identical frames.
 - **Taller wide modes.** Above 768 lines the control panel is extended with its own texture instead of a black band, the building information window opens at the bottom of the screen, and the world map no longer reads past its image (a band of noise under it). `--wide auto` now adds lines on screens taller than 16:9 (1366 / aspect, up to 1023: 16:10 → 1324×843). New `tall` scenario at 1444×903 ([#23](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/23)).
 - **Event messages documented.** `formats/eventmsg.md` describes `Zeus eventmsg.txt` (4,172 phrases looked up by name in a table of the executable, how the game skips unknown words and stops at an inner quote) and `Zeus event message categories.txt`; `tools/eventmsg.py` reads all 11 files of the game and, given the executable, checks every phrase name.

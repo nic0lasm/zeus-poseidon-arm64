@@ -120,6 +120,7 @@ Le plan complet, ce que chaque étape doit atteindre et un retour sur la 1.0 :
 
 | Version | Points forts |
 |---|---|
+| [**1.1**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.1) | premier lancement en moins de clics (téléchargement en un clic, sélecteur dans Téléchargements, plus de question de langue) ; modes larges plus hauts ; sol de la ville dessiné en natif (petite ville à 35 % d'un cœur au lieu d'environ 50 %) |
 | [**1.0.1**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.0.1) | le jeu à sa vraie vitesse (il tournait aux deux tiers depuis la 0.2) ; répartiteur de sprites natif |
 | [**1.0**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.0) | première version stable : le code de la 0.9, joué à la main |
 | [0.9](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v0.9) | version candidate : démarrage en moins d'une seconde, vraie résolution affichée en mode large, moins de mémoire |

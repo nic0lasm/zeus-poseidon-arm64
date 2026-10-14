@@ -10,7 +10,7 @@ an emulator at all.
 
 ```mermaid
 flowchart LR
-    A["<b>1.0</b><br/>Playable on<br/>Apple Silicon<br/><i>released</i>"] --> B["<b>1.1</b><br/>Cool and quiet<br/><i>in progress</i>"]
+    A["<b>1.0</b><br/>Playable on<br/>Apple Silicon<br/><i>released</i>"] --> B["<b>1.1</b><br/>Cool and quiet<br/><i>released</i>"]
     B --> C["<b>1.2</b><br/>Every edition<br/><i>needs testers</i>"]
     C --> D["<b>2.0</b><br/>Everywhere<br/>Linux, Intel Macs"]
     D --> E["<b>3.0</b><br/>Recompiled<br/>no emulator"]
@@ -21,7 +21,7 @@ flowchart LR
 | Version | Theme | State | Follow it |
 |---|---|---|---|
 | **1.0.1** | The whole game on Apple Silicon Macs, at its real speed | released | [release notes](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.0.1) |
-| **1.1** | Cool and quiet: as little CPU as the game needs | in progress | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/1) · [#21](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/21), [#32](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/32) done · [#22](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/22) · [#23](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/23) |
+| **1.1** | Cool and quiet: as little CPU as the game needs | released (small city at 35 % of a core; [#22](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/22) goes on toward 20 %) | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/1) · [#21](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/21), [#32](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/32) done · [#22](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/22) · [#23](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/23) |
 | **1.2** | Every language edition | needs testers | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/2) · [#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24) |
 | **2.0** | Everywhere: Linux (x86-64, arm64) and Intel Macs | planned | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/3) · [#25](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/25) |
 | **3.0** | Recompiled: no emulator, the player's own copy translated to native code | research | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/4) · [#26](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/26) · [#27](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/27) |
@@ -201,6 +201,7 @@ modders and tool makers.
 
 | Version | Highlights |
 |---|---|
+| [1.1](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.1) | easier first launch; taller wide modes; native ground drawing; Linux build in CI |
 | [1.0.1](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.0.1) | the game at its real speed; native sprite dispatcher; this roadmap |
 | [1.0](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.0) | first stable version: the code of 0.9, played through by hand |
 | [0.9](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v0.9) | release candidate: start-up under a second, real resolution shown in wide mode, file cache limited to small files |
