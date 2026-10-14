@@ -123,7 +123,7 @@ another Mac, the first launch needs a right-click → *Open*.
 | `--frames N`, `--seconds S` | stop after N displayed frames or S seconds |
 | `--screenshot FILE.bmp` | save the last displayed frame |
 | `--window-shot FILE.bmp` | save what the window shows, scaling included |
-| `--script "T:ACTION; …"` | replay input at T seconds: `click X,Y`, `rclick X,Y`, `move X,Y`, `key CODE` (Windows virtual key), `char CODE`, `shot FILE.bmp` |
+| `--script "T:ACTION; …"` | replay input at T seconds: `click X,Y`, `rclick X,Y`, `move X,Y`, `down X,Y` and `up X,Y` (press and release separately, to drag), `key CODE` (Windows virtual key), `char CODE`, `shot FILE.bmp` |
 
 Example — reach the main menu without a window and capture it:
 

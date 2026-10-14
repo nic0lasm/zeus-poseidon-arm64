@@ -27,6 +27,16 @@ python3 tools/check_scenarios.py --no-native   # same, with every game function 
 Reference logs are kept in `build/scenarios/`; they depend on the game files and are not
 versioned. A scenario also fails if the game stops on a missing function.
 
+| Scenario | What it plays |
+|---|---|
+| `tutorial` | profile, first tutorial, a house, keyboard scrolling |
+| `adventure` | first Zeus adventure, every tab of the control panel, building attempts |
+| `wide` | wide mode: mode switch, information window, panel at its new position |
+| `poseidon` | first Poseidon adventure, a road drawn by dragging, housing, world map and back |
+| `editor` | adventure editor: adventure list, editor screen, city map, terrain brush, menus |
+| `options` | *File* menu, every window of the *Options* menu, in-game help, *About* |
+| `working-city` | the last tutorial's large city: sanctuaries, stadium, a god and a monster |
+
 Scenarios were written for the English GOG edition at 800×600. Lines starting with `#` are
 comments; `# durée : N` gives the length of the run in virtual seconds and `# options : …` extra
 options for `zeus-run`.

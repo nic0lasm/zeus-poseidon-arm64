@@ -46,6 +46,7 @@ public:
     std::string frame_log_path;   // une ligne par image affichée : son empreinte
     // Ajoute au scénario les actions décrites par `text`, de la forme
     // « 5:click 400,300; 7:rclick 10,10; 8:move 5,5; 9:key 27; 9.5:char 65; 10:shot f.bmp ».
+    // Un glissement s'écrit « 5:down 100,100; 6:move 130,115; 7:up 160,130 ».
     void add_script(const std::string& text);
 
     // Taille de l'écran annoncée au programme tant qu'il n'a pas choisi de mode d'affichage.

@@ -240,6 +240,11 @@ void Desktop::add_script(const std::string& text) {
         if (verb == "move") { point(); push(Kind::Move, 0); }
         else if (verb == "click") { point(); push(Kind::Move, 0); push(Kind::LeftDown, 0.15); push(Kind::LeftUp, 0.3); }
         else if (verb == "rclick") { point(); push(Kind::Move, 0); push(Kind::RightDown, 0.15); push(Kind::RightUp, 0.3); }
+        // « down » et « up » séparés : un glissement s'écrit down, move…, up (tracé d'une route).
+        // Le jeu lit la case survolée une fois par image : on lui laisse une demi-seconde entre
+        // l'arrivée de la souris et le bouton, sinon il part de la case d'avant.
+        else if (verb == "down") { point(); push(Kind::Move, 0); push(Kind::LeftDown, 0.5); }
+        else if (verb == "up") { point(); push(Kind::Move, 0); push(Kind::LeftUp, 0.5); }
         else if (verb == "key") { rest >> e.key; push(Kind::KeyDown, 0); push(Kind::KeyUp, 0.15); }
         else if (verb == "char") { rest >> e.key; push(Kind::Char, 0); }
         else if (verb == "shot") { rest >> e.path; push(Kind::Shot, 0); }

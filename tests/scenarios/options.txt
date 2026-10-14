@@ -1,0 +1,4 @@
+5:key 27; 12:click 220,101; 17:char 78; 20:click 556,320; 27:click 644,523; 33:click 212,120; 45:rclick 300,300; 50:click 20,10; 53:rclick 500,400; 55:click 70,10; 57:click 100,40; 60:click 320,205; 64:rclick 780,590; 66:rclick 780,590; 68:click 70,10; 70:click 100,60; 74:rclick 780,590; 76:click 70,10; 78:click 100,80; 81:click 355,210; 83:click 320,300; 86:click 70,10; 88:click 100,100; 92:rclick 780,590; 94:click 70,10; 96:click 100,160; 100:rclick 780,590; 102:click 130,10; 104:click 160,40; 108:rclick 780,590; 110:click 130,10; 112:click 160,100; 116:rclick 780,590
+# durée : 125
+# Menus de la ville : File, puis chaque fenêtre du menu Options (affichage avec demande du mode
+# fenêtré, son, vitesse portée à 100 %, difficulté, messages), aide en ligne et À propos.

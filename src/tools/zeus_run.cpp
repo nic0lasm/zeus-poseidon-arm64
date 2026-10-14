@@ -3,6 +3,8 @@
 //   zeus-run --selftest        vérifie le processeur émulé et l'appel de fonctions hôtes
 //   zeus-run --bench           mesure le processeur émulé et le coût d'un appel de fonction hôte
 //   zeus-run --inspect EXE     charge l'exécutable sans rien exécuter et liste ses imports
+//   zeus-run --check-audio DOSSIER
+//                              décode chaque fichier son du dossier comme le fait le mixeur
 //   zeus-run --app [--installer SETUP.exe]
 //                              mode application (aussi sans argument) : demande le jeu au
 //                              premier lancement (installateur GOG ou dossier déballé),
@@ -35,7 +37,8 @@
 //     --screenshot SORTIE.bmp  enregistre la dernière image affichée
 //     --window-shot SORTIE.bmp enregistre le contenu de la fenêtre, mise à l'échelle comprise
 //     --script "T:ACTION; …"   joue des actions à T secondes : click X,Y ; rclick X,Y ;
-//                              move X,Y ; key CODE ; char CODE ; shot SORTIE.bmp
+//                              move X,Y ; down X,Y ; up X,Y ; key CODE ; char CODE ;
+//                              shot SORTIE.bmp
 
 #include <algorithm>
 #include <cctype>
@@ -53,7 +56,10 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <thread>
+#include <vector>
 
+#include "win32/audio.h"
 #include "win32/cpu.h"
 #include "win32/pe_image.h"
 #include "win32/process.h"
@@ -187,6 +193,56 @@ double copy_call_time(bool native, uint32_t bytes, uint32_t calls) {
     const auto start = std::chrono::steady_clock::now();
     cpu.run(0x1000, 0x1000 + 13);
     return std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count() / calls * 1e9;
+}
+
+// Décode tous les fichiers .wav et .mp3 d'un dossier par les chemins du mixeur : le lecteur WAV
+// de l'hôte d'abord, AudioToolbox sinon. Un son refusé serait muet en jeu sans autre signe.
+int check_audio(const std::filesystem::path& root) {
+    namespace fs = std::filesystem;
+    using zeus::win32::Sound;
+    int wav_direct = 0, wav_fallback = 0, mp3 = 0, failed = 0, empty = 0;
+    double seconds = 0;
+    std::vector<fs::path> files;
+    for (const auto& entry : fs::recursive_directory_iterator(root))
+        if (entry.is_regular_file()) files.push_back(entry.path());
+    std::sort(files.begin(), files.end());
+    for (const fs::path& path : files) {
+        std::string ext = path.extension().string();
+        std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        if (ext != ".wav" && ext != ".mp3") continue;
+        if (fs::file_size(path) == 0) {  // muet dans le jeu d'origine aussi
+            std::printf("vide   %s\n", path.lexically_relative(root).c_str());
+            ++empty;
+            continue;
+        }
+        std::shared_ptr<Sound> sound;
+        bool direct = false;
+        if (ext == ".wav") {
+            std::ifstream in(path, std::ios::binary);
+            const std::vector<char> data((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+            sound = zeus::win32::decode_wav(reinterpret_cast<const uint8_t*>(data.data()), data.size());
+            direct = sound != nullptr;
+        }
+        if (!sound) {
+            sound = zeus::win32::decode_file_async(path);
+            while (!sound->ready) std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+        if (!sound->frames() || sound->rate <= 0) {
+            std::printf("ÉCHEC  %s\n", path.lexically_relative(root).c_str());
+            ++failed;
+            continue;
+        }
+        seconds += static_cast<double>(sound->frames()) / sound->rate;
+        if (ext == ".mp3") ++mp3;
+        else if (direct) ++wav_direct;
+        else {
+            ++wav_fallback;
+            std::printf("par AudioToolbox  %s\n", path.lexically_relative(root).c_str());
+        }
+    }
+    std::printf("%d WAV lus par l'hôte, %d WAV par AudioToolbox, %d MP3, %d vides, %d refusés ; %.0f minutes de son\n",
+                wav_direct, wav_fallback, mp3, empty, failed, seconds / 60);
+    return failed ? 1 : 0;
 }
 
 int bench() {
@@ -627,6 +683,7 @@ int main(int argc, char** argv) {
         if (argc == 2 && !std::strcmp(argv[1], "--selftest")) return selftest();
         if (argc == 2 && !std::strcmp(argv[1], "--bench")) return bench();
         if (argc == 3 && !std::strcmp(argv[1], "--inspect")) return inspect(argv[2]);
+        if (argc == 3 && !std::strcmp(argv[1], "--check-audio")) return check_audio(argv[2]);
         std::fprintf(stderr, "usage : zeus-run [--app] | --selftest | --bench | --inspect EXE | --make-pack CD JEU SORTIE | --run EXE [options]\n");
         return 2;
     } catch (const std::exception& e) {

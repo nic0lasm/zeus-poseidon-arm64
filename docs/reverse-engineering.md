@@ -41,6 +41,25 @@ saved game is essentially a list of memory blocks.
 - **Frame presentation**, function `0x0050C1B0`: in full-screen mode it calls
   `BltFast(primary, 0, 0, backbuffer, &rectangle, 0)`, and only once an elapsed-time counter
   reaches `0x32`. *Hypothesis:* the counter is in milliseconds, giving 20 frames per second.
+- **Mouse.** The window procedure (`0x005C4A90`, reached through tables, so Ghidra does not see
+  it as a function: `Listing.java` below prints it) only records state. Every mouse message
+  stores the position in two 16-bit variables (`0x00F2A70E` x, `0x00F2A70C` y); button messages
+  set or clear a bit of `0x00F2A70B` (bit 0 left, bit 1 right), and a left press also sets a
+  "clicked" flag at `0x00F2A706`. The game reads these once per frame. Consequence for scripted
+  input: a press must come at least one frame after the move that precedes it, and a drag
+  (road, wall) needs intermediate moves.
+- **DirectDraw calls.** Every call site that goes through the DirectDraw objects kept at
+  `0x00F2AB20` (DirectDraw), `0x00F2AB48` (clipper), `0x00F2AB4C`/`50`/`54` (surfaces) and
+  `0x00F0E624` (JPEG backdrop) was listed. The game uses `SetCooperativeLevel`,
+  `SetDisplayMode`, `CreateSurface`, `CreateClipper`, `Release`; on the clipper `SetHWnd`; on
+  surfaces `Blt`, `BltFast`, `GetSurfaceDesc`, `IsLost`, `Lock`, `Restore`, `SetClipper`,
+  `Unlock`, `Release`. The host provides all of them. The only `Blt` with two rectangles
+  (`0x00504FA0`, JPEG backdrops) builds them with equal sizes: the game never asks for a
+  scaled copy.
+- **Exceptions.** `RaiseException` has a single caller, the C runtime's floating-point error
+  helper (`0x005D224A`), and `RtlUnwind` is only reached from the runtime's structured
+  exception handlers. The game never throws; both would only run after a processor fault,
+  which the host reports instead of dispatching.
 
 ### Sound
 
@@ -123,6 +142,9 @@ tools/ghidra/headless.sh zeus/gog -process Zeus.exe -noanalysis -readOnly \
 tools/ghidra/headless.sh zeus/gog -process Zeus.exe -noanalysis -readOnly \
     -postScript Xrefs.java OUT.tsv ADDRESS[:LENGTH]…
 ```
+
+`Listing.java OUT.txt START END` prints the disassembly of an address range, including code
+that belongs to no recognised function.
 
 `zeus-run --watch-call ADDRESS` lists the call sites of a game function with their last
 arguments, and `--dump-data FILE` writes the game's variables at exit; comparing two dumps (for

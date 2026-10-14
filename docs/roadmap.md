@@ -40,6 +40,17 @@ is far less work than a rewrite.
   hitting a missing function.
 - Scripted soak run in the first adventure (*Zeus and Europa*): every tab of the control
   panel, building attempts, 19,566 frames and 2.2 million system calls without a stop.
+- Scripted runs of the first Poseidon adventure (a road drawn by dragging, housing, world map),
+  of the adventure editor (adventure screen, city map, terrain brush), of every window of the
+  *Options* menu, of the in-game help; each of the sixteen tutorials loaded in turn and its
+  screen reviewed.
+- Endurance: the large city of the last tutorial, 25 minutes in real time at full game speed,
+  several game years with autosaves, an earthquake, a god and a monster walking the streets,
+  without a stop.
+- Every sound file of the game (703 WAV, 929 MP3, 311 minutes) decodes through the code paths
+  of the mixer (`zeus-run --check-audio`); so do the files of a French pack.
+- The seven scenarios of `tests/scenarios` give the same frames with and without the native
+  functions.
 
 ## Known limits
 
@@ -48,9 +59,13 @@ is far less work than a rewrite.
 - Video: audio and picture are paced independently, so they may drift slightly.
 - **Performance**: a running city uses about half of one CPU core; loading screens use a full
   core. The game itself caps its display rate at 20 frames per second.
-- `RaiseException`, `RtlUnwind` and several DirectDraw methods are not written; no play
-  session has needed them so far.
-- Tested with the English GOG edition only.
+- `RaiseException` and `RtlUnwind` are not written: the game only reaches them after a
+  processor fault, which the host reports instead
+  ([details](reverse-engineering.md#findings-in-the-gog-executable)). Every DirectDraw method
+  the game calls is provided.
+- The 3D placement of ambience has been checked by measurement only, not by ear; reports are
+  welcome.
+- Tested with the English GOG edition, alone and with a French pack, on a single Mac model.
 
 ## Milestone 6 — in progress
 

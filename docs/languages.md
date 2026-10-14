@@ -46,6 +46,11 @@ which may not match the 2.1 game exactly.
 The steps can also be run one by one: `tools/cdimage.py`, `tools/ishield.py`, `tools/wise.py`,
 `tools/build_install.py`, then `tools/make_language_pack.py`.
 
+To check the sounds of a pack, `./build/zeus-run --check-audio packs/fr` decodes every file the
+way the game's mixer will. One oddity of the French CDs shows up there:
+`Audio/Voice/Walker/trd_e_1.mp3` is an empty file on both discs, so that one line of the trader
+is silent, as it was in the original French edition.
+
 The executable of the other edition is only read, to copy its character table. It is never
 run, and its copy protection is left alone.
 

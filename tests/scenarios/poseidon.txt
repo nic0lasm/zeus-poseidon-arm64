@@ -1,0 +1,4 @@
+5:key 27; 12:click 580,101; 22:char 80; 25:click 556,320; 36:click 590,260; 48:click 315,442; 62:click 656,491; 80:click 666,451; 81:move 400,400; 82:down 330,315; 84:move 360,330; 85:move 390,345; 86:move 420,360; 87:move 450,375; 88:move 480,390; 89:move 510,405; 90:move 540,420; 91:move 570,435; 92:up 570,435; 94:click 622,42; 96:click 677,345; 97:move 400,300; 99:click 388,285; 100:click 301,330; 101:click 448,315; 102:click 361,360; 103:click 508,345; 104:click 421,390; 105:click 568,375; 106:click 481,420; 107:click 622,83; 110:rclick 300,200; 113:rclick 300,200; 116:click 745,580; 124:click 380,235; 129:click 720,583; 137:key 39; 138:key 40
+# durée : 190
+# Poséidon : profil, première aventure (The Birth of Atlantis), route tracée en glissant,
+# terrains à bâtir de part et d'autre, fenêtre d'information, carte du monde et retour à la ville.
