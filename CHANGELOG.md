@@ -5,6 +5,13 @@ pull request.
 
 ## Unreleased
 
+## 1.0 — 2026-10-14
+
+First stable version. The code is that of 0.9, which has now been played by hand: adventures
+of Zeus and Poseidon, 3D sound by ear, the pause when switching to another application with
+⌘Tab, the mouse wheel, the French pack built by the application from the original CDs. Nothing
+had to be fixed.
+
 ## 0.9 — 2026-10-14
 
 Release candidate for 1.0, meant to be played and reported on before it gets that number.

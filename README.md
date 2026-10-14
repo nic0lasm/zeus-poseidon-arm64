@@ -25,6 +25,9 @@ The result is the real game — same simulation, same rules, same save files —
 
 ## Status
 
+**Version 1.0** — the whole game is playable. Download it from the
+[releases page](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest).
+
 | Milestone | What you get | State |
 |---|---|---|
 | 1. The game starts | the real main menu in a Mac window | done |

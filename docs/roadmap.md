@@ -26,6 +26,9 @@ less work than a rewrite.
 
 ## What has been verified
 
+- Version 1.0, by hand: adventures of Zeus and Poseidon, 3D sound by ear, the pause when
+  switching to another application with ⌘Tab, the mouse wheel, a French pack built by the
+  application from the original CDs, in window and full screen, on a MacBook Air M4.
 - Clean build with `-Wall -Wextra -Wpedantic`; `zeus-run --selftest` passes.
 - Scripted run (no window): *Play Zeus*, typing a leader name, *Tutorials*, *Housing and
   People*; the city is alive, the calendar advances, a housing lot placed next to a road
@@ -67,9 +70,8 @@ less work than a rewrite.
   processor fault, which the host reports instead
   ([details](reverse-engineering.md#findings-in-the-gog-executable)). Every DirectDraw method
   the game calls is provided.
-- The 3D placement of ambience has been checked by measurement only, not by ear; reports are
-  welcome.
-- Tested with the English GOG edition, alone and with a French pack, on a single Mac model.
+- Tested with the English GOG edition, alone and with a French pack, on a single Mac model;
+  reports from other Macs and other language editions are welcome.
 
 ## Milestone 6 — partly done
 
@@ -121,7 +123,7 @@ frame went from 3.5–5 s to under a second; the parsed table hashes the same wi
 (`0x005ACF50`, about a fifth of the time: called 65,000 times a second, some thirty blocks of
 branching each time) and by the text routines of the control panel. The dispatcher calls some
 forty other functions; rewriting it by hand with the same guarantee of fidelity is a project of
-its own, left for after version 1.0. The game is already fast enough to play: a small city uses
+its own, for after version 1.0. The game is already fast enough to play: a small city uses
 about half of one core.
 
 ## Milestone 5 — plan

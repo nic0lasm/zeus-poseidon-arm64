@@ -26,6 +26,9 @@ réécriture.
 
 ## Avancement
 
+**Version 1.0** — tout le jeu est jouable. À télécharger sur la
+[page des versions](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest).
+
 | Jalon | Ce qu'on obtient | État |
 |---|---|---|
 | 1. Le jeu démarre | le vrai menu principal dans une fenêtre Mac | fait |

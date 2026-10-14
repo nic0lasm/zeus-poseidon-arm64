@@ -45,8 +45,8 @@ ideal (see [docs/getting-started.md](docs/getting-started.md)).
 - **Other editions**: does your copy (other language, other store) start? Send the SHA-256 of
   its `Zeus.exe` and what happens.
 - **Missing Windows functions**: each one is small and self-contained (`src/win32/`).
-- **Listening**: the 3D placement of ambience (`src/win32/mss.cpp`) was tuned by measurement;
-  ears on real speakers are welcome.
+- **Other Macs and editions**: reports from other Mac models, other language editions or
+  other stores.
 - **Native code**: the sprite dispatcher (`0x005ACF50`) leads the profile of a running city;
   see the end of [docs/roadmap.md](docs/roadmap.md).
 - **File formats**: anything not yet described in `formats/`.
