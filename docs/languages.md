@@ -6,8 +6,7 @@ instance the original French CDs. The pack stays on your Mac; it is made of game
 not be shared.
 
 Status: French works (menus, tutorials, missions, accented text, typing accented names).
-Long play sessions still need testing. Other Western European editions should work the same
-way but have not been tried.
+Other Western European editions should work the same way but have not been tried.
 
 ## What a pack contains
 
@@ -20,30 +19,32 @@ A pack is a folder whose files take precedence over those of the GOG installatio
 - `table-caracteres.bin`, the 224-byte character table of the executable of that language;
 - `remplace.txt`, the list of folders the pack replaces entirely.
 
-## Building a French pack from the original CDs
+## Building a pack from the original CDs
+
+You need the images of both CDs (*Zeus* and *Poseidon*) in the language you want and, if you
+have them, the official 1.1 and 2.1 updates in that language. Put them in one folder; the files
+are recognised by their content, whatever their names.
+
+**With the application** — hold the Option key (⌥) while it starts, or use the dialog shown on
+first launch: pick *Another language, from the original CDs…*, then the folder, then a name.
+The pack is built in about a minute and appears in the list. Each language keeps its own saved
+games. Packs live in `~/Library/Application Support/Zeus Poseidon/Packs/`.
+
+**From the command line**
 
 ```bash
-# 1. Unpack the CDs and the official updates (no installer is run)
-python3 tools/cdimage.py extract cd-zeus.iso original/cd-zeus
-python3 tools/cdimage.py extract cd-poseidon.iso original/cd-poseidon
-python3 tools/ishield.py extract original/cd-zeus/DATA1.CAB original/cab-zeus
-python3 tools/ishield.py extract original/cd-poseidon/data1.cab original/cab-poseidon
-python3 tools/wise.py extract update_1_1.exe original/patch-zeus-1.1
-python3 tools/wise.py extract update_2_1.exe original/patch-poseidon-2.1
-python3 tools/build_install.py            # rebuilds the 2.1 installation in original/install
-
-# 2. Build the pack
-python3 tools/make_language_pack.py original/install original/gog/app packs/fr \
-    --cd original/cd-zeus --cd original/cd-poseidon
-
-# 3. Play
+./build/zeus-run --make-pack FOLDER original/gog/app packs/fr
 ./build/zeus-run --run original/gog/app/Zeus.exe --language packs/fr
 ```
 
-With the application, put the pack in
-`~/Library/Application Support/Zeus Poseidon/Packs/` (for instance `Packs/fr`). The next launch
-asks which language to play in and remembers the answer; delete `langue.txt` in that folder to
-be asked again. Each language keeps its own saved games.
+Either way nothing from the CDs is executed: the images are read, the installation archives
+unpacked and the updates applied by the Python tools of this project (`tools/`), which the
+application carries along with its own Python interpreter. About 3 GB of free space is needed
+while the pack is being built. Without the 2.1 update the pack takes the files of the CDs,
+which may not match the 2.1 game exactly.
+
+The steps can also be run one by one: `tools/cdimage.py`, `tools/ishield.py`, `tools/wise.py`,
+`tools/build_install.py`, then `tools/make_language_pack.py`.
 
 The executable of the other edition is only read, to copy its character table. It is never
 run, and its copy protection is left alone.

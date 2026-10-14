@@ -93,7 +93,8 @@ number of blocks the emulator runs, and only removing whole loops from it reduce
 
 1. ~~Check that French files can be layered over the GOG executable~~ — done: it works, once
    the character table and the placement of accented letters are taken from the French build.
-2. ~~Typing accented letters~~ — done. A full French play session: to be reported.
+2. ~~Typing accented letters~~ — done. ~~Packs built by the application from CD images~~ —
+   done.
 3. ~~Language choice in the application~~ — done.
 4. ~~Wider resolutions~~ — done: see below.
 

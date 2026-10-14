@@ -8,6 +8,8 @@
 //                              premier lancement (installateur GOG ou dossier déballé),
 //                              propose les packs de langue du dossier « Packs », range sauvegardes et réglages dans
 //                              ~/Library/Application Support/Zeus Poseidon
+//   zeus-run --make-pack DOSSIER_CD JEU SORTIE
+//                              fabrique un pack de langue depuis les images des CD d'origine
 //   zeus-run --run EXE [options]
 //                              exécute le programme dans le processeur émulé
 //     --write-dir DOSSIER      reçoit les écritures du jeu (défaut : run/zeus) ; l'installation
@@ -36,9 +38,12 @@
 //                              move X,Y ; key CODE ; char CODE ; shot SORTIE.bmp
 
 #include <algorithm>
+#include <cctype>
 #include <chrono>
 #include <cstdio>
 #include <mach-o/dyld.h>
+
+#include <CoreGraphics/CoreGraphics.h>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
@@ -323,16 +328,20 @@ void alert(const std::string& title, const std::string& text) {
     applescript("display alert \"" + title + "\" message \"" + text + "\"");
 }
 
+// Dossier du programme en cours d'exécution.
+std::filesystem::path program_dir() {
+    char self[4096];
+    uint32_t size = sizeof self;
+    std::error_code error;
+    if (_NSGetExecutablePath(self, &size) != 0) return {};
+    return std::filesystem::canonical(self, error).parent_path();
+}
+
 // Outil de déballage des installateurs GOG : celui du paquet, sinon celui du système.
 std::string innoextract_path() {
     namespace fs = std::filesystem;
-    char self[4096];
-    uint32_t size = sizeof self;
-    if (_NSGetExecutablePath(self, &size) == 0) {
-        std::error_code error;
-        const fs::path bundled = fs::canonical(self, error).parent_path().parent_path() / "Helpers" / "innoextract";
-        if (!error && fs::exists(bundled)) return bundled.string();
-    }
+    const fs::path bundled = program_dir().parent_path() / "Helpers" / "innoextract";
+    if (fs::exists(bundled)) return bundled.string();
     for (const char* candidate : {"/opt/homebrew/bin/innoextract", "/usr/local/bin/innoextract"})
         if (fs::exists(candidate)) return candidate;
     return {};
@@ -359,6 +368,79 @@ std::string unpack_installer(const std::string& installer, const std::filesystem
                  "The GOG installer of Zeus + Poseidon is needed (setup_zeus_and_poseidon_….exe)."));
     if (exe.empty() && !output.empty()) std::fprintf(stderr, "%s\n", output.c_str());
     return exe;
+}
+
+// Fabrique un pack de langue à partir des CD d'origine, avec les outils Python du projet :
+// ceux du paquet (et son interpréteur) s'ils existent, sinon ceux du dépôt. Renvoie un texte
+// d'erreur, vide en cas de succès.
+std::string make_language_pack(const std::filesystem::path& cd_folder, const std::filesystem::path& game_dir,
+                               const std::filesystem::path& pack) {
+    namespace fs = std::filesystem;
+    const fs::path here = program_dir();
+    fs::path python = here.parent_path() / "Resources" / "python" / "bin" / "python3";
+    fs::path tool = here.parent_path() / "Resources" / "tools" / "make_pack_from_cds.py";
+    if (!fs::exists(tool)) {
+        python = "/usr/bin/python3";
+        tool = here.parent_path() / "tools" / "make_pack_from_cds.py";
+    }
+    if (!fs::exists(tool) || !fs::exists(python)) return tr("outils de fabrication absents", "pack building tools missing");
+    const std::string command = quoted(python.string()) + " " + quoted(tool.string()) + " " + quoted(cd_folder.string()) +
+                                " " + quoted(game_dir.string()) + " " + quoted(pack.string()) + " 2>&1";
+    std::string last;
+    bool done = false;
+    if (FILE* pipe = popen(command.c_str(), "r")) {
+        char buffer[1024];
+        while (std::fgets(buffer, sizeof buffer, pipe)) {
+            std::string line = buffer;
+            while (!line.empty() && (line.back() == '\n' || line.back() == '\r')) line.pop_back();
+            if (line.empty()) continue;
+            std::fprintf(stderr, "%s\n", line.c_str());
+            if (line == "TERMINÉ") done = true;
+            else last = line;
+        }
+        pclose(pipe);
+    }
+    if (done && fs::exists(pack / "remplace.txt")) return {};
+    std::error_code error;
+    fs::remove_all(pack, error);  // pack inachevé, que l'outil vient de créer
+    return last.empty() ? std::string(tr("échec", "failure")) : last;
+}
+
+// Dialogues de fabrication d'un pack, depuis le mode application.
+void build_language_pack(const std::filesystem::path& game_dir, const std::filesystem::path& packs_dir) {
+    namespace fs = std::filesystem;
+    const std::string folder = applescript(
+        std::string("POSIX path of (choose folder with prompt \"") +
+        tr("Dossier qui contient les images des deux CD (Zeus et Poséidon) et, si possible, les mises à jour 1.1 et 2.1",
+           "Folder that holds the images of both CDs (Zeus and Poseidon) and, if possible, the 1.1 and 2.1 updates") +
+        "\")");
+    if (folder.empty()) return;
+    const std::string name = applescript(std::string("text returned of (display dialog \"") +
+                                         tr("Nom de cette langue dans la liste", "Name of this language in the list") +
+                                         "\" default answer \"Français\" with title \"Zeus + Poseidon\")");
+    std::string safe;
+    for (unsigned char c : name)
+        if (std::isalnum(c) || c >= 0x80 || c == '-' || c == '_' || c == ' ') safe += static_cast<char>(c);
+    if (safe.empty()) return;
+    std::error_code error;
+    fs::create_directories(packs_dir, error);
+    if (fs::exists(packs_dir / safe)) {
+        alert(tr("Ce nom est déjà pris", "This name is already taken"), safe);
+        return;
+    }
+    applescript(std::string("display notification \"") +
+                tr("Fabrication du pack de langue : environ une minute, 3 Go d'espace temporaire.",
+                   "Building the language pack: about a minute, 3 GB of temporary space.") +
+                "\" with title \"Zeus + Poseidon\"");
+    const std::string failure = make_language_pack(folder, game_dir, packs_dir / safe);
+    if (failure.empty()) {
+        applescript(std::string("display notification \"") + tr("Pack de langue prêt : ", "Language pack ready: ") + safe +
+                    "\" with title \"Zeus + Poseidon\"");
+        return;
+    }
+    std::string reason;
+    for (char c : failure) reason += c == '"' || c == '\\' ? '\'' : c;
+    alert(tr("Le pack n'a pas pu être fabriqué", "The pack could not be built"), reason);
 }
 
 // Mode application : le jeu est demandé une fois (installateur GOG ou dossier déjà déballé),
@@ -416,31 +498,38 @@ int run_app(const std::string& installer) {
     o.write_dir = (support / "Jeu").string();
     o.wide = "auto";
 
-    // Packs de langue rangés dans « Packs » : la langue est demandée une fois, puis retenue
-    // dans langue.txt (ligne vide : l'anglais de l'édition GOG). Chaque langue a ses sauvegardes.
-    std::vector<std::string> packs;
-    std::error_code error;
-    for (const auto& entry : fs::directory_iterator(support / "Packs", error))
-        if (fs::exists(entry.path() / "remplace.txt")) packs.push_back(entry.path().filename().string());
-    std::sort(packs.begin(), packs.end());
-    if (!packs.empty()) {
-        const fs::path choice_file = support / "langue.txt";
-        std::string choice;
-        const bool chosen = static_cast<bool>(std::ifstream(choice_file));
-        if (std::ifstream in{choice_file}) std::getline(in, choice);
-        if (!chosen) {
-            std::string list = "\"English\"";
-            for (const std::string& pack : packs) list += ", \"" + pack + "\"";
-            const std::string answer = applescript("choose from list {" + list + "} with title \"Zeus + Poseidon\" with prompt \"" +
-                                                   tr("Langue du jeu", "Game language") + "\" default items {\"English\"}");
-            if (answer == "false") return 0;  // annulé
-            choice = answer == "English" ? "" : answer;
-            std::ofstream(choice_file) << choice << "\n";
+    // Langue : demandée au premier lancement, puis retenue dans langue.txt (ligne vide : l'anglais
+    // de l'édition GOG). Garder la touche Option enfoncée au lancement la redemande. Les packs
+    // sont rangés dans « Packs » ; chaque langue a ses sauvegardes.
+    const fs::path packs_dir = support / "Packs", choice_file = support / "langue.txt";
+    std::string choice;
+    bool chosen = static_cast<bool>(std::ifstream(choice_file));
+    if (std::ifstream in{choice_file}) std::getline(in, choice);
+    if (CGEventSourceFlagsState(kCGEventSourceStateCombinedSessionState) & kCGEventFlagMaskAlternate) chosen = false;
+    while (!chosen) {
+        std::vector<std::string> packs;
+        std::error_code error;
+        for (const auto& entry : fs::directory_iterator(packs_dir, error))
+            if (fs::exists(entry.path() / "remplace.txt")) packs.push_back(entry.path().filename().string());
+        std::sort(packs.begin(), packs.end());
+        const std::string build = tr("Autre langue, depuis les CD d'origine…", "Another language, from the original CDs…");
+        std::string list = "\"English\"";
+        for (const std::string& pack : packs) list += ", \"" + pack + "\"";
+        list += ", \"" + build + "\"";
+        const std::string answer = applescript("choose from list {" + list + "} with title \"Zeus + Poseidon\" with prompt \"" +
+                                               tr("Langue du jeu", "Game language") + "\" default items {\"English\"}");
+        if (answer == "false" || answer.empty()) return 0;  // annulé
+        if (answer == build) {
+            build_language_pack(fs::path(exe).parent_path(), packs_dir);
+            continue;  // le nouveau pack apparaît dans la liste
         }
-        if (!choice.empty() && std::find(packs.begin(), packs.end(), choice) != packs.end()) {
-            o.language = (support / "Packs" / choice).string();
-            o.write_dir = (support / ("Jeu-" + choice)).string();
-        }
+        choice = answer == "English" ? "" : answer;
+        std::ofstream(choice_file) << choice << "\n";
+        chosen = true;
+    }
+    if (!choice.empty() && fs::exists(packs_dir / choice / "remplace.txt")) {
+        o.language = (packs_dir / choice).string();
+        o.write_dir = (support / ("Jeu-" + choice)).string();
     }
     return run(o);
 }
@@ -485,10 +574,15 @@ int main(int argc, char** argv) {
             }
             return run(o);
         }
+        if (argc == 5 && !std::strcmp(argv[1], "--make-pack")) {
+            const std::string failure = make_language_pack(argv[2], argv[3], argv[4]);
+            if (!failure.empty()) std::fprintf(stderr, "zeus-run : %s\n", failure.c_str());
+            return failure.empty() ? 0 : 1;
+        }
         if (argc == 2 && !std::strcmp(argv[1], "--selftest")) return selftest();
         if (argc == 2 && !std::strcmp(argv[1], "--bench")) return bench();
         if (argc == 3 && !std::strcmp(argv[1], "--inspect")) return inspect(argv[2]);
-        std::fprintf(stderr, "usage : zeus-run [--app] | --selftest | --inspect EXE | --run EXE [options]\n");
+        std::fprintf(stderr, "usage : zeus-run [--app] | --selftest | --bench | --inspect EXE | --make-pack CD JEU SORTIE | --run EXE [options]\n");
         return 2;
     } catch (const std::exception& e) {
         std::fprintf(stderr, "zeus-run : %s\n", e.what());

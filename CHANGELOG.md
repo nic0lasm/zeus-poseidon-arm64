@@ -5,6 +5,10 @@ pull request.
 
 ## Unreleased
 
+- **Language packs from the application.** Pick a folder with the images of the original CDs:
+  the application builds the pack itself, with its own Python interpreter. Hold Option at
+  launch to choose the language again. `zeus-run --make-pack` does the same from the command
+  line.
 - **Wide screen.** `--wide auto` (always on in the application) turns the game's 1024×768 mode
   into a wide mode fitted to the screen: larger map view, control panel at the right edge.
 - `--watch-call` and `--dump-data`, two reverse-engineering aids.

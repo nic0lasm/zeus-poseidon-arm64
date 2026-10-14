@@ -11,6 +11,7 @@ It contains no file from the game.
 | SDL 3 and sdl2-compat | window, input, audio output | zlib | https://github.com/libsdl-org |
 | innoextract | unpacking the GOG installer (separate helper program) | zlib | https://constexpr.org/innoextract/ |
 | Boost, liblzma, zstd | used by innoextract | BSL-1.0, 0BSD, BSD-3-Clause | https://www.boost.org, https://tukaani.org/xz/, https://github.com/facebook/zstd |
+| CPython (python-build-standalone) | runs the project's pack-building tools inside the application | PSF-2.0 | https://github.com/astral-sh/python-build-standalone |
 | FFmpeg | Bink video and audio decoding | LGPL-2.1-or-later (reduced build: Bink demuxer and decoders, libswscale, libswresample) | https://ffmpeg.org |
 
 A redistributable application bundle links FFmpeg statically, from the reduced build produced by

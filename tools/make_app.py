@@ -132,9 +132,36 @@ def main(argv):
 
     # Les chemins de recherche hérités de Homebrew sont remplacés par le dossier du paquet :
     # c'est par eux que sdl2-compat trouve SDL3.
+    # Fabrication des packs de langue : les outils Python du projet et un interpréteur autonome
+    # (tools/fetch_python.py), réduit à ce dont ces outils ont besoin.
+    python_source = os.path.join(ROOT, "build", "deps", "python-standalone", "python")
+    signed_extra = []
+    if os.path.isdir(python_source):
+        python_target = os.path.join(app, "Contents", "Resources", "python")
+        os.makedirs(os.path.join(python_target, "bin"))
+        interpreter = os.path.join(python_target, "bin", "python3")
+        shutil.copy2(os.path.join(python_source, "bin", "python3.12"), interpreter)
+        signed_extra.append(interpreter)
+        unused = {"site-packages", "ensurepip", "idlelib", "tkinter", "lib2to3", "pydoc_data", "unittest", "test",
+                  "turtledemo", "config-3.12-darwin", "__pycache__", "venv", "distutils", "asyncio", "email",
+                  "multiprocessing", "xml", "xmlrpc", "http", "sqlite3", "curses", "dbm", "wsgiref", "html",
+                  "concurrent", "ctypes", "logging", "json", "tomllib", "zipapp.py", "pydoc.py", "turtle.py",
+                  "_pydecimal.py", "doctest.py", "pdb.py"}
+        shutil.copytree(os.path.join(python_source, "lib", "python3.12"), os.path.join(python_target, "lib", "python3.12"),
+                        ignore=lambda folder, names: [n for n in names if n in unused])
+        for folder, _, names in os.walk(python_target):
+            signed_extra += [os.path.join(folder, n) for n in names if n.endswith((".so", ".dylib"))]
+        tools_target = os.path.join(app, "Contents", "Resources", "tools")
+        os.makedirs(tools_target)
+        for name in ("cdimage.py", "ishield.py", "wise.py", "build_install.py", "make_language_pack.py",
+                     "make_pack_from_cds.py"):
+            shutil.copy2(os.path.join(ROOT, "tools", name), os.path.join(tools_target, name))
+    else:
+        print("attention : Python autonome absent (tools/fetch_python.py), le paquet ne saura pas fabriquer de pack de langue")
+
     # Licences : celle du projet et la liste des bibliothèques embarquées.
     resources = os.path.join(app, "Contents", "Resources")
-    os.makedirs(resources)
+    os.makedirs(resources, exist_ok=True)
     shutil.copy2(os.path.join(ROOT, "LICENSE"), os.path.join(resources, "LICENSE.txt"))
     shutil.copy2(os.path.join(ROOT, "docs", "third-party.md"), os.path.join(resources, "THIRD-PARTY.md"))
 
@@ -147,6 +174,8 @@ def main(argv):
         run("codesign", "--force", "--sign", "-", library)
     if helper:
         run("codesign", "--force", "--sign", "-", helper)
+    for binary_file in signed_extra:
+        run("codesign", "--force", "--sign", "-", binary_file)
     run("codesign", "--force", "--sign", "-", app)
 
     size = sum(os.path.getsize(os.path.join(d, f)) for d, _, files in os.walk(app) for f in files)

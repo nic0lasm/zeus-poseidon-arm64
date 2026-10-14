@@ -90,12 +90,13 @@ differ from Unicorn's, so it must not be redistributed.
 
 ```bash
 python3 tools/build_ffmpeg.py        # reduced FFmpeg (Bink only, LGPL), built in build/deps
+python3 tools/fetch_python.py        # standalone Python, for building language packs in the app
 cmake -S . -B build/diffusion -G Ninja -DCMAKE_BUILD_TYPE=Release -DZEUS_FFMPEG=build/deps/ffmpeg
 cmake --build build/diffusion --target zeus-run
 python3 tools/make_app.py --binary build/diffusion/zeus-run "build/diffusion/Zeus Poseidon.app"
 ```
 
-The result is smaller (about 23 MB) and carries its licence notices
+The result (about 50 MB) and carries its licence notices
 ([third-party.md](third-party.md)). It is signed locally only, not notarised by Apple: on
 another Mac, the first launch needs a right-click → *Open*.
 
