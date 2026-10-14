@@ -5,6 +5,7 @@ pull request.
 
 ## Unreleased
 
+- **Download in one click, honest first-launch steps.** The README (English and French) opens with a direct link to `releases/latest/download/Zeus-Poseidon-macos-arm64.zip` (`tools/publish.py release` now also writes the archive under that version-free name, same bytes), gives the exact macOS 15 steps (*Privacy & Security → Open Anyway*; right-click → *Open* no longer works), says where to get the GOG installer from a Mac, and that an Apple Silicon Mac is required ([#55](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/55)).
 - **zeus-run split by role.** `zeus_run.cpp` becomes `src/tools/zeus_run/`: command line, launch, application mode, dialogs, language packs, diagnostics; no change of behaviour or options.
 - **Contact sheet of screenshots.** `tools/contact_sheet.py OUT.bmp COLUMNS SHOT.bmp …` puts several captures, halved, in one grid, to review a scripted run at a glance (standard library only).
 - **Scenarios in parallel.** `tools/check_scenarios.py --jobs N` (default: cores minus one) plays the eight scenarios at the same time, each in a fresh write directory, and prints the results in alphabetical order as before: 2 min 10 s instead of about 8 to 20 min depending on the load. `tools/publish.py merge` now stops at once on a pull request in conflict with `main`, or whose branch was not pushed.

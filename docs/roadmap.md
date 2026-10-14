@@ -142,7 +142,7 @@ modders and tool makers.
 
 ## Decisions for the maintainer
 
-- **A signed and notarised application** would remove the right-click → *Open* step on first
+- **A signed and notarised application** would remove the *Open Anyway* steps on first
   launch. It needs a paid Apple Developer membership; under consideration.
 
 ---

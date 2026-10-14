@@ -28,13 +28,23 @@ rules, same save files — not a remake.
 > **This repository contains no game files.** You need your own copy of the game (GOG edition).
 > See [Legal](#legal).
 
-## Play in three steps
+## Play
 
-1. Download **`Zeus-Poseidon-…-macos-arm64.zip`** from the
-   [latest release](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest) and unzip it.
-2. Right-click **Zeus Poseidon.app** → **Open** (the first time only: the application is not
-   signed by Apple).
-3. Pick your GOG installer (`setup_zeus_and_poseidon_….exe`). It is unpacked once; then play.
+**[⬇ Download Zeus-Poseidon-macos-arm64.zip](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest/download/Zeus-Poseidon-macos-arm64.zip)** — for a Mac with an **Apple Silicon** chip
+(M1 or later; it does not run on an Intel Mac). You also need your own copy of the game: the
+GOG installer, see step 3.
+
+1. Open the downloaded zip (double-click it), then double-click **Zeus Poseidon**.
+2. macOS refuses to open it the first time, because the application is not notarised by Apple.
+   Click **Done** (or *OK*), then open **Apple menu → System Settings → Privacy & Security**,
+   scroll down to the message about “Zeus Poseidon” and click **Open Anyway**; confirm with your
+   password or Touch ID, then click **Open**. This is needed once only. *(Written for macOS 15
+   from Apple's documentation; the exact wording may differ slightly on your version, and has
+   still to be checked by a human on a clean Mac.)*
+3. Pick your GOG installer (`setup_zeus_and_poseidon_….exe`). It is unpacked once (about a
+   minute, 800 MB); then play. To get it from a Mac: sign in at **GOG.com → your library →
+   Zeus + Poseidon → Download offline backup game installers → Windows** (download the `.exe`
+   and the `.bin` files next to it, if any).
 
 **In French?** Hold the Option key (⌥) at launch and choose *Another language, from the original
 CDs…*: the application builds a French pack from the images of your own CDs

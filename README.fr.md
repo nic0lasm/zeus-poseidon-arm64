@@ -28,15 +28,24 @@ règles, mêmes sauvegardes — et non une réécriture.
 > **Ce dépôt ne contient aucun fichier du jeu.** Il faut posséder sa propre copie (édition GOG).
 > Voir [Mentions légales](#mentions-légales).
 
-## Jouer en trois étapes
+## Jouer
 
-1. Téléchargez **`Zeus-Poseidon-…-macos-arm64.zip`** depuis la
-   [dernière version](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest) et
-   décompressez-le.
-2. Clic droit sur **Zeus Poseidon.app** → **Ouvrir** (la première fois seulement : l'application
-   n'est pas signée par Apple).
+**[⬇ Télécharger Zeus-Poseidon-macos-arm64.zip](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest/download/Zeus-Poseidon-macos-arm64.zip)** — pour un Mac à puce **Apple Silicon**
+(M1 ou plus récent ; ne fonctionne pas sur un Mac Intel). Il faut aussi votre propre copie du
+jeu : l'installateur GOG, voir l'étape 3.
+
+1. Ouvrez le zip téléchargé (double-clic), puis double-cliquez sur **Zeus Poseidon**.
+2. macOS refuse de l'ouvrir la première fois, car l'application n'est pas notariée par Apple.
+   Cliquez sur **OK**, puis ouvrez **menu Pomme → Réglages Système → Confidentialité et
+   sécurité**, descendez jusqu'au message sur « Zeus Poseidon » et cliquez sur **Ouvrir quand
+   même** ; confirmez avec votre mot de passe ou Touch ID, puis cliquez sur **Ouvrir**. Une seule
+   fois. *(Écrit pour macOS 15 d'après la documentation d'Apple ; les libellés exacts peuvent
+   varier selon la version, et restent à vérifier par un humain sur un Mac neuf.)*
 3. Désignez votre installateur GOG (`setup_zeus_and_poseidon_….exe`). Il est déballé une fois
-   pour toutes ; ensuite, jouez.
+   pour toutes (environ une minute, 800 Mo) ; ensuite, jouez. Pour l'obtenir depuis un Mac :
+   connectez-vous sur **GOG.com → bibliothèque → Zeus + Poseidon → installateurs Windows hors ligne
+   (« Télécharger les installateurs hors ligne ») → Windows** (téléchargez le `.exe` et les
+   fichiers `.bin` qui l'accompagnent, s'il y en a).
 
 **En français ?** Gardez la touche Option (⌥) enfoncée au lancement et choisissez *Autre langue,
 depuis les CD d'origine…* : l'application fabrique un pack français à partir des images de vos

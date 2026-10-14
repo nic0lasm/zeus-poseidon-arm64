@@ -103,7 +103,7 @@ python3 tools/make_app.py --binary build/diffusion/zeus-run "build/diffusion/Zeu
 The result (about 50 MB) carries its licence notices ([third-party.md](third-party.md)).
 The tool strips debugging information and checks that no file of the bundle mentions your home
 folder. It is signed locally only, not notarised by Apple: on another Mac, the first launch
-needs a right-click → *Open*.
+needs *System Settings → Privacy & Security → Open Anyway* (on macOS 15 and later, right-click → *Open* no longer works).
 
 ## Options
 

@@ -19,6 +19,7 @@ Chaque étape s'arrête à la première anomalie ; la sortie tient en quelques l
 """
 import hashlib
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -119,6 +120,10 @@ def release(version):
     with open(archive, "rb") as f:
         digest = hashlib.sha256(f.read()).hexdigest()
     print(f"{name} : {os.path.getsize(archive) / 1e6:.1f} Mo, {count} fichiers, aucun mot interdit")
+    # Même archive sous un nom sans version : le lien releases/latest/download/… ne change jamais.
+    stable = os.path.join(DIFFUSION, "Zeus-Poseidon-macos-arm64.zip")
+    shutil.copyfile(archive, stable)
+    print(f"{os.path.basename(stable)} : mêmes octets, à joindre à la version")
     print(f"SHA-256 {digest}")
 
 
