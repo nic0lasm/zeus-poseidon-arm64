@@ -37,6 +37,9 @@ public:
     // Emplacement où écrire ce chemin (dossiers créés), ou nullopt s'il sort de l'installation.
     // Si `keep_content`, le fichier existant de l'installation y est d'abord copié.
     std::optional<std::filesystem::path> writable(const std::string& windows_path, bool keep_content);
+    // Vrai si ce fichier de l'hôte appartient à l'installation ou au pack de langue, que le
+    // programme ne peut pas modifier.
+    bool is_fixed(const std::filesystem::path& host_path) const;
     bool remove(const std::string& windows_path);
     bool make_directory(const std::string& windows_path);
     // Entrées correspondant à un motif (jokers * et ? dans le dernier élément du chemin).
@@ -51,8 +54,16 @@ private:
     // Éléments du chemin relatifs à l'installation, en minuscules et dans le codage du jeu
     // (Windows-1252) ; nullopt si en dehors. Les noms de fichiers de l'hôte sont en UTF-8.
     std::optional<std::vector<std::string>> relative_parts(const std::string& windows_path) const;
-    static std::optional<std::filesystem::path> lookup(const std::filesystem::path& root,
-                                                       const std::vector<std::string>& parts);
+    std::optional<std::filesystem::path> lookup(const std::filesystem::path& root,
+                                                const std::vector<std::string>& parts) const;
+    // Contenu d'un dossier de l'hôte : nom en minuscules dans le codage du jeu -> nom réel. Le
+    // résultat est retenu tant que la date de modification du dossier ne change pas.
+    struct Listing {
+        std::filesystem::file_time_type modified;
+        std::map<std::string, std::string> names;
+    };
+    const std::map<std::string, std::string>& listing(const std::filesystem::path& directory) const;
+    mutable std::map<std::string, Listing> listings_;
 
     // Comme lookup, pour un dossier qui ne change jamais (installation, pack de langue) : le
     // résultat est retenu, car le jeu redemande sans cesse les mêmes fichiers.

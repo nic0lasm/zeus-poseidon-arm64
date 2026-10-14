@@ -83,6 +83,9 @@ public:
         return trace && (trace_only.empty() || name.compare(0, trace_only.size(), trace_only) == 0);
     }
     std::map<std::string, uint64_t> call_counts;
+    // Temps passé dans chaque fonction système, en nanosecondes (mesuré si `time_calls`).
+    bool time_calls = false;
+    std::map<std::string, uint64_t> call_times;
 
 private:
     void bind_imports();

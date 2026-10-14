@@ -113,8 +113,8 @@ another Mac, the first launch needs a right-click → *Open*.
 | `--watch-call ADDRESS` | list the call sites of a game function (hexadecimal address) |
 | `--dump-data FILE.bin` | write the game's variables at exit |
 | `--profile FILE.tsv` | time spent per block of game code (slow); summarise with `tools/profile_report.py` |
-| `--native` | use the host rewrites of some game functions (experimental) |
-| `--counts` | print, on exit, how many times each Windows function was called |
+| `--no-native` | emulate everything, without the host rewrites of some game functions |
+| `--counts` | print, on exit, how many times each Windows function was called and the time spent in it |
 | `--trace-only PREFIX` | trace only functions whose name starts with PREFIX, e.g. `mss32.dll` |
 | `--headless` | hidden window, sound muted |
 | `--mute` | sound muted |

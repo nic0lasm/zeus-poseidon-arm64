@@ -18,7 +18,7 @@
 //     --trace                  affiche chaque appel système
 //     --trace-only PRÉFIXE     ne trace que les fonctions dont le nom commence ainsi (mss32.dll)
 //     --break-on FONCTION      arrête le programme à l'appel de cette fonction (essai du rapport)
-//     --native                 remplace les fonctions du jeu réécrites pour l'hôte (à l'essai)
+//     --no-native              laisse à l'émulateur les fonctions du jeu réécrites pour l'hôte
 //     --deterministic          horloge fictive et son coupé : exécution reproductible
 //     --wide auto | LxH        remplace le mode 1024 x 768 du jeu par un mode large, à choisir
 //                              ensuite dans Options > Display options ; « auto » prend les
@@ -27,7 +27,7 @@
 //     --dump-data SORTIE.bin   écrit à la fin la section .data du programme (variables du jeu)
 //     --frame-log SORTIE.txt   empreinte de chaque image affichée
 //     --profile SORTIE.tsv     profil d'exécution du code du jeu, par bloc (ralentit beaucoup)
-//     --counts                 affiche à la fin le nombre d'appels de chaque fonction
+//     --counts                 affiche à la fin le nombre d'appels et le temps passé dans chaque fonction
 //     --headless               fenêtre cachée, son coupé
 //     --mute                   son coupé
 //     --fullscreen             plein écran dès l'ouverture (⌘F ou ⌘Entrée pour basculer)
@@ -153,19 +153,58 @@ double loop_time(bool with_store, bool with_call, uint32_t turns) {
     return std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count() / turns * 1e9;
 }
 
+// Temps moyen, en nanosecondes, d'un appel à une fonction du programme qui copie `bytes` octets
+// (rep movsd), soit émulée, soit remplacée par une fonction de l'hôte.
+double copy_call_time(bool native, uint32_t bytes, uint32_t calls) {
+    Cpu cpu;
+    cpu.map(0x00001000, 0x1000, true);
+    cpu.map(0x00002000, 0x3000);
+    cpu.map(0x00100000, 0x100000);
+    std::vector<uint8_t> code = {
+        0xBB, 0, 0, 0, 0,              // mov ebx, appels
+        // boucle :
+        0xE8, 0x04, 0x00, 0x00, 0x00,  // call copie
+        0x4B,                          // dec ebx
+        0x75, 0xF8,                    // jnz boucle
+        0xF4,                          // (fin)
+        // copie :
+        0xBE, 0x00, 0x00, 0x10, 0x00,  // mov esi, 0x100000
+        0xBF, 0x00, 0x00, 0x18, 0x00,  // mov edi, 0x180000
+        0xB9, 0, 0, 0, 0,              // mov ecx, octets / 4
+        0xF3, 0xA5,                    // rep movsd
+        0xC3,                          // ret
+    };
+    const uint32_t words = bytes / 4;
+    std::memcpy(&code[1], &calls, 4);
+    std::memcpy(&code[25], &words, 4);
+    cpu.write(0x1000, code.data(), code.size());
+    if (native)
+        cpu.replace_function(0x1000 + 14, 0, [bytes](Cpu& c) {
+            std::memcpy(c.host(0x180000), c.host(0x100000), bytes);
+            return 0u;
+        });
+    cpu.set_reg(Cpu::Reg::ESP, 0x4800);
+    const auto start = std::chrono::steady_clock::now();
+    cpu.run(0x1000, 0x1000 + 13);
+    return std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count() / calls * 1e9;
+}
+
 int bench() {
     const double plain = loop_time(false, false, 20000000), store = loop_time(true, false, 20000000);
     const double call = loop_time(false, true, 1000000);
     std::printf("boucle seule         : %6.1f ns par tour\n", plain);
     std::printf("avec une écriture    : %6.1f ns par tour\n", store);
     std::printf("avec un appel hôte   : %6.0f ns par tour\n", call);
+    for (uint32_t bytes : {116u, 3480u, 27840u})
+        std::printf("copie de %5u octets : %7.0f ns émulée, %6.0f ns par une fonction native\n", bytes,
+                    copy_call_time(false, bytes, 20000), copy_call_time(true, bytes, 20000));
     return 0;
 }
 
 struct RunOptions {
     std::string exe, write_dir = "run/zeus", profile, frame_log, memory_dump, wide, watch, language, screenshot, window_shot, script, trace_only, break_on;
     bool trace = false, headless = false, counts = false, mute = false, fullscreen = false, deterministic = false,
-         native = false;
+         native = true;
     int frames = 0;
     double seconds = 0;
 };
@@ -177,6 +216,7 @@ int run(const RunOptions& o) {
     process.trace = o.trace || !o.trace_only.empty();
     process.trace_only = o.trace_only;
     process.break_on = o.break_on;
+    process.time_calls = o.counts;
     zeus::win32::Desktop& desktop = process.desktop();
     desktop.headless = o.headless;
     desktop.fullscreen = o.fullscreen;
@@ -243,13 +283,17 @@ int run(const RunOptions& o) {
             if (s.name == ".data") out.write(reinterpret_cast<const char*>(process.cpu().host(s.address)), s.virtual_size);
     }
     if (!o.profile.empty()) {
-        // Une ligne par bloc de code : adresse, nanosecondes.
+        // Une ligne par bloc de code : adresse, nanosecondes, nombre d'exécutions.
         std::ofstream out(o.profile);
-        for (const auto& [address, bytes] : process.cpu().profile()) out << std::hex << address << std::dec << '\t' << bytes << '\n';
+        for (const auto& [address, block] : process.cpu().profile())
+            out << std::hex << address << std::dec << '\t' << block.nanoseconds << '\t' << block.executions << '\n';
     }
     if (o.counts)
-        for (const auto& [name, count] : process.call_counts)
-            std::fprintf(stderr, "%10llu  %s\n", static_cast<unsigned long long>(count), name.c_str());
+        for (const auto& [name, count] : process.call_counts) {
+            const auto time = process.call_times.find(name);
+            std::fprintf(stderr, "%10llu  %8.1f ms  %s\n", static_cast<unsigned long long>(count),
+                         time == process.call_times.end() ? 0.0 : time->second / 1e6, name.c_str());
+        }
     std::fprintf(stderr, "%llu appels système vers %zu fonctions distinctes, %d images affichées\n",
                  static_cast<unsigned long long>(total), process.call_counts.size(), desktop.presents());
     if (!error.empty()) {
@@ -565,6 +609,7 @@ int main(int argc, char** argv) {
                 else if (a == "--watch-call") o.watch = value();
                 else if (a == "--deterministic") o.deterministic = true;
                 else if (a == "--native") o.native = true;
+                else if (a == "--no-native") o.native = false;
                 else if (a == "--screenshot") o.screenshot = value();
                 else if (a == "--window-shot") o.window_shot = value();
                 else if (a == "--script") o.script = value();

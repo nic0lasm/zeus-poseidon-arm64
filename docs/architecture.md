@@ -36,7 +36,7 @@ analysis/notes reverse-engineering notes kept under version control
 | `pe_image.*` | loads the PE executable and lists its imports |
 | `process.*` | stack, heap, thread block, binding of every import to a host function |
 | `vfs.*` | the file system the game sees |
-| `native.cpp` | game functions rewritten for the host (experimental, off by default) |
+| `native.cpp` | game functions rewritten for the host |
 | `widescreen.cpp` | wide display mode, in place of the game's 1024×768 |
 | `language.cpp` | in-memory text adjustments for language packs |
 | `text.*` | conversion between the game's Windows-1252 text and UTF-8 |
@@ -51,10 +51,11 @@ analysis/notes reverse-engineering notes kept under version control
 
 ### Calling from the game into the host
 
-Every imported function gets a 4-byte slot in a reserved, otherwise empty memory zone
-(`0xF0000000`). The import table of the executable is filled with those addresses. When the
-game calls one, the emulator stops, the host runs the matching C++ function, pops the arguments
-as `stdcall` would, and resumes the game at the return address.
+Every imported function gets a 4-byte slot in a reserved memory zone (`0xF0000000`). The import
+table of the executable is filled with those addresses. Each slot holds a `ret n` instruction.
+When the game calls one, a hook runs the matching C++ function and sets the result; the game
+then executes the `ret n` itself and carries on. The emulator is not stopped, which keeps a
+system call around 100 ns.
 
 A function that has not been written stops the program and names itself. Nothing is silently
 faked, with one deliberate exception: the few sound and video functions that are not written
@@ -63,8 +64,8 @@ yet (3D sound, mostly) do nothing and return zero.
 ### Calling from the host into the game
 
 Windows calls back into programs — most importantly the window procedure. A host function can
-request a guest call; the emulator then runs the game's function and hands the result to a
-continuation. Calls can be chained, which is how a sequence of window messages is delivered
+request a guest call; the emulator is then stopped and restarted on the game's function, and
+its result goes to a continuation. Calls can be chained, which is how a sequence of window messages is delivered
 before a system call returns.
 
 ### Process environment
@@ -94,7 +95,8 @@ processor; the game keeps time from the clock, not from its loop count.
 
 The game believes it lives in `C:\Zeus`. Paths are resolved case-insensitively. Reads look in
 the write directory first, then in the game folder; writes only ever go to the write directory.
-The game folder is strictly read-only. An optional language pack sits between the two: its files
+The game folder is strictly read-only, which lets the host keep the files it has read in
+memory: the game reopens the same ones constantly. An optional language pack sits between the two: its files
 replace those of the game folder (see [languages.md](languages.md)). File names are converted
 between the game's Windows-1252 and the host's UTF-8.
 

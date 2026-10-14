@@ -60,35 +60,41 @@ whether the emulator can go.
 **A rule first.** Code translated mechanically from the game's executable is still the game's
 code: it cannot be kept in this repository or shipped in a release. Native code here is
 written by hand from an understanding of what a function does, and proven against the original
-with the frame log of a deterministic run. Mechanical translation (Ghidra p-code,
+with the frame logs of deterministic runs. Mechanical translation (Ghidra p-code,
 `tools/ghidra/ExportPcode.java`) is only a reading aid.
 
-**What has been measured.**
+**How a native function is entered.** The first byte of the game's function is replaced in
+memory by a plain return, and the host function runs just before it, from a hook. The emulator
+is never diverted, so entering costs about 75 ns. System calls use the same trick: each import
+slot holds a `ret n`, which brought a system call from 4,500 ns down to about 100 ns.
+`zeus-run --bench` measures both. For scale, copying one 58×30 tile takes 4,700 ns emulated and
+130 ns natively.
 
-- Counting executed code bytes, 10 functions account for 77 % and 50 for 98 %. That count
-  overweights copy loops, which the emulator already runs quickly.
-- Sampling the host during a running city tells more: about 39 % of the time is spent in a
-  small routine the emulator calls at the start of every block of code
-  (`helper_check_exit_request`), which cannot be turned off, and 14 % was spent looking up
-  files in the game folder (now cached).
-- Entering a native function from emulated code is not free: the emulator has to leave and
-  re-enter its translated code. Replacing a short function called very often can therefore be
-  slower than emulating it.
+**Where the time goes.** `zeus-run --profile` measures time per block of game code and
+`tools/profile_report.py` sums it per function, subtracting the cost of the measurement itself
+(an earlier version did not, and overstated short loops). On the reference scenario the picture
+before any native code was: opaque rectangle copy 12.5 %, run-length sprite drawing 12.4 %, the
+sprite dispatcher 11 %, system calls 10 %, the city drawing loop 8.7 %, `_strcmpi` 5 %.
 
-**What exists.**
+**What is native today** (`src/win32/native.cpp`, on by default, `--no-native` to compare):
 
-- Guest memory is one 4 GB block owned by the host, shared by the emulator and native code.
-- `Cpu::replace_function` runs a host function in place of a game function;
-  `src/win32/native.cpp` holds the first two (an opaque rectangle copy and `_strcmpi`). They
-  give frame logs identical to the original over 4,092 frames. Measured on a quiet machine, they
-  bring no gain: 39.4 s against 39.7 s for the reference scenario, best of three runs each
-  (single runs fall into two groups, around 40 s and around 50 s, whatever the mode). They
-  stay off by default (`--native`).
-- `zeus-run --profile` measures time per block; `tools/profile_report.py` sums it per function.
+| Game function | What it does |
+|---|---|
+| `0x00413DC0` | copies an opaque rectangle to the frame buffer |
+| `0x00416010` | same, with magenta as the transparent colour |
+| `0x004161B0` | draws a run-length compressed image, optionally as a shadow |
+| `0x00413E30` | draws a run-length compressed image blended with the background |
+| `0x0050B410` | clears the frame buffer |
+| `0x005CC640` | `_strcmpi` from the C runtime |
 
-**Next.** Replace whole units entered once per frame (the city drawing loop and the sprite
-routines it calls) rather than small functions entered thousands of times: what costs is the
-number of blocks the emulator runs, and only removing whole loops from it reduces that.
+All three scenarios (16,878 frames) give the same frame logs with and without them.
+
+**Also done on the host side.** The game reopens the same files thousands of times a minute;
+read-only game files are now kept in memory and directory listings are cached, which cut the
+time spent opening files by two thirds.
+
+**Next.** The sprite dispatcher (`0x005ACF50`) and the city drawing loop (`0x00458170`), which
+now top the profile, and the function that calls `_strcmpi` 18 million times in 90 seconds.
 
 ## Milestone 5 — plan
 

@@ -23,9 +23,14 @@ constexpr uint32_t kInvalidHandle = 0xFFFFFFFF;
 constexpr uint32_t kErrorFileNotFound = 2, kErrorPathNotFound = 3, kErrorInvalidHandle = 6,
                    kErrorNoMoreFiles = 18, kErrorAlreadyExists = 183;
 
+// Fichier ouvert. Un fichier de l'installation, que le programme ne peut pas modifier, est lu
+// une fois pour toutes en mémoire : le jeu rouvre sans cesse les mêmes (plusieurs milliers de
+// fois par minute pour un fichier d'aventure).
 struct OpenFile {
     std::fstream stream;
     fs::path path;
+    std::shared_ptr<const std::vector<uint8_t>> data;  // contenu en mémoire, ou nul
+    size_t position = 0;
 };
 
 struct FindState {
@@ -37,6 +42,9 @@ struct State {
     explicit State(Process& p) : vfs(p.vfs()) {}
     Vfs& vfs;
     std::map<uint32_t, std::unique_ptr<OpenFile>> files;
+    // Contenu des fichiers de l'installation déjà lus (jusqu'à 32 Mo chacun, 512 Mo en tout).
+    std::map<std::string, std::shared_ptr<const std::vector<uint8_t>>> contents;
+    size_t contents_size = 0;
     std::map<uint32_t, FindState> finds;
     std::map<uint32_t, uint32_t> virtual_regions;  // adresse -> taille
     std::map<std::string, std::string> environment;
@@ -411,9 +419,27 @@ void install_kernel32(Process& p) {
                 return kInvalidHandle;
             }
             file->path = *existing;
-            file->stream.open(*existing, std::ios::binary | std::ios::in);
+            std::error_code ec;
+            const uintmax_t size = st->vfs.is_fixed(*existing) ? fs::file_size(*existing, ec) : 0;
+            const auto known = st->contents.find(existing->string());
+            if (known != st->contents.end()) {
+                file->data = known->second;
+            } else if (!ec && size > 0 && size <= (32u << 20)) {
+                std::ifstream in(*existing, std::ios::binary);
+                auto bytes = std::make_shared<std::vector<uint8_t>>(static_cast<size_t>(size));
+                if (in.read(reinterpret_cast<char*>(bytes->data()), static_cast<std::streamsize>(size))) {
+                    if (st->contents_size + size > (512u << 20)) {
+                        st->contents.clear();
+                        st->contents_size = 0;
+                    }
+                    st->contents[existing->string()] = bytes;
+                    st->contents_size += size;
+                    file->data = std::move(bytes);
+                }
+            }
+            if (!file->data) file->stream.open(*existing, std::ios::binary | std::ios::in);
         }
-        if (!file->stream) {
+        if (!file->data && !file->stream) {
             p.last_error = kErrorFileNotFound;
             return kInvalidHandle;
         }
@@ -432,6 +458,13 @@ void install_kernel32(Process& p) {
             p.last_error = kErrorInvalidHandle;
             return 0u;
         }
+        if (OpenFile& file = *found->second; file.data) {
+            const size_t got = std::min<size_t>(p.arg(2), file.data->size() - std::min(file.position, file.data->size()));
+            if (got) cpu.write(p.arg(1), file.data->data() + file.position, got);
+            file.position += got;
+            if (p.arg(3)) cpu.write_u32(p.arg(3), static_cast<uint32_t>(got));
+            return 1u;
+        }
         std::vector<char> buffer(p.arg(2));
         std::fstream& f = found->second->stream;
         f.clear();
@@ -446,6 +479,10 @@ void install_kernel32(Process& p) {
         const auto found = st->files.find(p.arg(0));
         if (found == st->files.end()) {
             p.last_error = kErrorInvalidHandle;
+            return 0u;
+        }
+        if (found->second->data) {
+            p.last_error = 5;  // ERROR_ACCESS_DENIED : fichier ouvert en lecture
             return 0u;
         }
         std::vector<char> buffer(p.arg(2));
@@ -464,6 +501,14 @@ void install_kernel32(Process& p) {
             p.last_error = kErrorInvalidHandle;
             return kInvalidHandle;
         }
+        if (OpenFile& file = *found->second; file.data) {
+            const int64_t base = p.arg(3) == 0 ? 0 : p.arg(3) == 1 ? static_cast<int64_t>(file.position)
+                                                                  : static_cast<int64_t>(file.data->size());
+            const int64_t target = base + static_cast<int32_t>(p.arg(1));
+            if (target < 0) return kInvalidHandle;
+            file.position = static_cast<size_t>(target);
+            return static_cast<uint32_t>(target);
+        }
         std::fstream& f = found->second->stream;
         f.clear();
         const auto way = p.arg(3) == 0 ? std::ios::beg : p.arg(3) == 1 ? std::ios::cur : std::ios::end;
@@ -477,15 +522,15 @@ void install_kernel32(Process& p) {
     def("GetFileSize", 2, [&p, &cpu, st] {
         const auto found = st->files.find(p.arg(0));
         if (found == st->files.end()) return kInvalidHandle;
-        found->second->stream.flush();
+        if (!found->second->data) found->second->stream.flush();
         std::error_code ec;
-        const uint64_t size = fs::file_size(found->second->path, ec);
+        const uint64_t size = found->second->data ? found->second->data->size() : fs::file_size(found->second->path, ec);
         if (p.arg(1)) cpu.write_u32(p.arg(1), static_cast<uint32_t>(size >> 32));
         return static_cast<uint32_t>(size);
     });
     def("SetEndOfFile", 1, [&p, st] {
         const auto found = st->files.find(p.arg(0));
-        if (found == st->files.end()) return 0u;
+        if (found == st->files.end() || found->second->data) return 0u;
         std::fstream& f = found->second->stream;
         f.flush();
         std::error_code ec;
@@ -494,13 +539,13 @@ void install_kernel32(Process& p) {
     });
     def("FlushFileBuffers", 1, [&p, st] {
         const auto found = st->files.find(p.arg(0));
-        if (found != st->files.end()) found->second->stream.flush();
+        if (found != st->files.end() && !found->second->data) found->second->stream.flush();
         return 1u;
     });
     def("GetFileInformationByHandle", 2, [&p, &cpu, st] {
         const auto found = st->files.find(p.arg(0));
         if (found == st->files.end()) return 0u;
-        found->second->stream.flush();
+        if (!found->second->data) found->second->stream.flush();
         std::error_code ec;
         const uint64_t size = fs::file_size(found->second->path, ec);
         const uint64_t time = to_filetime(fs::last_write_time(found->second->path, ec));

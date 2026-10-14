@@ -45,7 +45,12 @@ void Process::def(const std::string& dll, const std::string& name, uint32_t arg_
         ++call_counts[key];
         if (traced(key)) std::fprintf(stderr, "  appel %s\n", key.c_str());
         if (!break_on.empty() && key == break_on) throw std::runtime_error("arrêt demandé");
-        return fn();
+        if (!time_calls) return fn();
+        const auto start = std::chrono::steady_clock::now();
+        const uint32_t result = fn();
+        call_times[key] += static_cast<uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - start).count());
+        return result;
     };
     functions_[f.name] = std::move(f);
 }

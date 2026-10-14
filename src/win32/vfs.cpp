@@ -109,20 +109,35 @@ std::optional<std::vector<std::string>> Vfs::relative_parts(const std::string& w
     return split(full.substr(root.size()));
 }
 
-std::optional<fs::path> Vfs::lookup(const fs::path& root, const std::vector<std::string>& parts) {
-    fs::path current = root;
+const std::map<std::string, std::string>& Vfs::listing(const fs::path& directory) const {
     std::error_code ec;
-    for (const std::string& part : parts) {
-        bool found = false;
-        for (const auto& entry : fs::directory_iterator(current, ec)) {
-            if (lower(from_utf8(entry.path().filename().string())) == part) {
-                current = entry.path();
-                found = true;
-                break;
-            }
-        }
-        if (ec || !found) return std::nullopt;
+    const fs::file_time_type modified = fs::last_write_time(directory, ec);
+    Listing& known = listings_[directory.string()];
+    if (ec) {
+        known.names.clear();
+        known.modified = {};
+        return known.names;
     }
+    if (known.modified != modified || known.names.empty()) {
+        known.names.clear();
+        for (const auto& entry : fs::directory_iterator(directory, ec)) {
+            const std::string name = entry.path().filename().string();
+            known.names.emplace(lower(from_utf8(name)), name);
+        }
+        known.modified = modified;
+    }
+    return known.names;
+}
+
+std::optional<fs::path> Vfs::lookup(const fs::path& root, const std::vector<std::string>& parts) const {
+    fs::path current = root;
+    for (const std::string& part : parts) {
+        const auto& names = listing(current);
+        const auto found = names.find(part);
+        if (found == names.end()) return std::nullopt;
+        current /= found->second;
+    }
+    std::error_code ec;
     return fs::exists(current, ec) ? std::optional<fs::path>(current) : std::nullopt;
 }
 
@@ -184,6 +199,11 @@ std::optional<fs::path> Vfs::writable(const std::string& windows_path, bool keep
     }
     removed_.erase(join(*parts));
     return target;
+}
+
+bool Vfs::is_fixed(const fs::path& host_path) const {
+    const std::string path = host_path.string(), write = write_dir_.string();
+    return path.compare(0, write.size(), write) != 0;
 }
 
 bool Vfs::remove(const std::string& windows_path) {

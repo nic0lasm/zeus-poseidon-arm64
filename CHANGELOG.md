@@ -5,6 +5,11 @@ pull request.
 
 ## Unreleased
 
+- **Faster.** Six of the game's drawing and string routines now run natively, system calls no
+  longer stop the emulator, read-only game files are kept in memory and directory listings
+  are cached. Frame logs of all scenarios are unchanged. `--no-native` emulates everything.
+- `--counts` also reports the time spent in each Windows function; the profiler subtracts its
+  own overhead.
 - **3D sound.** The host offers a software 3D provider: with "3D sounds" on in the game's sound
   options, ambience is placed around the listener. Reverb and filters turn out never to be
   enabled by this build of the game.

@@ -21,6 +21,7 @@ alter the game.
 ```bash
 python3 tools/check_scenarios.py record     # before your change: store the reference logs
 python3 tools/check_scenarios.py            # after: replay and compare, frame by frame
+python3 tools/check_scenarios.py --no-native   # same, with every game function emulated
 ```
 
 Reference logs are kept in `build/scenarios/`; they depend on the game files and are not

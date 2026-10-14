@@ -36,6 +36,8 @@ ideal (see [docs/getting-started.md](docs/getting-started.md)).
 - Identifiers are in English. Comments, notes and messages are historically in French;
   either language is welcome in contributions.
 - A host function that is not implemented must fail loudly, not return a made-up value.
+- A native rewrite of a game function (`src/win32/native.cpp`) is written by hand, never
+  generated from the executable, and must leave every scenario's frame log unchanged.
 
 ## Where help is wanted
 

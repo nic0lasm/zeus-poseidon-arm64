@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Rejoue les scénarios de tests/scenarios et compare leurs images à une référence.
 
-Usage : python3 tools/check_scenarios.py [record] [--exe ZEUS.EXE] [--native]
+Usage : python3 tools/check_scenarios.py [record] [--exe ZEUS.EXE] [--no-native]
 
   record   enregistre la référence dans build/scenarios/ au lieu de comparer
   --exe    exécutable du jeu (défaut : original/gog/app/Zeus.exe)
-  --native passe --native à zeus-run
+  --no-native  passe --no-native à zeus-run : tout le code du jeu est émulé
 
 Chaque scénario est joué avec une horloge fictive (zeus-run --deterministic) : deux exécutions
 donnent les mêmes images, dont l'empreinte est écrite dans un journal. Un journal différent de
@@ -37,7 +37,7 @@ def read_scenario(path):
 def main(argv):
     record = "record" in argv
     exe = argv[argv.index("--exe") + 1] if "--exe" in argv else os.path.join(ROOT, "original", "gog", "app", "Zeus.exe")
-    extra = ["--native"] if "--native" in argv else []
+    extra = ["--no-native"] if "--no-native" in argv else []
     out = os.path.join(ROOT, "build", "scenarios")
     os.makedirs(out, exist_ok=True)
     failures = 0

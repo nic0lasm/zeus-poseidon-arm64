@@ -1,5 +1,6 @@
 #include "win32/cpu.h"
 
+#include <cstring>
 #include <ctime>
 #include <sys/mman.h>
 #include <unicorn/unicorn.h>
@@ -253,8 +254,13 @@ void Cpu::set_reg(Reg r, uint32_t value) {
 uint32_t Cpu::add_host_function(HostFunction function) {
     if ((functions_.size() + 1) * kThunkStride > kThunkSize)
         throw std::runtime_error("trop de fonctions hôtes");
+    // La case de la fonction contient « ret n » : une fois la fonction hôte exécutée, c'est le
+    // programme lui-même qui revient à son appelant, sans arrêt de l'émulateur.
+    const uint32_t address = kThunkBase + static_cast<uint32_t>(functions_.size()) * kThunkStride;
+    const uint8_t code[3] = {0xC2, static_cast<uint8_t>(function.arg_bytes), static_cast<uint8_t>(function.arg_bytes >> 8)};
+    std::memcpy(host(address), code, sizeof code);
     functions_.push_back(std::move(function));
-    return kThunkBase + static_cast<uint32_t>(functions_.size() - 1) * kThunkStride;
+    return address;
 }
 
 uint32_t Cpu::arg(int n) const {
@@ -270,22 +276,21 @@ void Cpu::start_profile() {
 void Cpu::on_block(uc_struct*, uint64_t address, uint32_t, void* user) {
     Cpu& cpu = *static_cast<Cpu*>(user);
     const uint64_t now = clock_gettime_nsec_np(CLOCK_UPTIME_RAW);
-    if (cpu.profile_block_) cpu.profile_[cpu.profile_block_] += now - cpu.profile_since_;
+    if (cpu.profile_block_) {
+        BlockTime& block = cpu.profile_[cpu.profile_block_];
+        block.nanoseconds += now - cpu.profile_since_;
+        ++block.executions;
+    }
     cpu.profile_block_ = static_cast<uint32_t>(address);
     cpu.profile_since_ = now;
 }
 
-void Cpu::replace_function(uint32_t address, uint32_t arg_bytes, std::function<std::optional<uint32_t>(Cpu&)> fn) {
-    add_code_hook(address, [arg_bytes, fn = std::move(fn)](Cpu& cpu) {
-        const std::optional<uint32_t> result = fn(cpu);
-        if (!result) return;
-        // Retour à l'appelant, comme l'aurait fait la fonction d'origine.
-        const uint32_t esp = cpu.reg(Reg::ESP);
-        const uint32_t return_address = cpu.read_u32(esp);
-        cpu.set_reg(Reg::EAX, *result);
-        cpu.set_reg(Reg::ESP, esp + 4 + arg_bytes);
-        cpu.set_reg(Reg::EIP, return_address);
-    });
+void Cpu::replace_function(uint32_t address, uint32_t arg_bytes, std::function<uint32_t(Cpu&)> fn) {
+    // « ret » ou « ret n » à la place du premier octet de la fonction.
+    const uint8_t code[3] = {static_cast<uint8_t>(arg_bytes ? 0xC2 : 0xC3), static_cast<uint8_t>(arg_bytes),
+                             static_cast<uint8_t>(arg_bytes >> 8)};
+    std::memcpy(host(address), code, arg_bytes ? 3 : 1);
+    add_code_hook(address, [fn = std::move(fn)](Cpu& cpu) { cpu.set_reg(Reg::EAX, fn(cpu)); });
 }
 
 void Cpu::add_code_hook(uint32_t address, std::function<void(Cpu&)> fn) {
@@ -298,7 +303,16 @@ void Cpu::add_code_hook(uint32_t address, std::function<void(Cpu&)> fn) {
 void Cpu::on_code_hook(uc_struct*, uint64_t address, uint32_t, void* user) {
     Cpu& cpu = *static_cast<Cpu*>(user);
     const auto found = cpu.code_hooks_.find(static_cast<uint32_t>(address));
-    if (found != cpu.code_hooks_.end()) found->second(cpu);
+    if (found == cpu.code_hooks_.end()) return;
+    try {
+        found->second(cpu);
+    } catch (const std::exception& e) {
+        // Une exception C++ ne doit pas traverser l'émulateur : on la reporte à run().
+        char where[32];
+        std::snprintf(where, sizeof where, "%#010x", static_cast<uint32_t>(address));
+        cpu.host_error_ = std::string("code du jeu en ") + where + " : " + e.what();
+        uc_emu_stop(cpu.uc_);
+    }
 }
 
 void Cpu::call_guest(uint32_t address, std::vector<uint32_t> args, std::function<uint32_t(uint32_t)> then) {
@@ -325,9 +339,12 @@ void Cpu::start_pending_call(uint32_t esp) {
 void Cpu::on_thunk(uc_struct* uc, uint64_t address, uint32_t, void* user) {
     Cpu& cpu = *static_cast<Cpu*>(user);
     const size_t index = static_cast<size_t>((address - kThunkBase) / kThunkStride);
-    uc_emu_stop(uc);  // tout changement de point d'exécution passe par un arrêt puis une relance
+    // Le cas courant n'arrête pas l'émulateur : la fonction hôte s'exécute, puis le « ret n » de
+    // la case rend la main. Un changement de point d'exécution (appel du programme depuis
+    // l'hôte, fin, erreur) passe en revanche par un arrêt puis une relance.
     try {
         if (index == 0) {
+            uc_emu_stop(uc);
             // Retour d'une fonction du programme appelée depuis l'hôte.
             if (cpu.continuations_.empty()) throw std::runtime_error("retour d'appel inattendu");
             Continuation& c = cpu.continuations_.back();
@@ -351,19 +368,21 @@ void Cpu::on_thunk(uc_struct* uc, uint64_t address, uint32_t, void* user) {
         const uint32_t return_address = cpu.read_u32(esp);
         cpu.current_ = f.name;
         const uint32_t result = f.call(cpu);
-        if (cpu.stop_requested_) return;
+        if (cpu.stop_requested_) {
+            uc_emu_stop(uc);
+            return;
+        }
         if (cpu.has_pending_) {
+            uc_emu_stop(uc);
             cpu.continuations_.push_back({return_address, esp, f.arg_bytes, cpu.pending_.then});
             cpu.start_pending_call(esp);
             return;
         }
         cpu.set_reg(Reg::EAX, result);
-        cpu.set_reg(Reg::ESP, esp + 4 + f.arg_bytes);
-        cpu.redirect_ = true;
-        cpu.redirect_to_ = return_address;
     } catch (const std::exception& e) {
         // Une exception C++ ne doit pas traverser l'émulateur : on la reporte à run().
         cpu.host_error_ = cpu.current_ + " : " + e.what();
+        uc_emu_stop(uc);
     }
 }
 
