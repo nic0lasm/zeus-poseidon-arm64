@@ -33,12 +33,15 @@ réécriture.
 | 3. Complet | musiques, bruitages, vidéos, plein écran | fait |
 | 4. Diffusable | performances, application `.app` autonome, compilation automatique, première version publiée | fait |
 | 5. Édition française | textes et voix français tirés de vos propres CD d'origine | fait |
-| 6. Sans émulateur | le code le plus sollicité du jeu traduit en natif, puis le reste | **commencé** |
+| 6. Sans émulateur | le code le plus sollicité du jeu en natif, puis le reste | **en partie** : dessin et démarrage |
 
-Ce qui fonctionne aujourd'hui : menus, profils de dirigeant, tutoriels, une ville qui vit
-(habitants, logements, construction, calendrier, trésorerie), défilement de la carte,
-sauvegarde et chargement, musiques, ambiances, bruitages et vidéo d'introduction. Les sauvegardes sont au format du jeu et restent compatibles avec
-l'original.
+Ce qui fonctionne aujourd'hui : tout le jeu, autant que les essais automatiques et les parties
+jouées permettent d'en juger — menus, profils de dirigeant, les seize tutoriels, les aventures
+de Zeus et de Poséidon, l'éditeur d'aventures, une ville qui vit avec ses habitants, ses dieux,
+ses monstres et ses catastrophes, sauvegarde et chargement, musiques, ambiances, son 3D,
+bruitages et vidéo d'introduction, fenêtre ou plein écran, molette, pause quand le jeu passe à
+l'arrière-plan. Les sauvegardes sont au format du jeu et restent compatibles avec l'original.
+Le jeu démarre en moins d'une seconde.
 
 La vue de la ville peut occuper un écran large : choisissez la plus grande résolution dans les
 options d'affichage du jeu (par exemple *1324 x 768*).

@@ -12,8 +12,9 @@ from 2002 that talks to the outside world through 202 imported functions. Each o
 implemented natively. The game cannot tell the difference, and because the simulation is the
 original code, fidelity comes for free.
 
-Later, hot spots of the original code (rendering first) can be replaced one by one with native
-code, with the original always available as a reference.
+Hot spots of the original code can then be replaced one by one with native code, with the
+original always available as a reference: today the pixel-drawing routines and one start-up
+loop run natively (see below), the rest of the game is emulated.
 
 ## Layout
 
@@ -58,8 +59,17 @@ then executes the `ret n` itself and carries on. The emulator is not stopped, wh
 system call around 100 ns.
 
 A function that has not been written stops the program and names itself. Nothing is silently
-faked, with one deliberate exception: the few sound and video functions that are not written
-yet (3D sound, mostly) do nothing and return zero.
+faked, with one deliberate exception: the few Miles and Bink functions the game imports but
+never needs do nothing and return zero.
+
+### Native game functions
+
+`native.cpp` replaces a few functions of the game itself. The first byte of the original
+function becomes a `ret`, and a hook runs the host version just before it, so entering it
+costs about 75 ns. A loop inside a function can be replaced the same way: its first
+instruction becomes a jump to its exit, and the hook leaves registers and stack as the loop
+would have. Each replacement checks the original bytes first and is proven by the frame logs
+of the scenarios, which must be identical with and without `--no-native`.
 
 ### Calling from the host into the game
 
@@ -95,8 +105,10 @@ processor; the game keeps time from the clock, not from its loop count.
 
 The game believes it lives in `C:\Zeus`. Paths are resolved case-insensitively. Reads look in
 the write directory first, then in the game folder; writes only ever go to the write directory.
-The game folder is strictly read-only, which lets the host keep the files it has read in
-memory: the game reopens the same ones constantly. An optional language pack sits between the two: its files
+The game folder is strictly read-only, which lets the host keep the small files it has read
+in memory (4 MB or less): the game reopens the same ones constantly. The same path can hand the
+game a patched copy of a file — the wide mode uses it to show the real resolution in a menu —
+without touching the file itself. An optional language pack sits between the two: its files
 replace those of the game folder (see [languages.md](languages.md)). File names are converted
 between the game's Windows-1252 and the host's UTF-8.
 
@@ -137,7 +149,10 @@ the audio track through the same mixer as the rest of the sound.
 The host translates SDL events into Windows messages (mouse, keys, characters) and feeds the
 game's own message loop. One lesson learned: the game sets the screen rectangle it copies every
 frame only when its window procedure receives `WM_MOVE`. Without that message, the game runs
-perfectly and shows a black screen. See [reverse-engineering.md](reverse-engineering.md).
+perfectly and shows a black screen. The wheel becomes `WM_MOUSEWHEEL`, and when the window
+stays in the background for more than 0.4 s the game receives the activation messages Windows
+would send, which make it pause and silence its sounds. See
+[reverse-engineering.md](reverse-engineering.md).
 
 ## Safety
 

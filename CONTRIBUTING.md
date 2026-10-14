@@ -45,7 +45,10 @@ ideal (see [docs/getting-started.md](docs/getting-started.md)).
 - **Other editions**: does your copy (other language, other store) start? Send the SHA-256 of
   its `Zeus.exe` and what happens.
 - **Missing Windows functions**: each one is small and self-contained (`src/win32/`).
-- **3D sound, reverb and filters** in `src/win32/mss.cpp`, currently ignored.
+- **Listening**: the 3D placement of ambience (`src/win32/mss.cpp`) was tuned by measurement;
+  ears on real speakers are welcome.
+- **Native code**: the sprite dispatcher (`0x005ACF50`) leads the profile of a running city;
+  see the end of [docs/roadmap.md](docs/roadmap.md).
 - **File formats**: anything not yet described in `formats/`.
 
 ## Before opening a pull request
@@ -65,5 +68,7 @@ For a change that must not alter the game's behaviour, replay the scenarios befo
 ```bash
 python3 tools/check_scenarios.py record     # before
 python3 tools/check_scenarios.py            # after: must print "ok" for each scenario
-``` Describe in the pull request what you verified and what
+```
+
+Describe in the pull request what you verified and what
 remains a hypothesis, and add a line to the "Unreleased" section of `CHANGELOG.md`.

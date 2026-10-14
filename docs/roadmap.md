@@ -10,19 +10,19 @@
 | 3 | Complete | music, sound effects, intro video, full screen | done |
 | 4 | Ready to share | performance, self-contained `.app`, automated builds, first release | done |
 | 5 | French edition | French texts and voices from the player's own CDs | done; widescreen left open |
-| 6 | No emulator | the game's hot code translated to native arm64, then the rest | started |
+| 6 | No emulator | the game's hot code translated to native arm64, then the rest | partly done: drawing routines and start-up |
 
 ### Why this order
 
-The game is playable; what stands between it and players is speed and packaging. Profiling a
-running city shows the whole frame time is spent inside the emulator, and more than half of
-that in its slow memory-write paths rather than in the game's code. Milestone 4 therefore
-starts with measurements and emulator tuning, then packaging.
+Once the game was playable, what stood between it and players was speed and packaging.
+Profiling a running city showed the whole frame time spent inside the emulator, more than half
+of it in the emulator's slow memory-write paths rather than in the game's code; milestone 4
+therefore started with measurements and emulator tuning, then packaging.
 
 Milestone 6 replaces an earlier idea (rewriting the engine by hand, module by module).
-Fidelity is already guaranteed by running the original code; translating that code
-mechanically to native code keeps the guarantee, removes the emulator and its overhead, and
-is far less work than a rewrite.
+Fidelity is already guaranteed by running the original code; replacing its hot spots one at a
+time, each one proven against the original frame by frame, keeps that guarantee and is far
+less work than a rewrite.
 
 ## What has been verified
 
@@ -71,7 +71,7 @@ is far less work than a rewrite.
   welcome.
 - Tested with the English GOG edition, alone and with a French pack, on a single Mac model.
 
-## Milestone 6 — in progress
+## Milestone 6 — partly done
 
 **Goal.** Run the game's hot code natively and leave the rest to the emulator, then decide
 whether the emulator can go.
@@ -117,8 +117,12 @@ The look-up loop is replaced on its own, not its whole function: a jump to the l
 preceded by a hook that leaves registers and stack exactly as the loop would. Time to the first
 frame went from 3.5–5 s to under a second; the parsed table hashes the same with and without it.
 
-**Next.** The sprite dispatcher (`0x005ACF50`) and the city drawing loop (`0x00458170`), which
-now top the profile.
+**Where it stands.** In a running city the profile is now led by the sprite dispatcher
+(`0x005ACF50`, about a fifth of the time: called 65,000 times a second, some thirty blocks of
+branching each time) and by the text routines of the control panel. The dispatcher calls some
+forty other functions; rewriting it by hand with the same guarantee of fidelity is a project of
+its own, left for after version 1.0. The game is already fast enough to play: a small city uses
+about half of one core.
 
 ## Milestone 5 — plan
 

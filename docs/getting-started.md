@@ -117,6 +117,7 @@ needs a right-click → *Open*.
 | `--dump-data FILE.bin` | write the game's variables at exit |
 | `--profile FILE.tsv` | time spent per block of game code (slow); summarise with `tools/profile_report.py` |
 | `--no-native` | emulate everything, without the host rewrites of some game functions |
+| `--check-audio FOLDER` | (alone, instead of `--run`) decode every sound file of a folder the way the mixer does |
 | `--counts` | print, on exit, how many times each Windows function was called and the time spent in it |
 | `--trace-only PREFIX` | trace only functions whose name starts with PREFIX, e.g. `mss32.dll` |
 | `--headless` | hidden window, sound muted |

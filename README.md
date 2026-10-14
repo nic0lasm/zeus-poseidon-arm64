@@ -32,12 +32,14 @@ The result is the real game — same simulation, same rules, same save files —
 | 3. Complete | music, sound effects, videos, full screen | done |
 | 4. Ready to share | performance, a self-contained `.app`, automated builds, a first release | done |
 | 5. French edition | French texts and voices taken from your own original CDs | done |
-| 6. No emulator | the game's hot code translated to native code, then the rest | **started** |
+| 6. No emulator | the game's hot code in native code, then the rest | **partly**: drawing and start-up |
 
-What works today: menus, leader profiles, tutorials, a running city (walkers, housing,
-construction, time, treasury), map scrolling, save and load, music, ambience, sound effects and the intro video.
-Save files are the game's own
-format and stay compatible with the original.
+What works today: the whole game as far as automated and hands-on testing can tell — menus,
+leader profiles, the sixteen tutorials, Zeus and Poseidon adventures, the adventure editor, a
+running city with its walkers, gods, monsters and disasters, save and load, music, ambience,
+3D sound, sound effects and the intro video, window or full screen, the mouse wheel, and a
+pause when the game is in the background. Save files are the game's own format and stay
+compatible with the original. The game starts in under a second.
 
 The city view can fill a wide screen: pick the largest resolution in the game's display options
 (it reads, for instance, *1324 x 768*).
