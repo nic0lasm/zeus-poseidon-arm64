@@ -20,8 +20,8 @@ flowchart LR
 
 | Version | Theme | State | Follow it |
 |---|---|---|---|
-| **1.0** | The whole game on Apple Silicon Macs | released | [release notes](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.0) |
-| **1.1** | Cool and quiet: as little CPU as the game needs | in progress | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/1) · [#21](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/21) done · [#22](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/22) · [#23](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/23) |
+| **1.0.1** | The whole game on Apple Silicon Macs, at its real speed | released | [release notes](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.0.1) |
+| **1.1** | Cool and quiet: as little CPU as the game needs | in progress | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/1) · [#21](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/21), [#32](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/32) done · [#22](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/22) · [#23](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/23) |
 | **1.2** | Every language edition | needs testers | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/2) · [#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24) |
 | **2.0** | Everywhere: Linux (x86-64, arm64) and Intel Macs | planned | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/3) · [#25](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/25) |
 | **3.0** | Recompiled: no emulator, the player's own copy translated to native code | research | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/4) · [#26](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/26) · [#27](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/27) |
@@ -57,7 +57,13 @@ fan noise on a laptop.
   core instead of 52 %.
 - **Less work per turn** ([#22](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/22)). The
   clock calls turned out to be the game's own profiling timers around each walker, not a wait:
-  what keeps the core busy is the simulation and the drawing of every turn, still emulated.
+  what keeps the core busy is the simulation and the drawing of every turn, still emulated. In
+  the order of the profile:
+  - [ ] the city drawing loop `0x00458170` ([#34](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/34));
+  - [ ] the control panel text routines, about 8 % of the time ([#35](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/35));
+  - [ ] research: the game redraws every turn but shows a frame at most every 50 ms — can the
+    unseen drawings be skipped without changing what the game computes?
+    ([#36](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/36))
 - **Taller wide modes** ([#23](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/23)), so that
   a 16:10 screen shows more of the city instead of scaling up 768 lines.
 
@@ -80,7 +86,14 @@ an ARM single-board computer deserves the same game without Wine or a virtual ma
 
 The host is about 7,000 lines of C++ on SDL2, Unicorn and FFmpeg, all portable. Four pieces tie
 it to macOS — MP3 and JPEG decoding, the dialogs, the application bundle — and each has a
-portable replacement ([#25](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/25)).
+portable replacement ([#25](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/25)):
+
+- [ ] MP3 decoding without AudioToolbox; done when `--check-audio` passes the 929 MP3 files with
+  the same durations ([#37](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/37));
+- [ ] JPEG decoding without ImageIO, same pixels ([#38](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/38));
+- [ ] first-launch dialogs, Option key and screen size through SDL ([#39](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/39));
+- [ ] Linux x86-64 and arm64 in the automated build, then an AppImage ([#40](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/40));
+- [ ] one universal Mac application, Intel and Apple Silicon ([#41](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/41)).
 
 **Done when** the tutorial scenario gives the same frame log on Linux x86-64, Linux arm64 and
 macOS, and downloadable builds exist for each (AppImage, universal Mac application).
@@ -103,7 +116,9 @@ The path ([#27](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/27)):
    run one game function emulated and native from the same state, compare everything. Useful
    right away for hand-written native code.
 2. **A translator**, x86-32 to C, one function at a time: exact flags, x87 floating point, the
-   game's jump tables. The list of 8,397 functions already comes from Ghidra.
+   game's jump tables. The list of 8,397 functions already comes from Ghidra. It starts small,
+   on the two clipping routines already rewritten by hand, which give a reference
+   ([#42](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/42)).
 3. **Mixed mode**: recompiled functions enter through the mechanism the sprite dispatcher uses
    today (`Cpu::add_fast_path`), with the emulator as fall-back; coverage grows function by
    function, measured by the scenarios.
@@ -179,7 +194,20 @@ modders and tool makers.
 | 5 | French edition | French texts and voices from the player's own CDs, wide screens | done (0.2, 0.3) |
 | 6 | Native code | drawing, start-up and the sprite dispatcher in native code | partly done since 0.4; continues as 3.0 |
 
-Every release and pull request is listed in [CHANGELOG.md](../CHANGELOG.md).
+### Releases
+
+| Version | Highlights |
+|---|---|
+| [1.0.1](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.0.1) | the game at its real speed; native sprite dispatcher; this roadmap |
+| [1.0](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.0) | first stable version: the code of 0.9, played through by hand |
+| [0.9](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v0.9) | release candidate: start-up under a second, real resolution shown in wide mode, file cache limited to small files |
+| [0.4](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v0.4) | 3D sound; six native routines and 100 ns system calls; mouse wheel; pause in the background; scenarios for Poseidon, the editor, the options and a large city |
+| [0.3](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v0.3) | wide screen; language packs built by the application from CD images; stripped and checked bundle |
+| [0.2](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v0.2) | French; non-executable data pages and a paced loop (half the CPU); stop report; GOG installer opened by the application; LGPL FFmpeg |
+| [0.1](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v0.1) | first preview: the original game in a sandboxed emulator, menus, tutorials, building, save and load, music, sound, intro video, full screen, application bundle |
+
+The archives of 0.1 and 0.2 were withdrawn: they carried build paths of the machine that made
+them. Every release and pull request is listed in [CHANGELOG.md](../CHANGELOG.md).
 
 ### What 1.0 was checked against
 

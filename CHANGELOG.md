@@ -5,6 +5,8 @@ pull request.
 
 ## Unreleased
 
+- **A clearer front page.** The README, in English and in French, opens with three steps to play, what you get, the next steps as task lists linked to their issues, and the history of every version since 0.1. The roadmap splits each step into precise tasks (#34 to #42).
+
 ## 1.0.1 — 2026-10-14
 
 The game now runs at its real speed (it ran at two thirds of it since 0.2), with less CPU.
