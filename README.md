@@ -69,40 +69,32 @@ CDs…*: the application builds a French pack from the images of your own CDs
 The aim: keep *Zeus* and *Poseidon* playable for as long as people want to play them — the
 original game, on the machines people own, proven identical to the original.
 
-### Now — 1.1 *Cool and quiet*
-As little CPU as the game needs, so that a laptop stays cool and silent.
-[Milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/1)
+### Next — 1.2 *Lighter*
+A running city under 20 % of one core (35 % for a small city today), so that a laptop stays cool
+and silent. [Milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/6)
 
-- [x] Native sprite dispatcher: 42 % less computing time in a large city ([#21](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/21))
-- [x] The game at its real speed: 45 simulation ticks a second instead of 30 ([#32](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/32))
-- [ ] Native city drawing loop ([#34](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/34))
-- [ ] Native control panel texts ([#35](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/35))
-- [ ] Can unseen redraws be skipped? — research ([#36](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/36))
-- [x] Taller wide modes, without a black band under the panel ([#23](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/23))
+- [ ] Equivalence harness first: a native function checked against the original on every call ([#26](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/26))
+- [ ] Then the second pass of the city drawing (buildings and walkers) and the simulation ([#22](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/22))
 
-**Target:** a small city under 20 % of one core (about 42 % today), the large city of the last
-tutorial under 35 %.
-
-### Next — 1.2 *Every edition*
+### Then — 1.3 *Every edition*
 German, Spanish, Italian, Polish, Dutch, Swedish, Czech… packs built from your own CDs.
 **Testers wanted**: if you own another edition, your report is the whole step
-([#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24)).
+([#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24)). [Milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/2)
 
-### Then — 2.0 *Everywhere*
+### Later — 2.0 *Everywhere*
 The same host on **Linux** (x86-64 and arm64) and **Intel Macs**. Only four small pieces are
 macOS-specific today. [Milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/3)
 
 - [ ] Portable MP3 decoding ([#37](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/37)) · JPEG decoding ([#38](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/38)) · first-launch dialogs ([#39](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/39))
-- [ ] Linux build in the automated build, then an AppImage ([#40](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/40))
-- [ ] One universal Mac application, Intel and Apple Silicon ([#41](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/41))
+- [ ] Linux x86-64 and arm64 in the automated build, then an AppImage ([#40](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/40))
+- [ ] Then one universal Mac application, Intel and Apple Silicon ([#41](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/41))
 
-### Later — 3.0 *Recompiled*
+### After — 3.0 *Recompiled*
 **No emulator at all.** Your own `Zeus.exe` translated to native code *on your machine* — like a
 language pack, nothing from the game is ever distributed — with the emulator kept as the
 reference that proves every translated function. Faster, lighter, and the way to an iPad
 edition. [Milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/4)
 
-- [ ] Equivalence harness: a native function checked against the original on every call ([#26](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/26))
 - [ ] First translated function, x86-32 to C ([#42](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/42))
 - [ ] The recompiler, then the whole game without an emulator ([#27](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/27))
 

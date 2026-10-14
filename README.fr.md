@@ -70,40 +70,32 @@ propres CD ([détails](docs/languages.md), en anglais).
 Le but : que *Zeus* et *Poséidon* restent jouables aussi longtemps qu'on aura envie d'y jouer — le
 jeu d'origine, sur les machines qu'on possède, prouvé identique à l'original.
 
-### Maintenant — 1.1 *Sobre et silencieux*
-Le moins de processeur possible, pour un portable qui reste frais et silencieux.
-[Jalon](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/1)
+### Ensuite — 1.2 *Plus léger*
+Une ville en cours de jeu sous 20 % d'un cœur (35 % pour une petite ville aujourd'hui), pour un
+portable qui reste frais et silencieux. [Jalon](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/6)
 
-- [x] Répartiteur de sprites natif : 42 % de calcul en moins dans une grande ville ([#21](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/21))
-- [x] Le jeu à sa vraie vitesse : 45 tours de simulation par seconde au lieu de 30 ([#32](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/32))
-- [ ] Boucle de dessin de la ville en natif ([#34](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/34))
-- [ ] Textes du panneau de contrôle en natif ([#35](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/35))
-- [ ] Peut-on éviter les dessins jamais affichés ? — étude ([#36](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/36))
-- [x] Modes larges plus hauts, sans bande noire sous le panneau ([#23](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/23))
+- [ ] D'abord le banc d'équivalence : une fonction native vérifiée contre l'originale à chaque appel ([#26](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/26))
+- [ ] Puis le second parcours du dessin de la ville (bâtiments et personnages) et la simulation ([#22](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/22))
 
-**Objectif :** une petite ville sous 20 % d'un cœur (environ 42 % aujourd'hui), la grande ville
-du dernier tutoriel sous 35 %.
-
-### Ensuite — 1.2 *Toutes les éditions*
+### Puis — 1.3 *Toutes les éditions*
 Packs allemand, espagnol, italien, polonais, néerlandais, suédois, tchèque… fabriqués depuis vos
 CD. **Testeurs recherchés** : si vous possédez une autre édition, votre retour fait toute
-l'étape ([#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24)).
+l'étape ([#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24)). [Jalon](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/2)
 
-### Puis — 2.0 *Partout*
+### Plus tard — 2.0 *Partout*
 Le même hôte sous **Linux** (x86-64 et arm64) et sur les **Mac Intel**. Seules quatre petites
 pièces dépendent aujourd'hui de macOS. [Jalon](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/3)
 
 - [ ] Décodage MP3 portable ([#37](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/37)) · décodage JPEG ([#38](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/38)) · fenêtres du premier lancement ([#39](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/39))
-- [ ] Compilation Linux dans la compilation automatique, puis une AppImage ([#40](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/40))
-- [ ] Une application Mac universelle, Intel et Apple Silicon ([#41](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/41))
+- [ ] Linux x86-64 et arm64 dans la compilation automatique, puis une AppImage ([#40](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/40))
+- [ ] Ensuite une application Mac universelle, Intel et Apple Silicon ([#41](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/41))
 
-### Plus tard — 3.0 *Recompilé*
+### Après — 3.0 *Recompilé*
 **Plus d'émulateur du tout.** Votre propre `Zeus.exe` traduit en code natif *sur votre machine* —
 comme un pack de langue, rien du jeu n'est jamais distribué —, l'émulateur restant la référence
 qui prouve chaque fonction traduite. Plus rapide, plus léger, et la voie vers une édition iPad.
 [Jalon](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/4)
 
-- [ ] Banc d'équivalence : une fonction native vérifiée contre l'originale à chaque appel ([#26](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/26))
 - [ ] Première fonction traduite, de l'x86-32 vers le C ([#42](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/42))
 - [ ] Le recompilateur, puis tout le jeu sans émulateur ([#27](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/27))
 

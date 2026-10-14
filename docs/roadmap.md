@@ -11,7 +11,8 @@ an emulator at all.
 ```mermaid
 flowchart LR
     A["<b>1.0</b><br/>Playable on<br/>Apple Silicon<br/><i>released</i>"] --> B["<b>1.1</b><br/>Cool and quiet<br/><i>released</i>"]
-    B --> C["<b>1.2</b><br/>Every edition<br/><i>needs testers</i>"]
+    B --> L["<b>1.2</b><br/>Lighter<br/>under 20 % of a core"]
+    L --> C["<b>1.3</b><br/>Every edition<br/><i>needs testers</i>"]
     C --> D["<b>2.0</b><br/>Everywhere<br/>Linux, Intel Macs"]
     D --> E["<b>3.0</b><br/>Recompiled<br/>no emulator"]
     E -.-> F["iPad, iPhone"]
@@ -21,10 +22,11 @@ flowchart LR
 | Version | Theme | State | Follow it |
 |---|---|---|---|
 | **1.0.1** | The whole game on Apple Silicon Macs, at its real speed | released | [release notes](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.0.1) |
-| **1.1** | Cool and quiet: as little CPU as the game needs | released (small city at 35 % of a core; [#22](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/22) goes on toward 20 %) | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/1) · [#21](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/21), [#32](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/32) done · [#22](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/22) · [#23](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/23) |
-| **1.2** | Every language edition | needs testers | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/2) · [#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24) |
-| **2.0** | Everywhere: Linux (x86-64, arm64) and Intel Macs | planned | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/3) · [#25](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/25) |
-| **3.0** | Recompiled: no emulator, the player's own copy translated to native code | research | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/4) · [#26](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/26) · [#27](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/27) |
+| **1.1** | Cool and quiet: easier first launch, taller wide modes, native city ground | released (small city at 35 % of a core) | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/1) · [#21](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/21), [#32](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/32), [#34](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/34), [#23](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/23) done |
+| **1.2** | Lighter: a running city under 20 % of one core | next | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/6) · [#26](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/26) equivalence harness first, then [#22](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/22) second drawing pass and simulation |
+| **1.3** | Every language edition | needs testers | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/2) · [#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24) |
+| **2.0** | Everywhere: Linux (x86-64, arm64), AppImage, then a universal Mac application | planned | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/3) · [#25](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/25) |
+| **3.0** | Recompiled: no emulator, the player's own copy translated to native code | research | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/4) · [#27](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/27) |
 | exploration | The City Building Series: *Emperor*, *Pharaoh*, *Caesar III* | research | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/5) · [#28](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/28) · [#29](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/29) |
 | ongoing | Every file format of the game documented | open to all | [#30](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/30) |
 
@@ -42,38 +44,23 @@ These rules hold for every version below; they are what makes the project trustw
   evidence (address, offset, measurement).
 - **No copy protection is touched.** Only the DRM-free GOG edition is run.
 
-## 1.1 — Cool and quiet
+## 1.2 — Lighter
 
-**Why.** The game is fast enough, but it still keeps one CPU core busy, which costs battery and
-fan noise on a laptop.
+**Why.** Version 1.1 brought a small city from about 50 % to 35 % of a core. The game is fast
+enough, but a laptop should stay cool and silent while it runs.
 
-- **Native sprite dispatcher** — done ([#21](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/21)):
-  42 % less computing time in a large city.
-- **The right game speed, with fewer loop turns** — done
-  ([#32](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/32)). Looking for a busy wait showed
-  something else: the game ticks only when a loop turn finds its interval elapsed, and the host's
-  fixed 16 ms pacing stretched the 22 ms interval of the default speed to 33 ms. The game had been
-  running at two thirds of its speed; it now ticks 45 times a second as intended, on 42 % of a
-  core instead of 52 %.
-- **Less work per turn** ([#22](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/22)). The
-  clock calls turned out to be the game's own profiling timers around each walker, not a wait:
-  what keeps the core busy is the simulation and the drawing of every turn, still emulated. In
-  the order of the profile:
-  - [x] the city drawing loop `0x00458170`, first pass (the ground of every tile): a small city
-    went from 51–60 % to 35 % of a core, the large city barely moved (85 % to 84 %); the second
-    pass, buildings and walkers, is still emulated
-    ([#34](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/34));
-  - [ ] the control panel text routines, about 8 % of the time ([#35](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/35));
-  - [ ] research: the game redraws every turn but shows a frame at most every 50 ms — can the
-    unseen drawings be skipped without changing what the game computes?
-    ([#36](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/36))
-- **Taller wide modes** ([#23](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/23)), so that
-  a 16:10 screen shows more of the city instead of scaling up 768 lines.
+- **Equivalence harness first** ([#26](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/26)): run one game function emulated and native from the
+  same state and compare everything. Every step below depends on it, and it is the first brick
+  of 3.0.
+- **Then less work per turn** ([#22](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/22)): the second pass of the city drawing loop `0x00458170`
+  (buildings and walkers), then the simulation. The control panel texts
+  ([#35](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/35)) and skipping unseen redraws ([#36](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/36)) were tried and concluded without merging:
+  each gained less than 2 points of CPU.
 
-**Done when** a small city uses less than 20 % of one core and the large city of the last
-tutorial less than 35 %, with the same frame rate and the same frames.
+**Done when** a small city uses less than 20 % of one core, with the same frame rate and the
+same frames (all eight scenarios identical).
 
-## 1.2 — Every edition
+## 1.3 — Every edition
 
 **Why.** The game was sold in a dozen languages. French works because the application can build
 a pack from the original CDs; every other edition should work the same way.
@@ -115,7 +102,7 @@ is to **remove the emulator** while keeping both founding rules:
 
 The path ([#27](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/27)):
 
-1. **An equivalence harness** ([#26](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/26)):
+1. **An equivalence harness** ([#26](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/26), first delivered in 1.2):
    run one game function emulated and native from the same state, compare everything. Useful
    right away for hand-written native code.
 2. **A translator**, x86-32 to C, one function at a time: exact flags, x87 floating point, the
