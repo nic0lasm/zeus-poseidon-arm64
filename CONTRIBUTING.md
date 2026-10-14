@@ -41,15 +41,25 @@ ideal (see [docs/getting-started.md](docs/getting-started.md)).
 
 ## Where help is wanted
 
-- **Play sessions**: adventures played through, with what worked and what did not.
-- **Other editions**: does your copy (other language, other store) start? Send the SHA-256 of
-  its `Zeus.exe` and what happens.
-- **Missing Windows functions**: each one is small and self-contained (`src/win32/`).
-- **Other Macs and editions**: reports from other Mac models, other language editions or
-  other stores.
-- **Native code**: the sprite dispatcher (`0x005ACF50`) leads the profile of a running city;
-  see the end of [docs/roadmap.md](docs/roadmap.md).
-- **File formats**: anything not yet described in `formats/`.
+Each step of the [roadmap](docs/roadmap.md) has an issue; the ones that need you are labelled
+[help wanted](https://github.com/nic0lasm/zeus-poseidon-arm64/labels/help%20wanted) and
+[needs testers](https://github.com/nic0lasm/zeus-poseidon-arm64/labels/needs%20testers).
+
+- **Play sessions**: adventures played through, with what worked and what did not; reports from
+  other Mac models.
+- **Other editions** ([#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24)): does your
+  copy (other language, other store) start, and does a pack built from your CDs work? Send the
+  SHA-256 of its `Zeus.exe` and what happens.
+- **Linux and Intel Macs** ([#25](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/25)): four
+  small macOS-specific pieces to make portable.
+- **Recompilation** ([#26](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/26),
+  [#27](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/27)): experience with static
+  recompilation, x86 semantics or equivalence testing is very welcome in the discussion.
+- **File formats** ([#30](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/30)): each
+  remaining format is a self-contained puzzle.
+- **Other City Building Series games** ([#28](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/28),
+  [#29](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/29)): if you own *Emperor*,
+  *Pharaoh* or *Caesar III* on GOG, the first measurements are easy to make.
 
 ## Before opening a pull request
 

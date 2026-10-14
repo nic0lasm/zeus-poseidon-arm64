@@ -28,15 +28,6 @@ The result is the real game — same simulation, same rules, same save files —
 **Version 1.0** — the whole game is playable. Download it from the
 [releases page](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest).
 
-| Milestone | What you get | State |
-|---|---|---|
-| 1. The game starts | the real main menu in a Mac window | done |
-| 2. Playable | mouse, keyboard, tutorials and adventures, building, saving and loading | done |
-| 3. Complete | music, sound effects, videos, full screen | done |
-| 4. Ready to share | performance, a self-contained `.app`, automated builds, a first release | done |
-| 5. French edition | French texts and voices taken from your own original CDs | done |
-| 6. No emulator | the game's hot code in native code, then the rest | **partly**: drawing and start-up |
-
 What works today: the whole game as far as automated and hands-on testing can tell — menus,
 leader profiles, the sixteen tutorials, Zeus and Poseidon adventures, the adventure editor, a
 running city with its walkers, gods, monsters and disasters, save and load, music, ambience,
@@ -50,7 +41,20 @@ The city view can fill a wide screen: pick the largest resolution in the game's 
 The game runs in English out of the box; French is
 possible with a language pack built from your own French copy ([docs/languages.md](docs/languages.md)).
 
-Details: [docs/roadmap.md](docs/roadmap.md).
+## Where we are going
+
+The aim is to keep the game playable for as long as people want to play it: the original game,
+on the machines people own, proven identical to the original.
+
+| Next | What it brings | Follow it |
+|---|---|---|
+| **1.1 — Cool and quiet** | as little CPU as the game needs (native drawing done, busy wait next), taller wide modes | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/1) |
+| **1.2 — Every edition** | German, Spanish, Italian, Polish… packs from your own CDs — **testers wanted** | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/2) |
+| **2.0 — Everywhere** | the same host on Linux (x86-64, arm64) and Intel Macs | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/3) |
+| **3.0 — Recompiled** | no emulator: your own copy translated to native code on your machine, proven frame by frame; the way to iPad | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/4) |
+| exploration | could the same host bring back *Emperor*, *Pharaoh*, *Caesar III*? | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/5) |
+
+The full plan, what each step must achieve and a look back on 1.0: [docs/roadmap.md](docs/roadmap.md).
 
 ## Download
 

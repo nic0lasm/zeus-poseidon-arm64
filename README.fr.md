@@ -29,15 +29,6 @@ réécriture.
 **Version 1.0** — tout le jeu est jouable. À télécharger sur la
 [page des versions](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest).
 
-| Jalon | Ce qu'on obtient | État |
-|---|---|---|
-| 1. Le jeu démarre | le vrai menu principal dans une fenêtre Mac | fait |
-| 2. Jouable | souris, clavier, tutoriels et aventures, construction, sauvegarde et chargement | fait |
-| 3. Complet | musiques, bruitages, vidéos, plein écran | fait |
-| 4. Diffusable | performances, application `.app` autonome, compilation automatique, première version publiée | fait |
-| 5. Édition française | textes et voix français tirés de vos propres CD d'origine | fait |
-| 6. Sans émulateur | le code le plus sollicité du jeu en natif, puis le reste | **en partie** : dessin et démarrage |
-
 Ce qui fonctionne aujourd'hui : tout le jeu, autant que les essais automatiques et les parties
 jouées permettent d'en juger — menus, profils de dirigeant, les seize tutoriels, les aventures
 de Zeus et de Poséidon, l'éditeur d'aventures, une ville qui vit avec ses habitants, ses dieux,
@@ -53,7 +44,21 @@ Le jeu tourne en anglais tel quel ;
 le français est possible avec un pack de langue fabriqué à partir de votre propre exemplaire
 français ([docs/languages.md](docs/languages.md), en anglais).
 
-Détail : [docs/roadmap.md](docs/roadmap.md) (en anglais).
+## La suite
+
+Le but : que le jeu reste jouable aussi longtemps qu'on aura envie d'y jouer — le jeu d'origine,
+sur les machines qu'on possède, prouvé identique à l'original.
+
+| Prochaine étape | Ce qu'elle apporte | Suivre |
+|---|---|---|
+| **1.1 — Sobre et silencieux** | le moins de processeur possible (dessin natif fait, attente active ensuite), modes larges plus hauts | [jalon](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/1) |
+| **1.2 — Toutes les éditions** | packs allemand, espagnol, italien, polonais… depuis vos CD — **testeurs recherchés** | [jalon](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/2) |
+| **2.0 — Partout** | le même hôte sous Linux (x86-64, arm64) et sur les Mac Intel | [jalon](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/3) |
+| **3.0 — Recompilé** | plus d'émulateur : votre exemplaire traduit en code natif sur votre machine, prouvé image par image ; la voie vers l'iPad | [jalon](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/4) |
+| exploration | le même hôte pourrait-il faire revivre *Emperor*, *Pharaoh*, *Caesar III* ? | [jalon](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/5) |
+
+Le plan complet, ce que chaque étape doit atteindre et un retour sur la 1.0 :
+[docs/roadmap.md](docs/roadmap.md) (en anglais).
 
 ## Téléchargement
 

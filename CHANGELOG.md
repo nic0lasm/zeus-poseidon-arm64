@@ -9,6 +9,10 @@ pull request.
   common cases (run-length and opaque images, neither clipped sideways nor mirrored, 95 % of
   the calls); every other case falls back to the original code. A large city needs 42 % less
   computing time; frames are identical.
+- **A new roadmap.** Four horizons after 1.0 — 1.1 *Cool and quiet*, 1.2 *Every edition*, 2.0
+  *Everywhere* (Linux, Intel Macs), 3.0 *Recompiled* (no emulator, the player's copy translated
+  on their own machine) — and an exploration of the other City Building Series games. Each step
+  has a milestone and an issue on GitHub; the roadmap also looks back on what 1.0 taught.
 
 ## 1.0 — 2026-10-14
 
