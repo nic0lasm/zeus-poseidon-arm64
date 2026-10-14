@@ -154,7 +154,7 @@ scripted runs and troubleshooting: [docs/getting-started.md](docs/getting-starte
         │  src/win32/                │   Miles Sound · Bink · Intel JPEG
         └─────────────┬──────────────┘   + hot game routines rewritten natively
                       │
-    SDL2 · FFmpeg · macOS ImageIO and AudioToolbox
+    SDL2 · FFmpeg (Bink, MP3) · macOS ImageIO
 ```
 
 The game imports 202 Windows functions. Each one is a small native function in `src/win32/`; a

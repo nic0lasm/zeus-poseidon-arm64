@@ -1,6 +1,12 @@
 #include "win32/audio.h"
 
-#include <AudioToolbox/AudioToolbox.h>
+extern "C" {
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libavutil/channel_layout.h>
+#include <libavutil/log.h>
+#include <libswresample/swresample.h>
+}
 #include <SDL.h>
 
 #include <algorithm>
@@ -14,44 +20,71 @@ namespace {
 uint32_t u32(const uint8_t* p) { return p[0] | p[1] << 8 | p[2] << 16 | static_cast<uint32_t>(p[3]) << 24; }
 uint16_t u16(const uint8_t* p) { return static_cast<uint16_t>(p[0] | p[1] << 8); }
 
-// Décode tout le fichier en 16 bits à sa fréquence et son nombre de canaux d'origine.
-void decode_with_audio_toolbox(const std::filesystem::path& path, Sound& out) {
-    CFURLRef url = CFURLCreateFromFileSystemRepresentation(
-        nullptr, reinterpret_cast<const UInt8*>(path.c_str()), static_cast<CFIndex>(path.native().size()), false);
-    ExtAudioFileRef file = nullptr;
-    if (url && ExtAudioFileOpenURL(url, &file) == noErr) {
-        AudioStreamBasicDescription source{};
-        UInt32 size = sizeof source;
-        ExtAudioFileGetProperty(file, kExtAudioFileProperty_FileDataFormat, &size, &source);
-        const int channels = source.mChannelsPerFrame >= 2 ? 2 : 1;
-        AudioStreamBasicDescription client{};
-        client.mSampleRate = source.mSampleRate;
-        client.mFormatID = kAudioFormatLinearPCM;
-        client.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
-        client.mBitsPerChannel = 16;
-        client.mChannelsPerFrame = static_cast<UInt32>(channels);
-        client.mBytesPerFrame = static_cast<UInt32>(2 * channels);
-        client.mFramesPerPacket = 1;
-        client.mBytesPerPacket = client.mBytesPerFrame;
-        if (ExtAudioFileSetProperty(file, kExtAudioFileProperty_ClientDataFormat, sizeof client, &client) == noErr) {
-            out.rate = static_cast<int>(source.mSampleRate);
-            out.channels = channels;
-            std::vector<int16_t> chunk(static_cast<size_t>(16384) * static_cast<size_t>(channels));
-            for (;;) {
-                AudioBufferList list;
-                list.mNumberBuffers = 1;
-                list.mBuffers[0].mNumberChannels = static_cast<UInt32>(channels);
-                list.mBuffers[0].mDataByteSize = static_cast<UInt32>(chunk.size() * 2);
-                list.mBuffers[0].mData = chunk.data();
-                UInt32 frames = 16384;
-                if (ExtAudioFileRead(file, &frames, &list) != noErr || frames == 0) break;
-                out.samples.insert(out.samples.end(), chunk.begin(),
-                                   chunk.begin() + static_cast<std::ptrdiff_t>(frames) * channels);
-            }
-        }
-        ExtAudioFileDispose(file);
+// Libère à la sortie de la fonction les objets FFmpeg ouverts.
+struct Av {
+    AVFormatContext* format = nullptr;
+    AVCodecContext* codec = nullptr;
+    SwrContext* resampler = nullptr;
+    AVPacket* packet = av_packet_alloc();
+    AVFrame* frame = av_frame_alloc();
+    ~Av() {
+        av_frame_free(&frame);
+        av_packet_free(&packet);
+        swr_free(&resampler);
+        avcodec_free_context(&codec);
+        avformat_close_input(&format);
     }
-    if (url) CFRelease(url);
+};
+
+// Convertit une image décodée en 16 bits entrelacés et l'ajoute au son.
+void append_frame(Av& av, int channels, Sound& out) {
+    const int capacity = swr_get_out_samples(av.resampler, av.frame->nb_samples);
+    if (capacity <= 0) return;
+    const size_t at = out.samples.size();
+    out.samples.resize(at + static_cast<size_t>(capacity) * static_cast<size_t>(channels));
+    uint8_t* target = reinterpret_cast<uint8_t*>(out.samples.data() + at);
+    const int got = swr_convert(av.resampler, &target, capacity, av.frame->extended_data, av.frame->nb_samples);
+    out.samples.resize(at + static_cast<size_t>(std::max(got, 0)) * static_cast<size_t>(channels));
+}
+
+// Décode tout le fichier en 16 bits à sa fréquence et son nombre de canaux d'origine.
+void decode_with_ffmpeg(const std::filesystem::path& path, Sound& out) {
+    // Les MP3 sans en-tête de durée sont la règle ici : l'avertissement de FFmpeg n'apprend rien.
+    static const bool quiet = (av_log_set_level(AV_LOG_ERROR), true);
+    (void)quiet;
+    Av av;
+    if (!av.packet || !av.frame || avformat_open_input(&av.format, path.c_str(), nullptr, nullptr) < 0) return;
+    if (avformat_find_stream_info(av.format, nullptr) < 0) return;
+    const int stream = av_find_best_stream(av.format, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
+    if (stream < 0) return;
+    const AVCodecParameters* parameters = av.format->streams[stream]->codecpar;
+    const AVCodec* decoder = avcodec_find_decoder(parameters->codec_id);
+    av.codec = decoder ? avcodec_alloc_context3(decoder) : nullptr;
+    if (!av.codec || avcodec_parameters_to_context(av.codec, parameters) < 0 || avcodec_open2(av.codec, decoder, nullptr) < 0)
+        return;
+    const int channels = av.codec->ch_layout.nb_channels >= 2 ? 2 : 1;
+    AVChannelLayout layout;
+    av_channel_layout_default(&layout, channels);
+    const int rate = av.codec->sample_rate;
+    if (rate <= 0 ||
+        swr_alloc_set_opts2(&av.resampler, &layout, AV_SAMPLE_FMT_S16, rate, &av.codec->ch_layout, av.codec->sample_fmt,
+                            rate, 0, nullptr) < 0 ||
+        swr_init(av.resampler) < 0) {
+        av_channel_layout_uninit(&layout);
+        return;
+    }
+    av_channel_layout_uninit(&layout);
+    out.rate = rate;
+    out.channels = channels;
+    auto drain = [&] {
+        while (avcodec_receive_frame(av.codec, av.frame) == 0) append_frame(av, channels, out);
+    };
+    while (av_read_frame(av.format, av.packet) >= 0) {
+        if (av.packet->stream_index == stream && avcodec_send_packet(av.codec, av.packet) == 0) drain();
+        av_packet_unref(av.packet);
+    }
+    avcodec_send_packet(av.codec, nullptr);
+    drain();
 }
 
 }  // namespace
@@ -97,7 +130,7 @@ std::shared_ptr<Sound> decode_wav(const uint8_t* data, size_t size) {
 std::shared_ptr<Sound> decode_file_async(const std::filesystem::path& path) {
     auto sound = std::make_shared<Sound>();
     std::thread([sound, path] {
-        decode_with_audio_toolbox(path, *sound);
+        decode_with_ffmpeg(path, *sound);
         sound->ready = true;
     }).detach();
     return sound;

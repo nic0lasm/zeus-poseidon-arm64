@@ -77,7 +77,7 @@ add_library(zeus_win32 STATIC
     src/win32/widescreen.cpp)
 target_include_directories(zeus_win32 PUBLIC src)
 target_link_libraries(zeus_win32 PUBLIC PkgConfig::UNICORN PkgConfig::FFMPEG SDL2::SDL2
-    "-framework AudioToolbox" "-framework ImageIO" "-framework CoreGraphics" "-framework CoreFoundation")
+    "-framework ImageIO" "-framework CoreGraphics" "-framework CoreFoundation")
 
 add_executable(zeus-run src/tools/zeus_run.cpp)
 target_link_libraries(zeus-run PRIVATE zeus_win32)
