@@ -37,6 +37,7 @@ analysis/notes reverse-engineering notes kept under version control
 | `process.*` | stack, heap, thread block, binding of every import to a host function |
 | `vfs.*` | the file system the game sees |
 | `native.cpp` | game functions rewritten for the host (experimental, off by default) |
+| `widescreen.cpp` | wide display mode, in place of the game's 1024×768 |
 | `language.cpp` | in-memory text adjustments for language packs |
 | `text.*` | conversion between the game's Windows-1252 text and UTF-8 |
 | `kernel32.cpp` | start-up, memory, strings, time, files |

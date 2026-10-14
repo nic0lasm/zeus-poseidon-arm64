@@ -18,6 +18,11 @@
 //     --break-on FONCTION      arrête le programme à l'appel de cette fonction (essai du rapport)
 //     --native                 remplace les fonctions du jeu réécrites pour l'hôte (à l'essai)
 //     --deterministic          horloge fictive et son coupé : exécution reproductible
+//     --wide auto | LxH        remplace le mode 1024 x 768 du jeu par un mode large, à choisir
+//                              ensuite dans Options > Display options ; « auto » prend les
+//                              proportions de l'écran
+//     --watch-call ADRESSE     liste à la fin les sites d'appel d'une fonction du jeu (hexadécimal)
+//     --dump-data SORTIE.bin   écrit à la fin la section .data du programme (variables du jeu)
 //     --frame-log SORTIE.txt   empreinte de chaque image affichée
 //     --profile SORTIE.tsv     profil d'exécution du code du jeu, par bloc (ralentit beaucoup)
 //     --counts                 affiche à la fin le nombre d'appels de chaque fonction
@@ -40,6 +45,7 @@
 #include <filesystem>
 #include <fstream>
 #include <map>
+#include <memory>
 #include <stdexcept>
 #include <string>
 
@@ -152,7 +158,7 @@ int bench() {
 }
 
 struct RunOptions {
-    std::string exe, write_dir = "run/zeus", profile, frame_log, language, screenshot, window_shot, script, trace_only, break_on;
+    std::string exe, write_dir = "run/zeus", profile, frame_log, memory_dump, wide, watch, language, screenshot, window_shot, script, trace_only, break_on;
     bool trace = false, headless = false, counts = false, mute = false, fullscreen = false, deterministic = false,
          native = false;
     int frames = 0;
@@ -186,6 +192,27 @@ int run(const RunOptions& o) {
     process.mute = o.mute || o.headless;
     process.load(o.exe);
     if (!o.profile.empty()) process.cpu().start_profile();
+    // Appels d'une fonction du jeu, regroupés par site d'appel : nombre, et arguments du dernier.
+    struct Caller {
+        uint64_t count = 0;
+        uint32_t args[6] = {};
+    };
+    auto callers = std::make_shared<std::map<uint32_t, Caller>>();
+    if (!o.watch.empty()) {
+        process.cpu().add_code_hook(static_cast<uint32_t>(std::stoul(o.watch, nullptr, 16)), [callers](zeus::win32::Cpu& c) {
+            Caller& caller = (*callers)[c.read_u32(c.reg(zeus::win32::Cpu::Reg::ESP))];
+            ++caller.count;
+            for (int i = 0; i < 6; ++i) caller.args[i] = c.arg(i);
+        });
+    }
+    if (!o.wide.empty()) {
+        // « auto » : même hauteur que le mode d'origine, largeur selon les proportions de l'écran.
+        int w = 0, h = 768;
+        if (o.wide == "auto") w = static_cast<int>(h * desktop.screen_aspect());
+        else if (std::sscanf(o.wide.c_str(), "%dx%d", &w, &h) != 2) throw std::runtime_error("--wide attend « auto » ou LARGEURxHAUTEUR");
+        if (w >= 1084 && zeus::win32::apply_wide_mode(process, w, h))
+            std::fprintf(stderr, "[hôte] écran large : le mode 1024 x 768 du jeu devient %d x %d\n", w, h);
+    }
     if (o.native) zeus::win32::install_native_functions(process);
     if (!o.language.empty()) zeus::win32::apply_language_pack(process, o.language);
     int code = 0;
@@ -198,6 +225,18 @@ int run(const RunOptions& o) {
     desktop.save_screenshot();
     uint64_t total = 0;
     for (const auto& [name, count] : process.call_counts) total += count;
+    for (const auto& [address, caller] : *callers)
+        std::fprintf(stderr, "appelant %#x : %llu appels, derniers arguments %d %d %d %d %d %d\n", address,
+                     static_cast<unsigned long long>(caller.count), static_cast<int32_t>(caller.args[0]),
+                     static_cast<int32_t>(caller.args[1]), static_cast<int32_t>(caller.args[2]),
+                     static_cast<int32_t>(caller.args[3]), static_cast<int32_t>(caller.args[4]),
+                     static_cast<int32_t>(caller.args[5]));
+    if (!o.memory_dump.empty()) {
+        // Section de données de l'exécutable, telle qu'elle est à la fin de l'exécution.
+        std::ofstream out(o.memory_dump, std::ios::binary);
+        for (const auto& s : process.image().sections)
+            if (s.name == ".data") out.write(reinterpret_cast<const char*>(process.cpu().host(s.address)), s.virtual_size);
+    }
     if (!o.profile.empty()) {
         // Une ligne par bloc de code : adresse, nanosecondes.
         std::ofstream out(o.profile);
@@ -375,6 +414,7 @@ int run_app(const std::string& installer) {
     RunOptions o;
     o.exe = exe;
     o.write_dir = (support / "Jeu").string();
+    o.wide = "auto";
 
     // Packs de langue rangés dans « Packs » : la langue est demandée une fois, puis retenue
     // dans langue.txt (ligne vide : l'anglais de l'édition GOG). Chaque langue a ses sauvegardes.
@@ -431,6 +471,9 @@ int main(int argc, char** argv) {
                 else if (a == "--language") o.language = value();
                 else if (a == "--profile") o.profile = value();
                 else if (a == "--frame-log") o.frame_log = value();
+                else if (a == "--dump-data") o.memory_dump = value();
+                else if (a == "--wide") o.wide = value();
+                else if (a == "--watch-call") o.watch = value();
                 else if (a == "--deterministic") o.deterministic = true;
                 else if (a == "--native") o.native = true;
                 else if (a == "--screenshot") o.screenshot = value();

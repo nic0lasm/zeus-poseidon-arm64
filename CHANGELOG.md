@@ -5,6 +5,9 @@ pull request.
 
 ## Unreleased
 
+- **Wide screen.** `--wide auto` (always on in the application) turns the game's 1024×768 mode
+  into a wide mode fitted to the screen: larger map view, control panel at the right edge.
+- `--watch-call` and `--dump-data`, two reverse-engineering aids.
 - Replayable scenarios (`tests/scenarios`, `tools/check_scenarios.py`): a tutorial and the
   first adventure, compared frame by frame against a recorded reference.
 - `CompareStringW` is provided.

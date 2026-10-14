@@ -20,16 +20,18 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def read_scenario(path):
-    script, seconds = [], 60
+    script, seconds, options = [], 60, []
     with open(path, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if line.startswith("#"):
                 if "durée" in line:
                     seconds = int(line.split(":")[1])
+                elif "options" in line:
+                    options = line.split(":", 1)[1].split()
             elif line:
                 script.append(line)
-    return "; ".join(script), seconds
+    return "; ".join(script), seconds, options
 
 
 def main(argv):
@@ -41,7 +43,7 @@ def main(argv):
     failures = 0
     for path in sorted(glob.glob(os.path.join(ROOT, "tests", "scenarios", "*.txt"))):
         name = os.path.splitext(os.path.basename(path))[0]
-        script, seconds = read_scenario(path)
+        script, seconds, options = read_scenario(path)
         reference = os.path.join(out, name + ".reference.txt")
         log = reference if record else os.path.join(out, name + ".txt")
         run = 0
@@ -51,7 +53,7 @@ def main(argv):
             write_dir = os.path.join(out, f"{name}-run{run}")
         result = subprocess.run(
             [os.path.join(ROOT, "build", "zeus-run"), "--run", exe, "--headless", "--deterministic",
-             "--write-dir", write_dir, "--seconds", str(seconds), "--frame-log", log, "--script", script] + extra,
+             "--write-dir", write_dir, "--seconds", str(seconds), "--frame-log", log, "--script", script] + options + extra,
             capture_output=True, text=True)
         last = result.stderr.strip().splitlines()[-1] if result.stderr.strip() else ""
         with open(log) as f:

@@ -42,6 +42,28 @@ saved game is essentially a list of memory blocks.
   `BltFast(primary, 0, 0, backbuffer, &rectangle, 0)`, and only once an elapsed-time counter
   reaches `0x32`. *Hypothesis:* the counter is in milliseconds, giving 20 frames per second.
 
+### Screen size and layout
+
+- `0x0050BCC0` sets the screen size from a mode number: 640×480, 800×600 or 1024×768, stored at
+  `0x00F2A6B4` (width) and `0x00F2A6B0` (height). 68 functions read these variables. Menus
+  always run in 800×600; the chosen mode applies to the city.
+- Part of the layout is computed from the width; part is chosen by comparing the width with
+  640, 800 or 1024, usually in a chain after one read.
+- `0x0058E280` sets the position of the control panel: 478, 598 or 838 (width − 186, at
+  `0x010DFF34`), and of the folded panel: width − 66 (`0x010DFF30`).
+- `0x0051CC00` (panel unfolded) and `0x0051CBA0` (folded) pass the size of the map view to
+  `0x00449E50` as a number of tile columns and rows: 10×39 at 800×600, 14×50 at 1024×768,
+  17×50 folded. The view is 60 pixels per column and 15 per row, so its width is
+  60 × columns − 2 and the screen sizes that fit exactly are 184 + 60 n by 33 + 15 n.
+- `0x0059EBE0` draws the background of the top bar, an image 838 pixels wide, at (0, 0); in
+  800×600 it clips it, in 640×480 it shifts it left.
+- `0x0058E3E0` fills a 9-pixel strip at the bottom of the screen over a width given as the
+  literal 1024.
+- The game's frame buffer is at the address held in `0x00F9C100`, two bytes per pixel, one
+  screen wide.
+
+`src/win32/widescreen.cpp` uses all of the above to offer a wide mode.
+
 ### Text rendering and languages
 
 - **Character table** at `0x0063BE2C`: one byte per character from `0x20` to `0xFF`, giving the
@@ -81,6 +103,10 @@ tools/ghidra/headless.sh zeus/gog -process Zeus.exe -noanalysis -readOnly \
 tools/ghidra/headless.sh zeus/gog -process Zeus.exe -noanalysis -readOnly \
     -postScript Xrefs.java OUT.tsv ADDRESS[:LENGTH]…
 ```
+
+`zeus-run --watch-call ADDRESS` lists the call sites of a game function with their last
+arguments, and `--dump-data FILE` writes the game's variables at exit; comparing two dumps (for
+instance in two screen modes) quickly finds the variables that matter.
 
 `ExportPcode.java OUT.txt ADDRESS…` writes the raw p-code of the functions containing the given
 addresses, and `ExportFunctions.java OUT.tsv` the list of functions; together with

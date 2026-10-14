@@ -65,7 +65,8 @@ cmake --build build
 
 The game opens in an 800×600 window. **⌘F** or **⌘↩** switches to full screen and back; the
 picture keeps its 4:3 proportions and stays sharp at any size. For a larger view of the city,
-choose *Options → Display options → 1024 x 768* in the game. Saves and settings are written to `run/zeus/`.
+choose *Options → Display options → 1024 x 768* in the game. Started with `--wide auto` (the
+application always does), that mode becomes a wide one fitted to your screen. Saves and settings are written to `run/zeus/`.
 
 The intro video plays first; press Esc to skip it.
 
@@ -107,6 +108,8 @@ another Mac, the first launch needs a right-click → *Open*.
 | `--trace` | print every Windows call |
 | `--deterministic` | virtual clock and no sound: two runs of the same script give the same frames |
 | `--frame-log FILE.txt` | write a hash of every displayed frame |
+| `--watch-call ADDRESS` | list the call sites of a game function (hexadecimal address) |
+| `--dump-data FILE.bin` | write the game's variables at exit |
 | `--profile FILE.tsv` | time spent per block of game code (slow); summarise with `tools/profile_report.py` |
 | `--native` | use the host rewrites of some game functions (experimental) |
 | `--counts` | print, on exit, how many times each Windows function was called |
@@ -114,6 +117,7 @@ another Mac, the first launch needs a right-click → *Open*.
 | `--headless` | hidden window, sound muted |
 | `--mute` | sound muted |
 | `--fullscreen` | start in full screen |
+| `--wide auto` or `--wide WxH` | turn the game's 1024×768 mode into a wide mode |
 | `--frames N`, `--seconds S` | stop after N displayed frames or S seconds |
 | `--screenshot FILE.bmp` | save the last displayed frame |
 | `--window-shot FILE.bmp` | save what the window shows, scaling included |

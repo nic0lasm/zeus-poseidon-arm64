@@ -108,6 +108,10 @@ private:
 // Adapte l'affichage du texte à un pack de langue ; à appeler après le chargement de l'exécutable.
 void apply_language_pack(Process& process, const std::filesystem::path& pack);
 
+// Remplace le mode 1024x768 du jeu par un mode large ; à appeler après le chargement. La taille
+// est arrondie à ce que le jeu sait afficher ; renvoie faux si rien n'a été modifié.
+bool apply_wide_mode(Process& process, int& width, int& height);
+
 // Remplace les fonctions du jeu réécrites pour l'hôte ; à appeler après le chargement.
 void install_native_functions(Process& process);
 

@@ -54,6 +54,8 @@ public:
     void create_window(const std::string& title, int width, int height);
     // Change le mode d'affichage : la fenêtre du programme, plein écran, en prend la taille.
     void set_mode(int width, int height);
+    // Rapport largeur / hauteur de l'écran du Mac (4/3 s'il est inconnu).
+    double screen_aspect() const;
     int width() const { return width_; }
     int height() const { return height_; }
 

@@ -27,4 +27,5 @@ Reference logs are kept in `build/scenarios/`; they depend on the game files and
 versioned. A scenario also fails if the game stops on a missing function.
 
 Scenarios were written for the English GOG edition at 800×600. Lines starting with `#` are
-comments; `# durée : N` gives the length of the run in virtual seconds.
+comments; `# durée : N` gives the length of the run in virtual seconds and `# options : …` extra
+options for `zeus-run`.

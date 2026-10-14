@@ -95,28 +95,21 @@ number of blocks the emulator runs, and only removing whole loops from it reduce
    the character table and the placement of accented letters are taken from the French build.
 2. ~~Typing accented letters~~ — done. A full French play session: to be reported.
 3. ~~Language choice in the application~~ — done.
-4. Wider resolutions: the game's own 1024×768 mode works (Options → Display options). Going
-   wider is not a setting: see below.
+4. ~~Wider resolutions~~ — done: see below.
 
-### Wide screens — in progress
+### Wide screens — done
 
-How the game handles its screen size (GOG executable):
+`zeus-run --wide auto` (always on in the application) replaces the game's 1024×768 mode by a
+wider one that matches the proportions of the screen, for instance 1324×768 on a 16:10
+display. Choose *Options → Display options → 1024 x 768 resolution* in the game: the map view
+grows, the control panel stays at the right edge. Menus and briefing screens are drawn by the
+game in 800×600 whatever the mode, and are unaffected. Nothing is changed on disk.
 
-- `0x0050BCC0` sets the size from a mode number: 640×480, 800×600 or 1024×768, stored at
-  `0x00F2A6B4` (width) and `0x00F2A6B0` (height). 68 functions read these two variables.
-- Part of the layout is generic (positions computed from the width), part is chosen by
-  comparing the width with 640, 800 or 1024, usually in a chain after a single read.
-- `0x0058E280` sets the position of the control panel from the width: 478, 598 or 838, that
-  is width − 186 for 1024 (`0x010DFF34`), and a second position at width − 66 (`0x010DFF30`).
+How it works is described in [reverse-engineering.md](reverse-engineering.md). Two limits:
 
-Experiment at 1280×800, in memory only: replacing the size of the third mode, the twelve
-comparisons with 1024 or 768 found in those 68 functions, and the two panel positions puts the
-control panel at the right edge and stretches the top bar's contents. Still wrong: the map
-view keeps its 1024-mode size (838×738), the top bar background stops at 838, and the bottom
-of the screen is not filled. Each of these is one more place to find and adapt.
-
-So a wide mode is reachable by cataloguing such places one by one, checking each step with a
-capture. It will be offered as an option of the host, never as a change to the game's files.
+- The label in the game still reads "1024 x 768".
+- The control panel artwork is 768 pixels high. A taller mode (`--wide 1444x903`) works but
+  leaves a black band under the panel, which is why `auto` keeps the height at 768.
 
 The game's "Windowed screen" option answers "Cannot set Windows mode" and carries on; use ⌘F
 to switch between window and full screen instead.

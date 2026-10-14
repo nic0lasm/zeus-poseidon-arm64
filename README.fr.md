@@ -40,6 +40,9 @@ Ce qui fonctionne aujourd'hui : menus, profils de dirigeant, tutoriels, une vill
 sauvegarde et chargement, musiques, ambiances, bruitages et vidéo d'introduction. Les sauvegardes sont au format du jeu et restent compatibles avec
 l'original.
 
+La vue de la ville peut occuper un écran large : choisissez *1024 x 768* dans les options
+d'affichage du jeu.
+
 Limites connues : pas encore de spatialisation 3D du son. Le jeu tourne en anglais tel quel ;
 le français est possible avec un pack de langue fabriqué à partir de votre propre exemplaire
 français ([docs/languages.md](docs/languages.md), en anglais).

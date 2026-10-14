@@ -1,0 +1,5 @@
+5:key 27; 12:click 220,101; 17:char 78; 20:click 556,320; 27:click 644,523; 33:click 212,120; 45:rclick 300,300; 50:click 90,10; 52:click 120,41; 55:click 320,253; 62:rclick 320,225; 67:rclick 900,650; 70:click 1165,580; 77:rclick 900,650; 80:click 1211,42; 84:click 1217,345; 87:click 700,300; 89:rclick 900,650; 92:key 39; 94:key 40
+# durée : 110
+# options : --wide 1324x768
+# Mode large : passage au troisième mode d'affichage, fenêtre d'information, objectifs, onglet
+# du panneau de contrôle à sa nouvelle position, construction, défilement.

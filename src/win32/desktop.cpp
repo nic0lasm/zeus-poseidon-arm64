@@ -75,6 +75,12 @@ Desktop::~Desktop() {
     SDL_Quit();
 }
 
+double Desktop::screen_aspect() const {
+    SDL_DisplayMode mode;
+    if (SDL_GetDesktopDisplayMode(0, &mode) != 0 || mode.w <= 0 || mode.h <= 0) return 4.0 / 3.0;
+    return static_cast<double>(mode.w) / mode.h;
+}
+
 void Desktop::create_window(const std::string& title, int width, int height) {
     if (window_) return;
     if (width > 0 && height > 0) {
