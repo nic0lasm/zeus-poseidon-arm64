@@ -5,6 +5,7 @@ pull request.
 
 ## Unreleased
 
+- **Building plans documented.** `formats/layout.md` describes the sanctuary, pyramid and palace plans of `Model/` (piece records, the two lists, how the game's `sscanf` copes with damaged lines); `tools/layout.py` reads all 102 files of the game.
 - **`Model/*.txt` documented.** `formats/model.md` describes the difficulty tables (buildings and houses, figures and enemies, tax sentiment, monster strength) and how the game reads them; `tools/model.py` reads all 63 files of the game and checks them against a re-implementation of the game's own parser.
 - **Download in one click, honest first-launch steps.** The README (English and French) opens with a direct link to `releases/latest/download/Zeus-Poseidon-macos-arm64.zip` (`tools/publish.py release` now also writes the archive under that version-free name, same bytes), gives the exact macOS 15 steps (*Privacy & Security → Open Anyway*; right-click → *Open* no longer works), says where to get the GOG installer from a Mac, and that an Apple Silicon Mac is required ([#55](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/55)).
 - **Portable first-launch dialogs.** Application mode now asks its questions through a small interface (`dialogs_macos.cpp` unchanged in behaviour: AppleScript and the Option key; `dialogs_sdl.cpp` elsewhere: SDL message boxes, zenity/kdialog file pickers if installed, command-line questions otherwise). On other systems the support folder is `$XDG_DATA_HOME/Zeus Poseidon`, and `ZEUS_ASK_LANGUAGE=1` asks the language again. Part of #25.
