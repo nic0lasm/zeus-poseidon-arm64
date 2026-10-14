@@ -54,7 +54,7 @@ Blocs d'une carte `.map` (rang, adresse dans la 2.1) :
 | 8 | `0x01171278` | u8 | valeurs aléatoires (256 valeurs, incompressible) | hypothèse |
 | 9, 15, 19, 22 à 24 | | u8 | inconnu | |
 
-Une sauvegarde **ne contient pas de grille d'images** : le jeu la recalcule au chargement à
+Les blocs d'une sauvegarde sont décrits dans [`sav.md`](sav.md). Une sauvegarde **ne contient pas de grille d'images** : le jeu la recalcule au chargement à
 partir du terrain et des bâtiments. On y trouve notamment (rangs dans une sauvegarde 2xx) :
 15 (u8, bits `0x40`…), 16 (u16, max 629 : numéros de bâtiment ?), 17 (u32, drapeaux de terrain),
 19 (u16 : numéros de personnage ?), 22 (u8 aléatoire).
