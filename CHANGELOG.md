@@ -5,6 +5,8 @@ pull request.
 
 ## Unreleased
 
+## 0.4 — 2026-10-14
+
 - **Faster.** Six of the game's drawing and string routines now run natively, system calls no
   longer stop the emulator, read-only game files are kept in memory and directory listings
   are cached. Frame logs of all scenarios are unchanged. `--no-native` emulates everything.

@@ -57,8 +57,8 @@ is far less work than a rewrite.
 - Sound: the fall-off of 3D ambience with distance is an assumption (linear, between Miles's
   default distances); the original providers may have sounded quieter or louder.
 - Video: audio and picture are paced independently, so they may drift slightly.
-- **Performance**: a running city uses about half of one CPU core; loading screens use a full
-  core. The game itself caps its display rate at 20 frames per second.
+- **Performance**: a small city uses about half of one CPU core, the large city of the last
+  tutorial about three quarters at full game speed; loading screens use a full core. The game itself caps its display rate at 20 frames per second.
 - `RaiseException` and `RtlUnwind` are not written: the game only reaches them after a
   processor fault, which the host reports instead
   ([details](reverse-engineering.md#findings-in-the-gog-executable)). Every DirectDraw method

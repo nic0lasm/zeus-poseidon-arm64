@@ -98,10 +98,10 @@ cmake --build build/diffusion --target zeus-run
 python3 tools/make_app.py --binary build/diffusion/zeus-run "build/diffusion/Zeus Poseidon.app"
 ```
 
-The result (about 50 MB) and carries its licence notices
-([third-party.md](third-party.md)). The tool strips debugging information and checks that no file of the bundle mentions your home
-folder. It is signed locally only, not notarised by Apple: on
-another Mac, the first launch needs a right-click → *Open*.
+The result (about 50 MB) carries its licence notices ([third-party.md](third-party.md)).
+The tool strips debugging information and checks that no file of the bundle mentions your home
+folder. It is signed locally only, not notarised by Apple: on another Mac, the first launch
+needs a right-click → *Open*.
 
 ## Options
 
