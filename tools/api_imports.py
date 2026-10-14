@@ -13,7 +13,7 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SILENT = {"mss32.dll", "binkw32.dll"}  # fonctions non écrites : sans effet, renvoient 0
 ROLES = {
-    "kernel32.dll": ("fichiers, mémoire, temps, environnement", "`kernel32.cpp`, fichiers par `vfs.cpp`"),
+    "kernel32.dll": ("fichiers, mémoire, temps, environnement", "`kernel32*.cpp`, fichiers par `vfs.cpp`"),
     "mss32.dll": ("son : Miles Sound System", "`mss.cpp` sur le mixeur de `audio.cpp` (SDL2, AudioToolbox) ; un fournisseur 3D logiciel"),
     "user32.dll": ("fenêtre, messages, souris, clavier", "`user32.cpp` et `desktop.cpp` (SDL2)"),
     "binkw32.dll": ("vidéos Bink", "`bink.cpp`, décodage par ffmpeg"),

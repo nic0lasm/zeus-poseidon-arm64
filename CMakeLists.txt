@@ -63,6 +63,8 @@ add_library(zeus_win32 STATIC
     src/win32/ddraw.cpp
     src/win32/desktop.cpp
     src/win32/kernel32.cpp
+    src/win32/kernel32_files.cpp
+    src/win32/kernel32_memory.cpp
     src/win32/language.cpp
     src/win32/media.cpp
     src/win32/mss.cpp
@@ -79,3 +81,10 @@ target_link_libraries(zeus_win32 PUBLIC PkgConfig::UNICORN PkgConfig::FFMPEG SDL
 
 add_executable(zeus-run src/tools/zeus_run.cpp)
 target_link_libraries(zeus-run PRIVATE zeus_win32)
+
+# Tests des pièces de l'hôte indépendantes du jeu (aucun fichier du jeu n'est lu).
+add_executable(zeus-tests src/tests/zeus_tests.cpp)
+target_link_libraries(zeus-tests PRIVATE zeus_win32)
+target_compile_definitions(zeus-tests PRIVATE ZEUS_TEST_DIR="${CMAKE_BINARY_DIR}/tests-tmp")
+enable_testing()
+add_test(NAME zeus-tests COMMAND zeus-tests)

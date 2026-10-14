@@ -216,8 +216,9 @@ void Desktop::toggle_fullscreen() {
     }
 }
 
-void Desktop::add_script(const std::string& text) {
+std::vector<ScriptEvent> parse_script(const std::string& text) {
     using Kind = ScriptEvent::Kind;
+    std::vector<ScriptEvent> script;
     std::stringstream all(text);
     std::string item;
     while (std::getline(all, item, ';')) {
@@ -239,7 +240,7 @@ void Desktop::add_script(const std::string& text) {
             ScriptEvent copy = e;
             copy.kind = kind;
             copy.at += delay;
-            script_.push_back(copy);
+            script.push_back(copy);
         };
         if (verb == "move") { point(); push(Kind::Move, 0); }
         else if (verb == "click") { point(); push(Kind::Move, 0); push(Kind::LeftDown, 0.15); push(Kind::LeftUp, 0.3); }
@@ -257,6 +258,12 @@ void Desktop::add_script(const std::string& text) {
         else if (verb == "shot") { rest >> e.path; push(Kind::Shot, 0); }
         else throw std::runtime_error("action inconnue : " + item);
     }
+    return script;
+}
+
+void Desktop::add_script(const std::string& text) {
+    const std::vector<ScriptEvent> events = parse_script(text);
+    script_.insert(script_.end(), events.begin(), events.end());
     std::stable_sort(script_.begin(), script_.end(), [](const ScriptEvent& a, const ScriptEvent& b) { return a.at < b.at; });
     screenshot_wanted_ = !script_.empty();
 }

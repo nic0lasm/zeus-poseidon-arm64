@@ -7,10 +7,14 @@ copy (see [docs/getting-started.md](../docs/getting-started.md)).
 
 ```bash
 ./build/zeus-run --selftest
+./build/zeus-tests
 ```
 
-checks the emulated processor and the call mechanism. The automated build runs it on every
-change.
+The first checks the emulated processor and the call mechanism. The second
+(`src/tests/zeus_tests.cpp`) tests the parts of the host that do not need the game, on cases
+built in memory: the WAV reader, the test-script parser, Windows-1252 ↔ UTF-8 conversion, the
+case-insensitive file lookup of the virtual file system (in a temporary folder under `build/`),
+and the sprite dispatcher's clipping. The automated build runs both on every change.
 
 ## With the game: scenarios
 
