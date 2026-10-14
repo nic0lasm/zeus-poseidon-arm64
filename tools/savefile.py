@@ -363,15 +363,15 @@ BLOCK_NAMES = {
     4: ("city", "vérifié en partie"), 5: ("year", "vérifié"), 6: ("month", "vérifié"),
     7: ("cities", "hypothèse"), 9: ("scenario", "hypothèse"), 13: ("table_9173f4", "hypothèse"),
     14: ("table_9173f4_count", "hypothèse"), 15: ("grid_edge", "hypothèse"),
-    16: ("grid_building", "hypothèse"), 17: ("grid_terrain", "vérifié"),
-    19: ("grid_figure", "hypothèse"), 20: ("grid_bitfield", "hypothèse"),
+    16: ("grid_building", "vérifié"), 17: ("grid_terrain", "vérifié"),
+    19: ("grid_figure", "vérifié"), 23: ("grid_desirability", "hypothèse"), 20: ("grid_bitfield", "hypothèse"),
     22: ("grid_random", "hypothèse"), 28: ("figures", "vérifié"),
     32: ("padding", "vérifié"), 34: ("names", "hypothèse"), 35: ("buildings", "vérifié"),
     38: ("month_tick", "vérifié"), 39: ("tick", "vérifié"), 40: ("buildings_high", "vérifié"),
     41: ("padding", "vérifié"), 42: ("random_state_1", "vérifié"),
     43: ("random_state_2", "vérifié"), 63: ("figures_created", "vérifié"), 64: ("padding", "vérifié"),
     54: ("messages", "vérifié"), 55: ("messages_created", "vérifié"),
-    56: ("messages_count", "vérifié"), 57: ("messages_last", "vérifié"), 68: ("buildings_last", "vérifié"), 83: ("buildings_created", "vérifié"), 101: ("table_9034f8", "hypothèse"),
+    56: ("messages_count", "vérifié"), 57: ("messages_last", "vérifié"), 68: ("buildings_last", "vérifié"), 102: ("grid_regrowth", "hypothèse"), 83: ("buildings_created", "vérifié"), 101: ("table_9034f8", "hypothèse"),
     125: ("status_text", "hypothèse"),
 }
 

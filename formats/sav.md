@@ -99,14 +99,14 @@ mesure cités), hypothèse (cohérent avec les comptages, à confirmer dans le c
 | 13 | `0x009173F4` | 124 × 150 | non | `scenario_events` | 150 enregistrements numérotés (+0 = rang), avec type à +2 et de nombreux champs à −1 : événements programmés de l'aventure ; avec le rang 14, forme le bloc 16 des `.map` (`0x9173F0`, 18 628 octets) | hypothèse | = |
 | 14 | `0x009173F0` | 4 × 1 | non | `scenario_events_count` | entier placé juste avant le rang 13 (3 dans `tutorial15.sav`) | hypothèse | = |
 | 15 | `0x00D404B8` | 1 × 51984 | oui | `grid_edge` | grille u8 ; rang 5 des `.map` (bit `0x40` : case où l'image est dessinée) | hypothèse | = |
-| 16 | `0x00D26E98` | 2 × 51984 | oui | `grid_building` | grille u16 : numéro du bâtiment de chaque case (maximum = nombre de bâtiments) | hypothèse | = |
+| 16 | `0x00D26E98` | 2 × 51984 | oui | `grid_building` | grille u16 : numéro du bâtiment qui occupe la case | vérifié (613 bâtiments sur 628 de la grande ville retrouvés à leur case +0x0C, 13 sur 13 dans le didacticiel) | = |
 | 17 | `0x00CCE128` | 4 × 51984 | oui | `grid_terrain` | grille u32 : drapeaux de terrain ; rang 6 des `.map` ; une route posée met le bit `0x40` sur ses cases | vérifié (route) | = |
 | 18 | `0x00CC1618` | 1 × 51984 | oui | `grid_cc1618` | grille u8 | inconnu | = |
-| 19 | `0x00D0D878` | 2 × 51984 | oui | `grid_figure` | grille u16 : numéro de personnage de chaque case | hypothèse | = |
+| 19 | `0x00D0D878` | 2 × 51984 | oui | `grid_figure` | grille u16 : premier personnage de la case ; les suivants sont chaînés par +0x08 du personnage (`0x004DC860`) | vérifié | = |
 | 20 | `0x00D00D68` | 1 × 51984 | oui | `grid_bitfield` | grille u8 ; rang 7 des `.map` (taille − 1 d'un élément de plusieurs cases dans les 4 bits bas) | hypothèse | = |
-| 21 | `0x00CB4B08` | 1 × 51984 | oui | `grid_cb4b08` | grille u8 | inconnu | = |
+| 21 | `0x00CB4B08` | 1 × 51984 | oui | `grid_cb4b08` | grille u8, non nulle seulement sous des bâtiments (141 cases dans la grande ville) ; `0x0041DF90` y fait évoluer des états 0x0F → 0x13 pour le type de bâtiment 199 | inconnu | = |
 | 22 | `0x00CA7FF8` | 1 × 51984 | non | `grid_random` | grille u8 de valeurs aléatoires ; rang 8 des `.map` ; stockée sans compression | hypothèse | = |
-| 23 | `0x00C9B4E8` | 1 × 51984 | oui | `grid_c9b4e8` | grille u8 | inconnu | = |
+| 23 | `0x00C9B4E8` | 1 × 51984 | oui | `grid_desirability` | grille i8 bornée à −100…100 : `0x004A4C60` ajoute autour d'un bâtiment une valeur par anneau, rayons 1 à 6 (tables `0x005F079E`…) ; attrait des cases | hypothèse | = |
 | 24 | `0x00C8E9D8` | 1 × 51984 | oui | `grid_c8e9d8` | grille u8 ; rang 9 des `.map` | inconnu | = |
 | 25 | `0x00C753B8` | 2 × 51984 | oui | `grid_c753b8` | grille u16 | inconnu | = |
 | 26 | `0x00B90C98` | 1 × 51984 | oui | `grid_b90c98` | grille u8 (aucune écriture directe dans le code) | inconnu | = |
@@ -185,17 +185,17 @@ mesure cités), hypothèse (cohérent avec les comptages, à confirmer dans le c
 | 99 | `0x00C35C68` | 1 × 51984 | non | `grid_c35c68` | grille u8 ; rang 15 des `.map` | inconnu | = |
 | 100 | `0x00EF57D8` | 4 × 4 | non | `table_ef57d8` | 4 entiers, jamais référencés par le code | inconnu | = |
 | 101 | `0x009034F8` | 324 × 232 | oui | `table_9034f8` | 232 × 324 octets ; le pointeur à +4 de chaque élément est libéré et remis à 0 avant l'écriture | hypothèse | = |
-| 102 | `0x00C1C648` | 1 × 51984 | non | `grid_c1c648` | grille u8, stockée sans compression | inconnu | = |
+| 102 | `0x00C1C648` | 1 × 51984 | non | `grid_regrowth` | grille u8, 255 sur presque toute la carte ; `0x004A7D30` remonte de 15 ou 16 (tirage) la valeur des cases de terrain `0x800` et `0x40000` jusqu'à 255 : repousse d'une ressource du terrain | hypothèse | = |
 | 103 | `0x00B1E8D8` | 32 × 1 | non | `value_b1e8d8` | 32 octets | inconnu | = |
 | 104 | `0x00699570` | 36 × 1 | oui | `value_699570` | 36 octets | inconnu | = |
 | 105 | `0x00B1E8F8` | 4 × 51984 | oui | `grid_b1e8f8` | grille u32 | inconnu | = |
 | 106 | `0x006A9CBC` | 1 × 26 | non | `table_6a9cbc` | 26 octets | inconnu | = |
 | 107 | `0x0069DFC8` | 1 × 13 | non | `table_69dfc8` | 13 octets | inconnu | = |
 | 108 | `0x00C688A8` | 1 × 51984 | oui | `grid_c688a8` | grille u8 | inconnu | = |
-| 109 | `0x00C29158` | 1 × 51984 | oui | `grid_c29158` | grille u8 | inconnu | = |
+| 109 | `0x00C29158` | 1 × 51984 | oui | `grid_c29158` | grille u8 recalculée par zone par `0x004A8E10` : 0 sur les cases de terrain `0x50004`, sinon valeur de `0x004A8C90` pour les cases de terrain `0x80` | vérifié (calcul) ; sens inconnu | = |
 | 110 | `0x00B1E8B8` | 4 × 1 | non | `value_b1e8b8` | entier | inconnu | = |
 | 111 | `0x008E01FA` | 1 × 51984 | oui | `grid_8e01fa` | grille u8 | inconnu | = |
-| 112 | `0x008ECD0A` | 1 × 51984 | oui | `grid_8ecd0a` | grille u8 | inconnu | = |
+| 112 | `0x008ECD0A` | 1 × 51984 | oui | `grid_8ecd0a` | grille u8 effacée puis recalculée entièrement par `0x0045ED20` selon l'orientation de la vue (`0x00DA2F88`) : donnée d'affichage dérivée | vérifié (recalcul) | = |
 | 113 | `0x00EF5800` | 4 × 367 | oui | `table_ef5800` | 367 entiers | inconnu | 235 : 4 × 334; 238 : 4 × 334; 241 : 4 × 334 |
 | 114 | `0x0090311C` | 4 × 1 | non | `value_90311c` | entier | inconnu | = |
 | 115 | `0x0078C578` | 28 × 8 | non | `table_78c578` | 8 × 28 octets | inconnu | = |
@@ -255,6 +255,7 @@ des numéros libres et remet l'élément à zéro.
 
 | Offset | Type | Champ | Statut |
 |---|---|---|---|
+| +0x08 | u16 | personnage suivant sur la même case (tête de liste : grille du rang 19) | vérifié |
 | +0x0A | u8 | type de personnage | vérifié |
 | +0x0C | u8 | 0 à la création | vérifié |
 | +0x0D | u8 | 1 à la création | vérifié |
@@ -274,6 +275,35 @@ des numéros libres et remet l'élément à zéro.
 | +0x86 | i16 | numéro de création (rang 63) | vérifié |
 | +0x92 | u8 | 0 à la création | vérifié |
 | +0x132 | u16 | `0xFFFF` à la création | vérifié |
+
+### Variables recalculées au chargement
+
+Utilisées partout avec les blocs mais absentes de la sauvegarde : `0x00DA2F80` (décalage ajouté
+à `228 × y + x` dans tous les indices de case), `0x00DA2F78` et `0x00DA2F7C` (bornes de la zone
+jouable, `0x004A8E10`), `0x00DA2F88` (orientation de la vue : 0, 2, 4 ou 6, `0x0045ED20`), la
+liste des numéros de personnage libres (`0x00DBB84C`, `0x004D9F40`) et `0x0091EBF0` (dernière
+réserve occupée du rang 81, `0x004889F0`).
+
+### Grilles dans la grande ville
+
+Cases non nulles, dont sous un bâtiment (rang 16) et sur une route (bit `0x40` du rang 17) :
+
+| Rang | Non nulles | Sous bâtiment | Sur route | Valeurs fréquentes |
+|---|---|---|---|---|
+| 15 | 9 832 | 1 596 | 461 | 64, 1, 9, 72 |
+| 20 | 5 647 | 1 338 | 182 | 32, 1, 33, 3 |
+| 21 | 141 | 141 | 0 | 6, 5, 1, 7 |
+| 23 | 4 842 | 1 707 | 425 | 254 (−2), 10, 2, 12 |
+| 27 | 141 | 141 | 0 | 6, 5, 2, 1 |
+| 99 | 573 | 94 | 15 | 8, 90, 66, 82 |
+| 102 | 51 976 | 1 781 | 461 | 255 (51 826 cases) |
+| 105 | 426 | 129 | 413 | 48, 56, 3 072, 3 120 |
+| 108 | 126 | 96 | 5 | 82, 78, 121, 79 |
+| 109 | 1 984 | 169 | 32 | 8, 16, 24, 96 |
+| 111 | 7 202 | 1 629 | 345 | 1, 2, 4, 3 |
+| 112 | 6 834 | 1 629 | 345 | 1, 2, 4, 3 |
+
+Les rangs 18, 24, 25 et 26 sont entièrement nuls dans les 8 sauvegardes d'essai et les 16 didacticiels livrés.
 
 ### Observations
 
