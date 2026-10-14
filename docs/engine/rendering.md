@@ -1,0 +1,527 @@
+# Rendering
+
+How `Zeus.exe` (GOG edition, SHA-256 `382bcd28…75e90a57`) puts pixels on the screen: surfaces,
+sprite banks, the sprite dispatcher, clipping, the pixel routines, the isometric view and the
+order in which the city is drawn. The goal is a description precise enough to rewrite the
+subsystem by hand without reading the machine code again.
+
+Every claim carries its evidence (an address, an offset, a measurement) and a status:
+
+- **verified**: read in the code (decompilation checked against the listing where widths
+  matter) and, where noted, confirmed by a measurement or by the native code that already
+  replaces it and keeps the eight scenarios identical;
+- **hypothesis**: inferred from names, data or context, not proven.
+
+Addresses are those of the GOG executable. `FUN_xxxxxxxx` names are Ghidra's. The native code
+mentioned is in `src/win32/native.cpp`, `src/win32/native_draw.cpp` and
+`src/win32/sprite_clip.h`; every address the host touches is listed in `src/win32/game_gog.h`.
+
+## 1. Measurements used in this page
+
+Scenario `working-city` (last tutorial, a large city), run for its full 300 s with
+`zeus-run --headless --deterministic`, once with `--no-native` (the original code alone) and
+once with the native functions; `--count` on every function named here, `--profile` on the
+native run. In this run the city view is drawn **463 times** (`0x0044A830`), the main loop
+turns 8,398 times (`0x00514020`) and 3,725 frames are presented. The deterministic clock does
+not run at wall-clock speed, so the counts below are given **per run** and **per city frame**;
+section 12 adds the real-time rate (about 45 city frames per second). Measurement logs are not
+kept in the repository; the commands are given so that they can be repeated.
+
+## 2. Frame lifecycle
+
+| Step | Function | What it does | Status |
+|---|---|---|---|
+| One turn of the main loop | `0x00513580` | asks `0x005168A0` whether a simulation tick is due, then draws | verified (`docs/reverse-engineering.md`) |
+| Draw the current screen | `0x00514020` | `switch` on the screen number, byte `0x00F2A6DD`; the city screens are `0x01`, `0x20` and `0x48` | verified |
+| City screen | `0x00514020` case `0x01`/`0x20`/`0x48` | when `0x00665E2C == 0`: city view `0x0051CAB0`, then the interface (`0x0058EA20`, `0x0058EA50`, `0x0058F130`, `0x004542B0`, `0x0059C8A0`, `0x0059D040`, `0x0059D280`, `0x0059E5A0`, `0x00521D30`) and `0x005C5D60` (a debug overlay drawn only when `0x0160AC9C`/`0x0160ACA0` are set) | verified (calls); roles of the interface calls: hypothesis |
+| Clear the frame | `0x0050B410` | fills `width × height` pixels with 0 unless `0x0063C040` is set | verified, native |
+| Present | `0x0050C1B0` | see section 3.3 | verified |
+
+The game draws everything into one 16-bit frame buffer in system memory, then copies it to the
+screen. Nothing is drawn by DirectDraw itself except that final copy.
+
+## 3. Surfaces
+
+### 3.1 Objects
+
+| Address | Object | Status |
+|---|---|---|
+| `0x00F2AB20` | `IDirectDraw` | verified |
+| `0x00F2AB48` | clipper (window mode) | verified |
+| `0x00F2AB54` | primary surface | verified (`0x00434380`: created with `DDSCAPS_PRIMARYSURFACE` = `0x200`) |
+| `0x00F2AB50` | back buffer, `[0x00F2A6A0] × [0x00F2A69C]` pixels | verified (`0x00434820` called from `0x00434380`) |
+| `0x00F2AB4C` | 16-bit buffer used instead of the back buffer when the desktop is in 24 or 32 bits (window mode) | verified (`0x00434380`, end) |
+| `0x00F0E624` | JPEG backdrop surface | verified (`docs/reverse-engineering.md`) |
+
+Creation is in `0x00433E20` (display depth, window or full screen) and `0x00434380`
+(surfaces). `0x00434250` releases everything and clears the frame buffer pointer.
+
+### 3.2 The frame buffer
+
+- **Pointer locked once.** `0x00434380` calls `Lock` on the back buffer (or on `0x00F2AB4C`),
+  stores `lpSurface` in **`0x00F9C100`** and calls `Unlock` immediately. Every drawing routine
+  then writes through that pointer, without locking again. **verified** (`0x00434380`; the host
+  keeps surface memory fixed, which is why this works).
+- **Geometry.** `0x0050B980` sets `0x00F139B8`/`0x00F139B0` (800×600, 1024×768 or 640×480 from
+  the mode at `0x00F2A770`), then: bytes per row `0x00F2A698` = width × 2, pixels per row
+  `0x00F2A6A0`, rows `0x00F2A69C`, screen width/height `0x00F2A6B4`/`0x00F2A6B0`, menu offsets
+  `0x00F2A6AC` = (width − 640)/2 and `0x00F2A6A8` = (height − 480)/2. **verified**
+- **Pixel format.** `0x00434380` reads the surface description (`GetSurfaceDesc`, method
+  `+0x58`) and stores in `0x00F2AB24`: `0x565` if the green mask is `0x07E0`, `0x555` otherwise
+  (`0x655` and `0x556` are recognised and reported as unsupported); index in `0x00F9C0E4`
+  (0 = 555, 2 = 565). **verified.** The host always announces 5-5-5; the native routines refuse
+  5-6-5 rather than guess (`require_555`).
+- **Colour encoding.** `0RRRRRGGGGGBBBBB`; magenta `0xF81F` is the transparent key of
+  uncompressed images; pure green `0x03E0` is the key of isometric bases (`formats/sg3.md`).
+  **verified**
+
+### 3.3 Presentation (`0x0050C1B0`)
+
+- An elapsed-time accumulator `0x00F9C0F0` grows by `0x0050BFA0()` each call; the frame is
+  presented when it reaches `0x32` or when the flag `0x00F2A6CC` forces it (argument 1 forces it
+  too). Then the accumulator and the flag are cleared. **verified**; that the unit is the
+  millisecond (20 frames per second) is a **hypothesis**.
+- Full screen (`0x00F2A764 != 0`): `BltFast(primary, 0, 0, back buffer, &0x00F2AB08, 0)`.
+- Window (`0x00F2A764 == 0`): if the desktop is not 16-bit (`0x00F2A760`, bits per pixel), lock
+  `0x00F2AB4C` and the back buffer, convert with `0x004139B0` (24-bit, from 555),
+  `0x00413A30` (24-bit, from 565), `0x004138B0` (32-bit, from 555) or `0x00413930` (32-bit, from
+  565), unlock; then `Blt(primary, &window rectangle, back buffer, &(0, 0, w, h), 0, 0)`.
+  **verified** (calls); the four converters were not read: **hypothesis** for their exact
+  rounding.
+
+## 4. Sprite banks
+
+All images live in one object, **`0x012AEBE8`** (the `this` of the dispatcher), made of banks
+of `0xCC44` bytes. **verified** (`0x005ACF50`, `0x00458170`, `0x00457900`).
+
+| Offset in a bank | Content | Status |
+|---|---|---|
+| `+0x1000` | pointer to the image entries, `0x48` bytes each | verified |
+| `+0x1004` | pointer to the groups, 8 bytes each, `+4` = first image id of the group | verified (`kTerrainGroups` = bank 5 + `0x1004`, `kFontGroups` = bank 0 + `0x1004`) |
+| `+0x110C` | file names of the bitmaps, `0x104` bytes each | verified (external images, section 5.2) |
+| `+0xDC34` | number of entries | verified |
+| `+0xDC38` | rank of the last group | verified (`kTerrainGroupCount`, `kLastFontGroup`) |
+| `0x3586D8` (from the object) | buffer of the external image currently loaded | verified |
+
+**Image id** = bank × 16384 + number, split with signed division (`id / 16384`, `id % 16384`).
+Id 0 and number ≤ 0 in bank 0 draw nothing; a number ≥ the entry count draws nothing (the ground
+loop instead falls back to entry 0 there). **verified.** Banks seen: 4 (`0x10001`, building
+props), 5 (terrain, `0x14000 + …`), 15 (`0x3C000 + …`, full-screen backgrounds). **verified**
+(constants in `0x00458170`, `0x00457900`, `0x005ACF50`).
+
+An entry is the `.sg3` image record (`formats/sg3.md`, 72 bytes) after loading:
+
+| Offset | Type | Field | Status |
+|---|---|---|---|
+| `+0x00` | u32 | address of the pixels (the file offset becomes a pointer); ≤ 0: nothing to draw | verified |
+| `+0x04` | u32 | data length | verified |
+| `+0x08` | u32 | length of the uncompressed isometric base; the compressed top follows it | verified (`0x005ADF00` adds it) |
+| `+0x0C` | u32 | bank whose name table holds the external file name | verified (`0x005ACF50`) |
+| `+0x10` | i32 | mirror link: the image is entry `n + link`, flipped | verified |
+| `+0x14`, `+0x16` | i16 | width, height | verified |
+| `+0x32` | u8 | type: 0, 2, 10, 12, 13, 20, 30 (`0x1E`) | verified |
+| `+0x33` | u8 | compressed (run-length) | verified |
+| `+0x34` | u8 | pixels in an external `.555`, loaded at draw time | verified |
+| `+0x35` | u8 | has a compressed top above its base (buildings) | verified (`0x005ADF00`, `0x00458170`) |
+| `+0x38` | u8 | bitmap index (file name) | verified |
+| `+0x3B` | u8 | draw as shadow (`0x7C00` pixels darken) | verified |
+| `+0x3E` | u8 | mirrored | verified |
+| `+0x40` | u32 | address of the alpha mask (Poseidon images), 0 if none | verified |
+
+`0x0040FCF0(n)` returns group `n` of bank 0 and `0x0040FD10(n)` an image id from a group number
+(called 3.9 million times in the run). **verified** (calls); exact arithmetic of `0x0040FD10`:
+see `tools/annotate_groups.py`.
+
+## 5. The sprite dispatcher, `0x005ACF50`
+
+`int __thiscall FUN_005acf50(banks, id, x, y, mode, colour*, mirror)` — 4,016 bytes, 366 call
+sites. Called **8,215,286** times in the run with the original code, on every screen (menus
+included: most of these calls are the 5.3 million opaque copies, section 14). Returns the visible width (or the image width on some paths), 0 when
+nothing was drawn, −1 for mode 1 without a colour. **verified**
+
+### 5.1 Steps
+
+1. Store the arguments in `0x00F139E0` (id), `0x00F139DC` (x), `0x00F139D8` (y).
+2. Find the entry (section 4). If `+0x3E` is set, follow the mirror link (to entry 0 if it
+   points past the count) and set the mirror flag. XOR it with the `mirror` argument.
+3. Fill the drawing state (section 6): image address `0x00F13A18`, width `0x00F13A1E`, height
+   `0x00F13A1C`, type `0x00F13A14`, target `0x00F13A40`/`0x00F13A3C` = (x, y).
+4. **External image** (`+0x34`), section 5.2.
+5. **Map backgrounds drawn in one block.** On screens `0x14`, `0x15`, `0x1A`, `0x2D`, `0x34`,
+   on screen 3 with sub-mode `0x00781894` ∈ {`0x14`, `0x15`}, and on screen 9 with sub-screen
+   `0x00FFA180 == 0x14`: if `id == [[0x0136F3E8] + 4] + 0x3C000`, copy the window
+   `[0x00F139D4]` columns × `[0x00F139D0]` rows starting at (`[0x00F139CC]`, `[0x00F139C8]`) of
+   the image with `0x00413DC0`, and return. **verified** (`0x005AD65B`–`0x005AD6D1`)
+6. **Isometric images** (type `0x1E`) by width: 58 → height forced to 30, drawn as a diamond;
+   26 and 10 → height 14 and 6, drawn by `0x00401000`, a one-byte `RET`: *never drawn*;
+   118, 178, 238, 298, 358 (bases of 2 to 6 tiles) → `0x0043FF10`, `0x00440170`, `0x004406B0`,
+   `0x00440FE0`, `0x00441E50`, which return directly. **verified**
+7. Clip (section 7). If invisible (vertical state 5), return 0.
+8. Choose the pixel routine (table below), then, if the overlay colour `0x0078C570` is not 0,
+   apply the overlay routine over the same pixels (section 9).
+
+### 5.2 External images (`+0x34`)
+
+The pixels are not in memory: the file name is built from the bitmap name
+(bank `[entry + 0x0C]`, `+0x110C + [entry + 0x38] × 0x104`) with an extension appended
+(`0x0050A720`, string at `0x0063C078`), the previous buffer is freed (`0x005AE730`), the buffer
+`0x00F9C104` takes its place, `0x0050A860` reads `length` bytes at `offset − 1`, then
+`0x00509F90` (compressed) or `0x0050A000` (uncompressed) prepares them. The image is then
+clipped and drawn with a reduced set of routines: run-length (`0x004161B0`, `0x004163B0`,
+`0x004165D0`, mirrored `0x00415490`, `0x004158E0`, `0x00415680`) or keyed copies (`0x00415F50`,
+`0x00416010`, mirrored `0x00415E30`, `0x00415EC0`); no alpha, no tint, no overlay. An image wider than a frame row is a
+full-screen backdrop: centred window (`(1024 − width)/2`, `(768 − height)/2`) read by
+`0x005AE770` and copied by `0x00413DC0`. **verified** (control flow); 0 calls in the run.
+
+### 5.3 Pixel routines by case
+
+Clipping state `cx` (`0x00F13991`): 0 whole, 1 clipped on the left, 2 on the right. `M`: mirror.
+
+| Image | `cx = 0` | `cx = 1` | `cx = 2` | Calls in the run (original) |
+|---|---|---|---|---|
+| type 0, `mode = 1` (tint, colour `*colour`; null pointer: returns −1) | `0x005B86A0` | `0x005B8B60` | `0x005B8910` | 0 |
+| type 0, compressed, alpha mask, not M | `0x00413E30` | `0x00414CE0` | `0x00414540` | 4,317 / 0 / 0 |
+| type 0, compressed, alpha mask, M | `0x00414190` | `0x004150B0` | `0x00414910` | 0 |
+| type 0, compressed, not M | `0x004161B0` | `0x004163B0` | `0x004165D0` | 2,384,169 / 5,563 / 5,703 |
+| type 0, compressed, M | `0x00415490` | `0x004158E0` | `0x00415680` | 1,020 / 57 / 2 |
+| type 0, uncompressed, not M | `0x00415F50` | `0x00416010` | `0x00416010` | 95,842 / 467 (both) |
+| any uncompressed, M | `0x00415E30` | `0x00415EC0` | `0x00415EC0` | 0 |
+| type 30, width 58 | `0x00435070` | `0x004377B0` | `0x00438A90` | 163,764 / 8,682 / 8,691 |
+| type 20 (glyph mask) | `0x00416C30` | `0x00416F00` | `0x00416FA0` | 934 / 0 / 0 |
+| type 13 (32 × 32) | general case | `0x00417290` | `0x00417290` | 0 |
+| type 12 (24 × 24) | `0x004171E0` | `0x004171E0` | `0x004171E0` | 0 |
+| type 10 (16 × 16) | general case | `0x00417140` | `0x00417140` | 0 |
+| type 2 | general case | `0x00417100` | `0x00417100` | 0 |
+| other types, uncompressed, not M | `0x00413DC0` (opaque) if `cy = 0`, else `0x00415F50` (keyed) | `0x00416010` | `0x00416010` | 5,319,977 opaque |
+
+"General case" for types 2, 10, 13 means the last two rows of the table. For uncompressed images
+the source pointer is advanced first by `(width × skipped rows + skipped columns) × 2` bytes.
+Type 30 ignores the mirror. **verified** (`0x005ACF50`, every branch read in the decompilation).
+
+The native fast path (`sprite::dispatch`) handles: compressed, not mirrored, not clipped
+sideways, `mode ≠ 1`, no alpha, no overlay → `0x004161B0`; uncompressed opaque whole images →
+`0x00413DC0`; 58-pixel diamonds not clipped sideways → `0x00435070`. With it, 7,938,575 of the
+8,215,286 calls stay in native code from entry to exit except 276,711 that fall back; the clip
+functions still run 493,617 times in emulated code (fallbacks and `0x005ADF00`). **verified**
+(two runs above).
+
+## 6. Drawing state (globals shared by all routines)
+
+The dispatcher and the clip functions write these; the pixel routines only read them.
+**verified** (`0x00509C20`, `0x00509CD0`, `0x005ACF50`, all routines in 5.3).
+
+| Address | Width | Meaning |
+|---|---|---|
+| `0x00F139E0`, `0x00F139DC`, `0x00F139D8` | 32 | arguments: id, x, y |
+| `0x00F13A18` | 32 | address of the pixels (advanced for uncompressed clipped images) |
+| `0x00F13A1E`, `0x00F13A1C` | 16 | width, height of the image (height forced to 30 for 58-pixel diamonds) |
+| `0x00F13A14` | 8 | type |
+| `0x00F13A40`, `0x00F13A3C` | 32 | first pixel written (x, y) after clipping |
+| `0x00F13991`, `0x00F13990` | 8 | horizontal, vertical clip state: 0 whole, 1 left, 2 right, 3 top, 4 bottom, 5 invisible |
+| `0x00F139AC` | 32 | pixels hidden on the left |
+| `0x00F139A8` | 32 | end of the visible part, in image columns |
+| `0x00F139A4` | 32 | visible pixels per row |
+| `0x00F139A0` | 32 | source bytes to skip after a row: (width − visible) × 2 |
+| `0x00F1399C` | 32 | target bytes to skip after a row: (row pixels − visible) × 2 |
+| `0x00F13994` | 32 | image rows up to the last visible one |
+| `0x00F13998` | 32 | rows hidden at the top |
+| `0x00F13A34` | 32 | rows to draw |
+| `0x00F139BC`, `0x00F139B8`, `0x00F139B4`, `0x00F139B0` | 32 | clip rectangle: left, right (exclusive), top, bottom (exclusive) |
+| `0x00F139D4`, `0x00F139D0`, `0x00F139CC`, `0x00F139C8` | 32 | window copied in one block (section 5.1, step 5) |
+| `0x00F1397C` | 16 | colour of type 20 masks (set by the text code, `0x00508B50` family) |
+| `0x0078C570` | 16 | overlay colour (section 9), 0 = none |
+
+The clip rectangle is the full screen outside the city view; `0x0044A830` sets it to the map
+view for the duration of the city drawing and restores (0, width, 0, height) afterwards.
+**verified**
+
+## 7. Clipping
+
+`0x00509C20` (horizontal) and `0x00509CD0` (vertical), reimplemented in
+`src/win32/sprite_clip.h` and tested on their own. **verified, native.**
+
+- Horizontal: width < 1 → invisible. If `x < left`: invisible if `x + width ≤ left`, else state
+  1, `skip = left − x`, `x = left`. Else if `x > right − width`: invisible if `x ≥ right`, else
+  state 2, `end = right − x`. Visible = end − skip. Skips are computed even when invisible
+  (with visible = 0).
+- Vertical: height < 1 → invisible. If `y < top`: invisible if `y + height ≤ top`, else state
+  3, `skipped = top − y`, `y = top`, rows limited to `bottom − top + skipped`. Else if
+  `y > bottom − height`: state 4 with `rows = bottom − y` if `y < bottom`, else invisible.
+  Rows to draw = rows − skipped.
+- The dispatcher makes the vertical state 5 when the horizontal one is 5.
+
+## 8. Pixel routines
+
+All write 16-bit pixels at `[0x00F9C100] + y × [0x00F2A698] + x × 2` (section 6 for x, y).
+**verified** for each routine named; the variants were compared by structure, not
+instruction by instruction, where marked *structure*.
+
+- **Opaque copy** `0x00413DC0(src)`: `rows × visible` pixels, skipping the two row strides.
+  *verified, native.*
+- **Keyed copy** `0x00415F50` (whole width), `0x00416010` (clipped): `0xF81F` in the source is
+  not written. The loops of `0x00416010` run at least once even for a count ≤ 0. *verified,
+  native for `0x00416010`.* Mirrored versions `0x00415E30`/`0x00415EC0` write each row from right
+  to left. *verified*
+- **Run-length images** `0x004161B0(src, shadow)`: first skip the hidden rows (`0x004170B0`,
+  counting the image width per row: `0xFF n` = n transparent pixels, `c` = c pixels follow);
+  then for each row, segments until the width is consumed. With `shadow`, a source pixel
+  `0x7C00` darkens the destination to `(dst >> 1) & 0x3DEF`; other pixels are copied. Runs cross
+  row ends in the data, but drawing stops at the width (the original quirks are in
+  `draw_runs_from`). *verified, native.* Left and right clipped versions `0x004163B0`,
+  `0x004165D0`, mirrored `0x00415490`, `0x004158E0`, `0x00415680`. *structure*
+- **Blended images** `0x00413E30(src, alpha)`: a second run stream with one byte (0–31) per
+  pixel, parallel to the first (`0x00417040` skips hidden rows in both). Per 5-bit component:
+  `(a × src + (31 − a) × dst) >> 5`; `a = 0` leaves the pixel. *verified, native* (555 only).
+  Clipped and mirrored versions: `0x00414CE0`, `0x00414540`, `0x00414190`, `0x004150B0`,
+  `0x00414910`. *structure*. `0x0041DF90` uses the same formula on whole images (`formats/sg3.md`).
+- **Ground diamond** `0x00435070(src, cy)`: 15 rows widening by 4 pixels (2, 6, …, 58),
+  centred, then 15 rows narrowing; stored back to back (450 words). Clipped at the top (state
+  3) only the lower half is drawn; at the bottom (4) only the upper half. *verified, native
+  (`draw_ground`).* Sideways clipped versions `0x004377B0`, `0x00438A90` (2.2 kB each).
+- **Isometric bases** of n × n tiles (`0x0043FF10` for n = 2 … `0x00441E50` for n = 6): the base
+  is drawn as separate 58×30 diamonds, each clipped and drawn by the three diamond routines,
+  1,800 bytes (`0x708`) apart in the data, plus the value at `0x00F29F74` (role not established).
+  For n = 2: (x, y), (x − 30, y + 15), (x + 30, y + 15), (x, y + 30). *verified for n = 2;
+  hypothesis that larger n follow the row layout of `formats/sg3.md`.*
+- **Building tops** `0x005ADF00(id, x, y)` / mirrored `0x005AE1B0`: for an entry with `+0x35`,
+  draw only the compressed part that follows the base (`pixels + [entry + 8]`), placed by base
+  width: 58 → (x, y − h + 30), height h − 16; 118 → (x − 30, y − h + 60), h − 31; 178 →
+  (x − 60, y − h + 90), h − 46; 238 → (x − 90, y − h + 120), h − 61; 298 → (x − 120,
+  y − h + 150), h − 76; 358 → (x − 150, y − h + 180), h − 91 (h = image height). Drawn with the
+  run-length routines (shadow flag `+0x3B`) and the overlay. *verified*
+- **Glyph mask** (type 20) `0x00416C30`: run-length segments whose pixels are all replaced by
+  one colour, `0x00F1397C`. *verified*; that type 20 images are font glyphs: *hypothesis*
+  (the colour is set in the text code).
+- **Tint** (mode 1) `0x005B86A0(src, colour)`: grey = (r + g + b) / 3 of each source pixel; each
+  output component = `(c × grey) >> 5`, rounded up when bit 4 of the product is set, with
+  `c` the component of `colour`; handles both 555 and 565. *verified*
+- **Fixed squares** `0x00417290` (32 × 32), `0x004171E0` (24 × 24), `0x00417140` (16 × 16):
+  opaque copies with a source stride of the full square; clipped left or top by offsetting the
+  source. `0x00417100` writes two pixels on one row and one below. *verified*; their use: not
+  seen in the run.
+
+## 9. Overlays and colour mixing
+
+| Effect | Mechanism | Where | Status |
+|---|---|---|---|
+| Transparency | key `0xF81F` (uncompressed), `0xFF n` runs (compressed), `0x03E0` in isometric bases | routines above | verified |
+| Shadow | source pixel `0x7C00` → `(dst >> 1) & 0x3DEF` | `0x004161B0` and variants, flag `+0x3B` | verified |
+| Alpha | `(a × src + (31 − a) × dst) >> 5` per component, a ∈ 0…31 | `0x00413E30` and variants | verified |
+| Tint | grey level × colour / 32 | `0x005B86A0` and variants, `mode = 1` | verified |
+| Single-colour mask | every opaque pixel = `[0x00F1397C]` | `0x00416C30` and variants | verified |
+| **Overlay** | after the sprite, every pixel it covered: `dst &= [0x0078C570]` | `0x00416070` (uncompressed), `0x00416140` (clipped), `0x00416820` (runs), `0x00416AF0`, `0x00416B90` (runs, clipped); mirrored tops `0x00415B80`, `0x00415C40`, `0x00415D30` | verified |
+
+The overlay colour is set by the city loop just before a building or tile is drawn and cleared
+just after: `0xF863` (red: keeps red, crushes green and blue) when byte `+0xBF` of the building
+record (`0x0092E727 + 0x118 n`) is set; the value returned by `0x0045DBD0(tile)` for tiles with
+flag `0x01000000`; `0x0051EF30` may change it when `0x00665E2C == 1`. **verified** (writes in
+`0x00458170`); that `+0xBF` marks a building selected for demolition or out of order is a
+**hypothesis**. The overlay routines ran 0 times in this scenario.
+
+## 10. The isometric view
+
+### 10.1 The map grid
+
+- The map is a staggered grid of **`0x1C9` (457) rows × `0xE7` (231) columns** at `0x007D3BEC`,
+  one 32-bit tile number per cell; values ≥ `0x0FFF0000` are marks, not tiles (the ground loop
+  then uses `value + 0xF0010000` as an image id). One row is `0x39C` bytes. **verified**
+- Odd rows are shifted half a tile to the left: the two cells above a cell of an odd row are
+  (r − 1, c − 1) and (r − 1, c); of an even row (r − 1, c) and (r − 1, c + 1). **verified**
+  (`0x00457900`, offsets `−0x3A0`, `−0x39C`, `−0x398`; `walker_behind`). The parity is counted
+  from the first drawn row, not from row 0. **verified**; that the first drawn row is always even
+  is a **hypothesis**.
+- Per-tile arrays, indexed by the tile number (not the cell): height `0x008E01FA` (s8, 30 pixels
+  per step), ground image `0x00D4CFC8`, terrain flags `0x00CCE128`, building `0x00D26E98` (s16),
+  bits `0x00D404B8` (`0x40`: anchor tile of what stands on it), slope `0x00D00D68` (low 4 bits:
+  size of a sloped piece; `0x10`: replacement ground), first walker `0x00D0D878` (s16), "walkers
+  drawn elsewhere" `0x0083AD6C`, `0x00CB4B08` (s8, with flags `0x44` or `0x48`: see 11.2).
+  **verified** (all in `src/win32/game_gog.h` except the last). Records: buildings
+  `0x0092E668`, `0x118` bytes, `+0` type (s16); walkers `0x00DBD790`, `0x184` bytes, `+0` next
+  walker on the same tile, `+2` type, `+0x5D` hidden. **verified**
+
+### 10.2 View parameters (`0x00449E50`)
+
+`0x0051CBA0`/`0x0051CC00` call `0x00449E50(228, 228, x0 = 0, y0 = 30, columns, rows, 58, 30)`
+(columns × rows depend on the screen: 10 × 39 at 800×600, 14 × 50 at 1024×768,
+`docs/reverse-engineering.md`). It stores: **verified**
+
+| Address | Value |
+|---|---|
+| `0x007D3BBC`, `0x007D3BB8` | view columns, view rows |
+| `0x007D3BE8`, `0x007D3BE4` | x0, y0 of the view on screen |
+| `0x007D3BB0`, `0x007D3BB4`, `0x007D3BAC`, `0x007D3BA8` | 58, 29, 87, 116 (tile width and its multiples by ½, 1½, 2) |
+| `0x007D3BA0`, `0x007D3BA4`, `0x007D3B9C`, `0x007D3B98` | 30, 15, 45, 60 (tile height and multiples) |
+| `0x007D3B94`, `0x007D3B90`, `0x007D3B8C`, `0x007D3B88` | clip rectangle of the view: x0, x0 + 60 × columns − 2, y0, y0 + 15 × (rows − 1) |
+
+### 10.3 Camera and projection
+
+`0x0051CAB0` calls `0x0044A830(column 0x00DA2F64, row 0x00DA2F68, 0x00DA2F80)`, which stores
+the camera cell in `0x007D3BD0`/`0x007D3BCC`, sets the clip rectangle to the view, raises the
+water-animation flag `0x007D3B1C` when more than 60 units of `0x00F9C0F4` have passed since
+`0x007D3B18`, then draws: `0x00458170`, `0x0044AD70`, `0x00451820`, `0x004517F0`, `0x00454420`,
+and restores the clip rectangle. **verified** (the argument of `0x00458170` is 0 in view mode
+0, 9999 otherwise).
+
+Projection used by the three passes of `0x00458170`: **verified**
+
+- rows `r = camera_row − 8 … camera_row − 8 + view_rows + 29`, columns
+  `c = camera_column − 6 … camera_column − 6 + view_columns + 8` (cells outside the grid are
+  skipped);
+- `x = x0 − 360 − (odd ? 30 : 0) + 60 × (c − camera_column + 6)`;
+- `y = y0 − 135 + 15 × (r − camera_row + 8) − 30 × height(tile)`.
+
+A tile is thus a 58 × 30 diamond on a 60 × 15 lattice; the 2-pixel gap is the `+2` added to
+`0x007D3BB0` at each column.
+
+## 11. City drawing order, `0x00458170`
+
+8,419 bytes, the largest drawing function and the first game function in the profile (5.4 % of
+the corrected time in the run, 51.6 million basic blocks). Before the passes it clears a ring of
+5 rows × 231 bytes at `0x0084787C` (flags of walkers deferred to a later row), increments
+`0x00847D24` and calls `0x005A7180` (role not established). **verified**
+
+### 11.1 First pass: the ground (native)
+
+For each cell, in row order then column order: compare the height with the cell two rows above
+(`compare` = 1 higher behind, −1 lower, else 1 if both have flag `0x200` and the one behind
+`0x800200`); skip images that the loop never draws (an interval and a bit set prepared once from
+the group numbers listed below, stored at `0x0160C248`, `0x0160C24C`, `0x0160C260`, flag
+`0x00847D28`, built from the 40 group numbers at `0x005F8CA8`–`0x005F8D44`); otherwise call **`0x00457900(tile, x, y, odd)`**, the ground of a tile: view-mode
+check (method `+0x18` of the view object `0x00641C10[mode]`), animated water (the image advances
+one step in its cycle, 6 images, the deep-water cycle by 15), red overlay for a building, sloped
+replacement image, walkers standing behind (types `0x01`, `0x04`, `0x0D`, `0x1C`, `0x2A`,
+`0x43`, `0x44`, `0x45` on the two cells above force the original path), then the dispatcher.
+**verified, native** for the common cases (`native_draw.cpp`, header comment: the three exits
+back to the original are listed there).
+
+Counts: `0x00457900` 593,891 calls (1,283 per city frame), 318,084 of which still run in
+emulated code with the native functions; diamonds `0x00435070` 163,764 (354 per frame).
+
+### 11.2 Second pass: what stands on each tile (not native)
+
+Same traversal, from after `0x0045868C` to `0x00459FF0`; for each cell: **verified** (order of
+the calls and conditions as summarised), roles as stated.
+
+1. **Ground drawn again.** The ground is drawn a second time by `0x00457900` when the tile has
+   flag `0x40000000` (then cleared) or is higher than one of the tiles behind it (scan of rows
+   r − 2, r − 4, …, ending at `0x004589F2`), so that a raised tile covers what was drawn
+   behind it; and, for a tile the first pass did not draw, unless a tile two rows in front is
+   higher, or four rows in front higher by two steps (`0x00458A19`–`0x00458C2D`). The skip list
+   of the first pass applies again.
+2. **Ambient counters.** For cells within ±3 columns and rows of the view centre, counters at
+   `0x010E41F4`–`0x010E4218` are incremented by terrain kind or by building class
+   (`0x005A7200`). Nothing is drawn. *Hypothesis: they drive the ambient sounds.*
+3. **Water with a boat or similar** (flags & `0x44` = `0x44` and `0x00CB4B08` set, or `0x48` and
+   building type 199): mark the tile in `0x0083AD6C` and draw it with `0x0041D150`
+   (0 calls in the run).
+4. **The object on the tile**, when the tile is an anchor (bits `0x40`), in view mode 0:
+   overlay red if `+0xBF`; flat tiles → building top `0x005ADF00` (or mirrored `0x005AE1B0` when
+   `0x0045DC10` says so: `0x00DA2F88` is 2 or 6 and `0x0045DC00`), unless a walker stands behind
+   (`0x0045DAF0` on the two cells above); flags `0x4020` → `0x0045A690`/`0x0045A790` with
+   size 0; sloped pieces → `0x0045A690(size, image, x, y)`, which offsets the top by
+   (29 + 1, −15), (58 + 2, −30), (87 + 3, −45), (116 + 4, −60) or (145 + 5, −75) for sizes 1–5.
+   Then extras: `0x0053E5F0` for some types, the two towers (images `0x809`, `0x80F` at
+   (x − 2, y − 43) and (x + 29, y − 43)) of building types `0x81`, `0x91`, `0x92`. Other view
+   modes ask the view object (method `+0x18`), or draw `0x0044BCD0` in mode `0x11`.
+5. **Building animations and special buildings**: a `switch` on the building type calls one
+   drawing function per kind (`0x0044C940` + `0x0044C4A0` for types `0x0B`–`0x0E`, `0x0045B500`
+   for `0x12`, `0x0045AB70`, `0x0045ADE0`, `0x0045C170`, `0x0044BE90`, `0x0044C0B0`,
+   `0x0044BFA0`, `0x0044C2F0`, `0x0045B690`, `0x0045B820`, `0x0045B9B0`, `0x0045BB40`,
+   `0x0045BCD0`, `0x0045BE60`/`0x0045BFE0`, `0x0044CD10`, `0x0044CB80`, `0x0045C580`,
+   `0x0045B060`, `0x0044E100`, `0x0045CDE0`, `0x0045C710`); otherwise the animation of the image
+   (`0x00423180`, `0x00413380`) is drawn by `0x0045D140`. Then `0x0044F320` for every anchor
+   (433,862 calls, as many as building tops; *hypothesis*: labels or fire and damage effects).
+6. **View-mode overlay** (modes other than 0): methods `+0x0C`, `+0x20` and `+0x00` of the view
+   object draw on the building (columns of the risk and service views: *hypothesis*).
+7. **Walkers.** After the object of cell (r, c), in this order:
+   - if the ring `0x0084787C` (5 rows of 231 bytes, row index modulo 5) has bit 2 for row
+     r − 4, the walkers of cell (r − 4, c) (`0x007D2D7C + c × 4 + r × 0x39C`) are sorted
+     (`0x00449B30`) and drawn with `0x0044FEF0(walker, x, y − 30 × (height + 2), arg, 1)`, and
+     the bit is cleared;
+   - the walkers of cell (r − 2, c) (`0x007D34B4 + c × 4 + r × 0x39C`) are sorted and drawn with
+     `0x0044FEF0(walker, x, y − 30 × (height + 1), arg, 2)` — last argument 3 when the ring has
+     bit 1 for row r − 2 (then cleared); on a tile with flags `0x44` and `0x00CB4B08` set, only
+     the walkers for which `0x004D7210` is false;
+   - the byte `0x0083AD6C` of the current tile is ORed into the ring for row r;
+   - `0x0045A5A0(tile, x, y, arg, byte ≠ 0, 1)` draws the walkers of the current tile (all of
+     them, or only those for which `0x004D7210` is true when the byte is set);
+   - `0x0041D3D0(tile, x, y, 0)` (620,704 calls).
+
+   Walkers hidden (`+0x5D`) are never drawn; lists stop at a number ≤ 0 or ≥ 2,000.
+   **verified** (calls and arguments). *Hypothesis*: the last argument of `0x0044FEF0` selects
+   which part of a walker is drawn, so that a walker is drawn in pieces at its own tile and two
+   rows later, after the buildings in front of it; `0x0041D3D0` draws animals and boats on
+   water.
+
+`0x0044FEF0` (5,977 bytes, the walker sprite) is called 27,178 times (59 per city frame).
+
+### 11.3 Third pass
+
+For anchor tiles with flag `0x08` and a building, in modes other than `0x10`, the view object
+(methods `+0x0C`, `+0x20`, `+0x00`) draws once more over everything. **verified** (control
+flow); what it draws is a **hypothesis** (the mode overlays above buildings).
+
+### 11.4 After the passes
+
+`0x0044AD70` (tiles again: construction preview or selection, *hypothesis*), `0x00451820`,
+`0x004517F0`, `0x00454420` (`0x0091EA6C` per tile: *hypothesis*, labels and flying effects), once
+per city frame each.
+
+## 12. Real-time rate
+
+`zeus-run --headless --ticks --count …` with the wall clock, same scenario, 150 s, native
+functions on: 3,344 simulation ticks in 74.4 s of active play (44.9 per second) and 3,396 city
+drawings (`0x0044A830`): **the city is drawn once per simulation tick, about 45 times per
+second**, while only 2,523 frames are presented in the whole run (17 per second, section 3.3).
+About half of the city drawings are therefore never shown (issue #36 studies skipping them).
+Per city drawing in this run: 945 building tops (`0x005ADF00`, 3,208,047 calls), 681 ground
+calls (`0x00457900`), 69 walkers (`0x0044FEF0`, 235,448 calls); the dispatcher ran 5,448,448
+times in the 150 s. To convert the per-frame column of section 13 into calls per second,
+multiply by 45.
+
+## 13. Order of the rewrite
+
+What is left to make the rendering fully native, in the order proposed: each step only needs the
+steps before it, and the most frequent come first within a step. Counts: original code alone,
+`working-city`, 300 s deterministic, 463 city frames.
+
+| # | Function | Role | Calls (run) | Per city frame | Now |
+|---|---|---|---|---|---|
+| 1 | `0x004163B0`, `0x004165D0` | run-length image clipped left / right | 5,563 / 5,703 | 12 / 12 | original (0.6 % + 0.4 % of the profile) |
+| 2 | `0x00415F50` | keyed copy, whole width | 95,842 | — (menus too) | original |
+| 3 | `0x004377B0`, `0x00438A90` | ground diamond clipped left / right | 8,682 / 8,691 | 19 / 19 | original |
+| 4 | `0x00415490`, `0x004158E0`, `0x00415680` | mirrored run-length images | 1,020 / 57 / 2 | 2 / 0.1 / 0 | original |
+| 5 | `0x00416C30`, `0x00416F00`, `0x00416FA0` | glyph masks | 934 / 0 / 0 | — | original |
+| 6 | overlay `0x00416070`, `0x00416140`, `0x00416820`, `0x00416AF0`, `0x00416B90`, `0x00415B80`, `0x00415C40`, `0x00415D30` | `dst &= colour` | 0 | 0 | original |
+| 7 | alpha variants `0x00414CE0`, `0x00414540`, `0x00414190`, `0x004150B0`, `0x00414910`; tint `0x005B86A0`, `0x005B8910`, `0x005B8B60`; squares `0x00417290`, `0x004171E0`, `0x00417140`, `0x00417100`; mirrored keyed `0x00415E30`, `0x00415EC0` | rare cases | 0 | 0 | original |
+| 8 | `0x005ACF50` | dispatcher: every remaining case, then the whole function | 8,215,286 | — (all screens) | fast path, 276,711 fallbacks |
+| 9 | `0x005ADF00`, `0x005AE1B0`, `0x0045A690`, `0x0045A790` | building tops | 433,862 / 0 / 45,747 / 0 | 937 / 0 / 99 / 0 | original |
+| 10 | `0x0043FF10`, `0x00440170`, `0x004406B0`, `0x00440FE0`, `0x00441E50` | bases of 2–6 tiles | 23,888 / 2,410 / 3,627 / 1,389 / 0 | 52 / 5 / 8 / 3 / 0 | original |
+| 11 | `0x00457900` | ground of a tile, remaining cases | 593,891 | 1,283 | fast path, 318,084 still emulated |
+| 12 | `0x00449B30` | sort the walkers of a tile | 1,411,706 | 3,049 | original |
+| 13 | `0x0045A5A0`, `0x0041D3D0`, `0x0041D150` | walkers and water life of a tile | 606,993 / 620,704 / 0 | 1,311 / 1,341 / 0 | original |
+| 14 | `0x0044FEF0` | one walker | 27,178 | 59 | original |
+| 15 | `0x0044F320`, `0x0045D140`, `0x0053E5F0`, `0x0045DC10`, building-type functions of 11.2 step 5 | building extras and animations | 433,862 / 4,488 / — / 553,374 / — | 937 / 10 / — / 1,195 / — | original |
+| 16 | `0x00458170` | second and third passes | 463 | 1 | first pass native |
+| 17 | `0x0044AD70`, `0x00451820`, `0x004517F0`, `0x00454420` | after the passes | 463 each | 1 | original |
+| 18 | `0x0044A830`, `0x0051CAB0`, `0x00449E50` | view set-up | 463 / 463 / rare | 1 | original |
+| 19 | `0x00514020`, `0x0050C1B0` and converters `0x004138B0`, `0x00413930`, `0x004139B0`, `0x00413A30` | frame and presentation | 8,398 / 8,412 | — | original (the host replaces the surfaces) |
+| 20 | `0x0050A860`, `0x0050A000`, `0x00509F90`, `0x005AE770`, `0x005AE730` | external images and backdrops | 0 | 0 | original |
+
+Already native: `0x00413DC0` (5,319,977 calls), `0x004161B0` (2,384,169), `0x00416010` (467),
+`0x00413E30` (4,317), `0x0050B410` (1,459), `0x00435070` (163,764), the clip functions
+(8,562,614 each) inside the dispatcher, and the first pass of `0x00458170`.
+
+Outside this page but heavy in the same profile: the text routines (`0x004F57A0`, 2.2 million
+calls; `0x00507F20`, 10.0 million; `0x00508B50`, 1.0 million; `0x004F59B0`, 1.1 million;
+`0x004F5300`, which calls the dispatcher). They belong to the "interface and texts" subsystem.
+
+## 14. Open questions
+
+- Unit of the presentation accumulator `0x00F9C0F0` (milliseconds?).
+- Role of `0x00F29F74` (added to the base pixels of multi-tile diamonds), of `0x005A7180`, and
+  of `0x0044F320`, `0x0041D3D0`, `0x0044AD70`, `0x00451820`, `0x00454420`.
+- Whether the first drawn row is always even (the parity of `0x00458170` is relative).
+- When `0x0045DC00` mirrors buildings (`0x00DA2F88` ∈ {2, 6}).
+- Which callers produce the 5.3 million opaque copies `0x00413DC0` (menus and panels, not the
+  city: 11,490 per city frame would be far more than the visible tiles).
