@@ -1,6 +1,8 @@
 // Dialogues du mode application sur macOS : AppleScript et CoreGraphics.
 
 #include <CoreGraphics/CoreGraphics.h>
+#include <SDL.h>
+#include <signal.h>
 #include <mach-o/dyld.h>
 
 #include <cstdlib>
@@ -53,7 +55,10 @@ int ask_choice(const std::string& title, const std::string& text, const std::vec
 }
 
 std::string ask_file(const std::string& prompt) {
-    return applescript("POSIX path of (choose file with prompt " + literal(prompt) + " of type {\"exe\"})");
+    // Téléchargements, où se trouve l'installateur : « path to downloads folder » n'appelle pas
+    // la demande d'accès aux dossiers protégés.
+    return applescript("POSIX path of (choose file with prompt " + literal(prompt) +
+                       " of type {\"exe\"} default location (path to downloads folder))");
 }
 
 std::string ask_folder(const std::string& prompt) {
@@ -76,6 +81,42 @@ std::string ask_text(const std::string& prompt, const std::string& initial) {
 
 void notify(const std::string& text) {
     applescript("display notification " + literal(text) + " with title \"Zeus + Poseidon\"");
+}
+
+namespace {
+long busy_pid = 0;
+}
+
+// Le dialogue tourne dans un processus à part, tué par busy_stop ; son seul bouton le masque.
+void busy_start(const std::string& title, const std::string& text) {
+    busy_stop();
+    const std::string script = "display dialog " + literal(text) + " buttons {" + literal(tr("Masquer", "Hide")) +
+                               "} default button 1 with title " + literal(title) + " giving up after 3600";
+    busy_pid = std::atol(command_output("/usr/bin/osascript -e " + quoted(script) + " >/dev/null 2>&1 & echo $!").c_str());
+}
+
+void busy_stop() {
+    if (busy_pid > 0) kill(static_cast<pid_t>(busy_pid), SIGTERM);
+    busy_pid = 0;
+}
+
+// Finder transmet le fichier déposé sur l'icône par un événement « ouvrir », que SDL reçoit une
+// fois initialisé : on l'attend un instant, sans fenêtre.
+std::string dropped_file() {
+    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) return {};
+    std::string file;
+    const Uint32 end = SDL_GetTicks() + 500;
+    while (file.empty() && SDL_GetTicks() < end) {
+        SDL_Event event;
+        while (SDL_PollEvent(&event))
+            if (event.type == SDL_DROPFILE) {
+                if (file.empty()) file = event.drop.file;
+                SDL_free(event.drop.file);
+            }
+        SDL_Delay(10);
+    }
+    SDL_QuitSubSystem(SDL_INIT_VIDEO);
+    return file;
 }
 
 bool option_key_down() {

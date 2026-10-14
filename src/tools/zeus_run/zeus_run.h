@@ -44,12 +44,18 @@ void alert(const std::string& title, const std::string& text);
 // Boutons de gauche à droite ; renvoie l'indice choisi, ou -1 si le dialogue est fermé.
 int ask_choice(const std::string& title, const std::string& text, const std::vector<std::string>& buttons,
                int default_button);
+// Sélecteur de fichier ouvert dans Téléchargements (macOS : sans demande d'accès aux dossiers protégés).
 std::string ask_file(const std::string& prompt);    // vide : annulé
 std::string ask_folder(const std::string& prompt);  // vide : annulé
 // Liste à choix unique ; renvoie l'élément choisi, vide si annulé.
 std::string ask_list(const std::string& title, const std::string& prompt, const std::vector<std::string>& items);
 std::string ask_text(const std::string& prompt, const std::string& initial);  // vide : annulé
 void notify(const std::string& text);  // notification discrète, sans réponse
+// Retour visible pendant une longue attente : une fenêtre qui se ferme à la fin (ou un message).
+void busy_start(const std::string& title, const std::string& text);
+void busy_stop();
+// Fichier déposé sur l'icône de l'application (ou ouvert avec elle) au lancement, ou vide.
+std::string dropped_file();
 bool option_key_down();  // touche Option (Alt) tenue au lancement
 std::filesystem::path default_support_dir();
 std::filesystem::path program_dir();

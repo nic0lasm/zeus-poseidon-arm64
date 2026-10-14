@@ -101,6 +101,10 @@ std::string ask_text(const std::string& prompt, const std::string& initial) {
 
 void notify(const std::string& text) { std::fprintf(stderr, "%s\n", text.c_str()); }
 
+void busy_start(const std::string& title, const std::string& text) { std::fprintf(stderr, "%s : %s\n", title.c_str(), text.c_str()); }
+void busy_stop() {}
+std::string dropped_file() { return {}; }
+
 bool option_key_down() {
     // Sans le clavier du système sous la main : variable d'environnement, ou Alt tenue si SDL le voit.
     if (const char* ask = std::getenv("ZEUS_ASK_LANGUAGE"); ask && *ask) return true;

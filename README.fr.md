@@ -41,7 +41,7 @@ jeu : l'installateur GOG, voir l'étape 3.
    même** ; confirmez avec votre mot de passe ou Touch ID, puis cliquez sur **Ouvrir**. Une seule
    fois. *(Écrit pour macOS 15 d'après la documentation d'Apple ; les libellés exacts peuvent
    varier selon la version, et restent à vérifier par un humain sur un Mac neuf.)*
-3. Désignez votre installateur GOG (`setup_zeus_and_poseidon_….exe`). Il est déballé une fois
+3. Désignez votre installateur GOG (`setup_zeus_and_poseidon_….exe`) — le sélecteur s'ouvre dans Téléchargements — ou déposez-le sur l'icône de l'application. Il est déballé une fois
    pour toutes (environ une minute, 800 Mo) ; ensuite, jouez. Pour l'obtenir depuis un Mac :
    connectez-vous sur **GOG.com → bibliothèque → Zeus + Poseidon → installateurs Windows hors ligne
    (« Télécharger les installateurs hors ligne ») → Windows** (téléchargez le `.exe` et les

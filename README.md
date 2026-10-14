@@ -41,7 +41,7 @@ GOG installer, see step 3.
    password or Touch ID, then click **Open**. This is needed once only. *(Written for macOS 15
    from Apple's documentation; the exact wording may differ slightly on your version, and has
    still to be checked by a human on a clean Mac.)*
-3. Pick your GOG installer (`setup_zeus_and_poseidon_….exe`). It is unpacked once (about a
+3. Pick your GOG installer (`setup_zeus_and_poseidon_….exe`) — the file picker opens in Downloads — or drop it on the application icon. It is unpacked once (about a
    minute, 800 MB); then play. To get it from a Mac: sign in at **GOG.com → your library →
    Zeus + Poseidon → Download offline backup game installers → Windows** (download the `.exe`
    and the `.bin` files next to it, if any).

@@ -50,9 +50,14 @@ std::string unpack_installer(const std::string& installer, const std::filesystem
     }
     if (!find_game(destination).empty()) return find_game(destination);  // déjà déballé
     fs::create_directories(destination);
+    busy_start("Zeus + Poseidon", tr("Déballage du jeu en cours (environ une minute, 800 Mo).\n\nCette fenêtre se ferme "
+                                     "toute seule, puis le jeu démarre.",
+                                     "Unpacking the game (about a minute, 800 MB).\n\nThis window closes by itself, "
+                                     "then the game starts."));
     const std::string command = quoted(tool) + " --silent --extract --output-dir " + quoted(destination.string()) +
                                 " " + quoted(installer) + " 2>&1";
     const std::string output = command_output(command);
+    busy_stop();
     const std::string exe = find_game(destination);
     if (exe.empty())
         alert(tr("Cet installateur n'a pas pu être déballé", "This installer could not be unpacked"),
@@ -75,8 +80,10 @@ int run_app(const std::string& installer) {
     std::string folder;
     if (std::ifstream in{memo}) std::getline(in, folder);
     std::string exe = folder.empty() ? std::string() : find_game(folder);
-    if (!installer.empty()) {
-        exe = unpack_installer(installer, unpacked);
+    // Installateur déposé sur l'icône de l'application, tant que le jeu n'est pas connu.
+    const std::string given = !installer.empty() ? installer : exe.empty() ? dropped_file() : std::string();
+    if (!given.empty()) {
+        exe = unpack_installer(given, unpacked);
         if (exe.empty()) return 1;
         folder = unpacked.string();
     }
@@ -115,19 +122,22 @@ int run_app(const std::string& installer) {
     o.wide = "auto";
 
     // Langue : demandée au premier lancement, puis retenue dans langue.txt (ligne vide : l'anglais
-    // de l'édition GOG). Garder la touche Option enfoncée au lancement la redemande. Les packs
+    // de l'édition GOG). Sans aucun pack, on ne demande rien : l'anglais. Garder la touche Option
+    // enfoncée au lancement ouvre la liste des langues. Les packs
     // sont rangés dans « Packs » ; chaque langue a ses sauvegardes.
     const fs::path packs_dir = support / "Packs", choice_file = support / "langue.txt";
     std::string choice;
     bool chosen = static_cast<bool>(std::ifstream(choice_file));
     if (std::ifstream in{choice_file}) std::getline(in, choice);
-    if (option_key_down()) chosen = false;
+    const bool ask_again = option_key_down();
+    if (ask_again) chosen = false;
     while (!chosen) {
         std::vector<std::string> packs;
         std::error_code error;
         for (const auto& entry : fs::directory_iterator(packs_dir, error))
             if (fs::exists(entry.path() / "remplace.txt")) packs.push_back(entry.path().filename().string());
         std::sort(packs.begin(), packs.end());
+        if (packs.empty() && !ask_again) break;  // aucun pack et pas d'Option : l'anglais, sans question
         const std::string build = tr("Autre langue, depuis les CD d'origine…", "Another language, from the original CDs…");
         std::vector<std::string> items{"English"};
         items.insert(items.end(), packs.begin(), packs.end());

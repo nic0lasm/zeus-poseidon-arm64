@@ -128,6 +128,13 @@ def main(argv):
             "LSMinimumSystemVersion": "12.0",
             "LSApplicationCategoryType": "public.app-category.simulation-games",
             "NSHighResolutionCapable": True,
+            # Déposer l'installateur GOG sur l'icône l'ouvre ; sans devenir le programme des .exe.
+            "CFBundleDocumentTypes": [{
+                "CFBundleTypeName": "Windows installer",
+                "CFBundleTypeExtensions": ["exe"],
+                "CFBundleTypeRole": "Viewer",
+                "LSHandlerRank": "None",
+            }],
         }, f)
 
     # Les chemins de recherche hérités de Homebrew sont remplacés par le dossier du paquet :
