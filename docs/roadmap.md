@@ -136,8 +136,8 @@ and a milestone only if the answer is good
 ## Ongoing — the game's knowledge, written down
 
 Every file format documented with a reference reader that reads all the files of its type
-([#30](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/30)): sprites and maps are done;
-texts, simulation parameters and adventures remain. This knowledge outlives any port and serves
+([#30](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/30)): sprites, maps and texts are done;
+simulation parameters and adventures remain. This knowledge outlives any port and serves
 modders and tool makers.
 
 ## Decisions for the maintainer

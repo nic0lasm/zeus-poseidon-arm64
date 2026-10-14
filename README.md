@@ -171,8 +171,9 @@ More: [docs/architecture.md](docs/architecture.md) and the findings in
 The project started as a study of the game's data and code, and that work is documented here
 for anyone building tools for the *Zeus* / *Poseidon* community:
 
-- **File formats** — [`formats/sg3.md`](formats/sg3.md) (sprites, `.sg3` + `.555`) and
-  [`formats/map.md`](formats/map.md) (maps and saved games, `.map` / `.sav` / `.pak`), each
+- **File formats** — [`formats/sg3.md`](formats/sg3.md) (sprites, `.sg3` + `.555`),
+  [`formats/map.md`](formats/map.md) (maps and saved games, `.map` / `.sav` / `.pak`) and
+  [`formats/eng.md`](formats/eng.md) (texts and in-game help, `.eng`), each
   with a reference reader in Python; more to come ([#30](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/30)).
 - **Extraction tools** — pure-Python readers for the original CD images, InstallShield
   cabinets and Wise patch installers ([`tools/`](tools/)).

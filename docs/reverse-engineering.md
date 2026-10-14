@@ -6,6 +6,7 @@ Detailed notes are written in French and live next to the code:
 |---|---|
 | [`formats/sg3.md`](../formats/sg3.md) | sprite archives: `.sg3` index + `.555` pixels |
 | [`formats/map.md`](../formats/map.md) | maps and saved games, image identifiers, terrain engine |
+| [`formats/eng.md`](../formats/eng.md) | text files: string groups, in-game help records, formatting codes |
 | [`analysis/notes/sources-et-binaires.md`](../analysis/notes/sources-et-binaires.md) | game editions, extraction chain, executables |
 | [`analysis/notes/api-imports.md`](../analysis/notes/api-imports.md) | the 202 Windows functions the game imports, and which are implemented |
 | [`analysis/notes/symbols.tsv`](../analysis/notes/symbols.tsv) | named addresses, each with its evidence |
