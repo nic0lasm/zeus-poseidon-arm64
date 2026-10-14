@@ -66,6 +66,7 @@ public:
     void start_profile();
     struct BlockTime {
         uint64_t nanoseconds = 0, executions = 0;
+        uint32_t bytes = 0;  // taille du bloc, en octets de code
     };
     const std::map<uint32_t, BlockTime>& profile() const { return profile_; }
 
@@ -121,7 +122,7 @@ private:
     uint8_t* memory_ = nullptr;
     static void on_block(uc_struct* uc, uint64_t address, uint32_t size, void* user);
     std::map<uint32_t, BlockTime> profile_;  // par adresse de bloc
-    uint32_t profile_block_ = 0;
+    uint32_t profile_block_ = 0, profile_size_ = 0;
     uint64_t profile_since_ = 0;
     static void on_code_hook(uc_struct* uc, uint64_t address, uint32_t size, void* user);
     std::map<uint32_t, std::function<void(Cpu&)>> code_hooks_;

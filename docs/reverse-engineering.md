@@ -9,7 +9,8 @@ Detailed notes are written in French and live next to the code:
 | [`formats/eng.md`](../formats/eng.md) | text files: string groups, in-game help records, formatting codes |
 | [`analysis/notes/sources-et-binaires.md`](../analysis/notes/sources-et-binaires.md) | game editions, extraction chain, executables |
 | [`analysis/notes/api-imports.md`](../analysis/notes/api-imports.md) | the 202 Windows functions the game imports, and which are implemented |
-| [`analysis/notes/symbols.tsv`](../analysis/notes/symbols.tsv) | named addresses, each with its evidence |
+| [`analysis/noms.tsv`](../analysis/noms.tsv) | names given by hand, each with its evidence |
+| [`analysis/symbols.tsv`](../analysis/symbols.tsv) | the code map: every function with module, status and evidence (see [engine/README.md](engine/README.md)) |
 
 ## Method
 

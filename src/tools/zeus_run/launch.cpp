@@ -135,10 +135,10 @@ int run(const RunOptions& o) {
             if (s.name == ".data") out.write(reinterpret_cast<const char*>(process.cpu().host(s.address)), s.virtual_size);
     }
     if (!o.profile.empty()) {
-        // Une ligne par bloc de code : adresse, nanosecondes, nombre d'exécutions.
+        // Une ligne par bloc de code : adresse, nanosecondes, nombre d'exécutions, taille en octets.
         std::ofstream out(o.profile);
         for (const auto& [address, block] : process.cpu().profile())
-            out << std::hex << address << std::dec << '\t' << block.nanoseconds << '\t' << block.executions << '\n';
+            out << std::hex << address << std::dec << '\t' << block.nanoseconds << '\t' << block.executions << '\t' << block.bytes << '\n';
     }
     if (o.counts)
         for (const auto& [name, count] : process.call_counts) {

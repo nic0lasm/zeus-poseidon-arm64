@@ -27,7 +27,7 @@ def main(argv):
     blocks = []
     with open(argv[1]) as f:
         for line in f:
-            address, time, executions = line.split()
+            address, time, executions = line.split()[:3]
             blocks.append((int(address, 16), int(time), int(executions)))
     busy = [time / executions for _, time, executions in blocks if executions >= 100000]
     overhead = min(busy) if busy else 0.0

@@ -74,6 +74,8 @@ an engine written by hand and documented** — the way Julius did for *Caesar II
 original stays the reference and the judge: each rewritten part must prove, turn by turn, that it
 gives exactly the same game state. Nothing is translated mechanically. No dates are promised.
 
+**Engine progress:** 6 of 4,872 functions replaced by hand-written native code; 56.9 % of the executed game code now runs natively (one measured scenario). [Code map and counters](docs/engine/README.md).
+
 - **1.x Playable** — keep it light and in every edition: first launch ([#55](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/55)), language packs
   ([#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24), **testers wanted**), processor use ([#22](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/22)). [Milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/2)
 - **Phase A — Instruments** — equivalence on the full game state ([#26](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/26)); a code map and two public

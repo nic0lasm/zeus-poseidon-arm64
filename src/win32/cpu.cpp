@@ -290,15 +290,17 @@ void Cpu::start_profile() {
     check(uc_hook_add(uc_, &hook, UC_HOOK_BLOCK, reinterpret_cast<void*>(&Cpu::on_block), this, 1, 0), "profil");
 }
 
-void Cpu::on_block(uc_struct*, uint64_t address, uint32_t, void* user) {
+void Cpu::on_block(uc_struct*, uint64_t address, uint32_t size, void* user) {
     Cpu& cpu = *static_cast<Cpu*>(user);
     const uint64_t now = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count());
     if (cpu.profile_block_) {
         BlockTime& block = cpu.profile_[cpu.profile_block_];
         block.nanoseconds += now - cpu.profile_since_;
         ++block.executions;
+        block.bytes = cpu.profile_size_;
     }
     cpu.profile_block_ = static_cast<uint32_t>(address);
+    cpu.profile_size_ = size;
     cpu.profile_since_ = now;
 }
 

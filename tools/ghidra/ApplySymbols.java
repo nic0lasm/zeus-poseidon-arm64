@@ -1,4 +1,4 @@
-// Applique au programme courant les noms de analysis/notes/symbols.tsv (adresse, nom, preuve).
+// Applique au programme courant les noms de analysis/noms.tsv (adresse, nom, ...).
 // Argument : chemin du fichier TSV. À lancer sans -readOnly pour que les noms soient enregistrés.
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -15,7 +15,7 @@ public class ApplySymbols extends GhidraScript {
     public void run() throws Exception {
         String[] args = getScriptArgs();
         if (args.length != 1) {
-            throw new IllegalArgumentException("usage : ApplySymbols.java symbols.tsv");
+            throw new IllegalArgumentException("usage : ApplySymbols.java noms.tsv");
         }
         int applied = 0;
         try (BufferedReader in = new BufferedReader(
