@@ -51,7 +51,7 @@ sur les machines qu'on possède, prouvé identique à l'original.
 
 | Prochaine étape | Ce qu'elle apporte | Suivre |
 |---|---|---|
-| **1.1 — Sobre et silencieux** | le moins de processeur possible (dessin natif fait, attente active ensuite), modes larges plus hauts | [jalon](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/1) |
+| **1.1 — Sobre et silencieux** | la bonne vitesse de jeu et le moins de processeur possible (dessin natif et cadencement faits), modes larges plus hauts | [jalon](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/1) |
 | **1.2 — Toutes les éditions** | packs allemand, espagnol, italien, polonais… depuis vos CD — **testeurs recherchés** | [jalon](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/2) |
 | **2.0 — Partout** | le même hôte sous Linux (x86-64, arm64) et sur les Mac Intel | [jalon](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/3) |
 | **3.0 — Recompilé** | plus d'émulateur : votre exemplaire traduit en code natif sur votre machine, prouvé image par image ; la voie vers l'iPad | [jalon](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/4) |

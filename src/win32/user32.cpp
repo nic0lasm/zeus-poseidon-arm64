@@ -1,8 +1,12 @@
 // USER32, GDI32, WINMM, OLE32, SHELL32 : fenêtre, messages, souris et clavier du programme émulé.
 
+#include <algorithm>
 #include <cstdio>
+#include <cstring>
 #include <map>
 #include <memory>
+#include <optional>
+#include <thread>
 
 #include "win32/process.h"
 #include "win32/text.h"
@@ -23,7 +27,19 @@ struct State {
     int cursor_count = 0;
     uint32_t next_message_id = 0xC000;
     uint32_t last_idle_poll = 0;  // instant de la dernière interrogation d'une file vide
+    std::optional<bool> knows_turns;  // vrai si le code de FUN_005168a0 est celui attendu
 };
+
+// Instant où le jeu fera son prochain tour de simulation, d'après FUN_005168a0 : un tour est dû
+// quand le temps écoulé depuis le dernier (0x00F9F998, horloge de timeGetTime) atteint
+// l'intervalle de la vitesse du jeu (pourcentage en 0x00F2A774 ; 0, 20, 35… ms en 0x0063DA1C,
+// de 100 % à 10 %) plus 2 ms. Rien si la vitesse sort de la table.
+std::optional<uint32_t> next_simulation_turn(Cpu& cpu) {
+    const int32_t speed = static_cast<int32_t>(cpu.read_u32(0x00F2A774));
+    const int32_t index = std::max((100 - speed) / 10, 0);
+    if (index >= 10) return std::nullopt;
+    return cpu.read_u32(0x00F9F998) + cpu.read_u32(0x0063DA1C + 4 * static_cast<uint32_t>(index)) + 2;
+}
 
 void write_message(Cpu& cpu, uint32_t address, const Message& m) {
     const uint32_t fields[7] = {m.hwnd, m.message, m.wparam, m.lparam, m.time,
@@ -222,12 +238,37 @@ void install_user32(Process& p) {
         }
         // La boucle du jeu interroge sa file sans jamais attendre et redessine à chaque tour.
         // Rien à lire : on limite la boucle à 60 tours par seconde, ce qui libère le processeur
-        // sans retard sensible des entrées ; le jeu règle sa vitesse sur l'horloge, pas sur ses
-        // tours, et n'affiche de toute façon que 20 images par seconde.
+        // sans retard sensible des entrées. Mais le jeu ne fait un tour de simulation que dans un
+        // tour de boucle où son intervalle est écoulé : attendre toujours 16 ms arrondirait cet
+        // intervalle au multiple de 16 ms suivant (22 ms à 90 % deviendraient 33 ms, soit le jeu
+        // aux deux tiers de sa vitesse). Quand le prochain tour de simulation tombe dans les deux
+        // créneaux à venir, on attend donc exactement jusqu'à lui.
         constexpr uint32_t kTurn = 16;  // millisecondes
         if (p.fixed_clock) return 0u;
         const uint32_t now = p.ticks();
-        if (now - st->last_idle_poll < kTurn) d.wait(static_cast<int>(kTurn - (now - st->last_idle_poll)));
+        uint32_t wait = now - st->last_idle_poll < kTurn ? kTurn - (now - st->last_idle_poll) : 0;
+        std::optional<uint32_t> exact;  // instant à atteindre au plus près
+        if (!st->knows_turns) {
+            constexpr uint8_t kExpected[] = {0x56, 0x57, 0xFF, 0x15, 0x24, 0x82, 0x5D, 0x00, 0x8B, 0xF8, 0xA1, 0x98, 0xF9, 0xF9, 0x00};
+            st->knows_turns = std::memcmp(cpu.host(0x005168A0), kExpected, sizeof kExpected) == 0;
+        }
+        if (*st->knows_turns) {
+            if (const std::optional<uint32_t> due = next_simulation_turn(cpu)) {
+                const int32_t until = static_cast<int32_t>(*due - now);
+                if (until > 0 && until <= static_cast<int32_t>(2 * kTurn)) {
+                    wait = static_cast<uint32_t>(until);
+                    exact = due;
+                }
+            }
+        }
+        if (exact) {
+            // L'attente de SDL dépasse souvent d'une milliseconde : on dort un peu moins, puis on
+            // cède la main jusqu'à l'instant voulu.
+            if (wait > 1) d.wait(static_cast<int>(wait - 1));
+            while (static_cast<int32_t>(*exact - p.ticks()) > 0) std::this_thread::yield();
+        } else if (wait) {
+            d.wait(static_cast<int>(wait));
+        }
         st->last_idle_poll = p.ticks();
         return 0u;
     });

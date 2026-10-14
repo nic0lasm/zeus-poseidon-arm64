@@ -55,6 +55,16 @@ saved game is essentially a list of memory blocks.
   `0x00F2AB04` is set and waits for a message otherwise. `WM_ACTIVATEAPP` sets or clears the
   flag; `WM_KILLFOCUS` and a minimising `WM_ACTIVATE` stop the sound channels (`0x005A1330`).
   The host sends these messages when its window leaves the foreground for more than 0.4 s.
+- **Game speed.** Each turn of the main loop (`0x00513580`) asks `0x005168A0` whether a
+  simulation tick is due: it is when `timeGetTime()` minus the time of the last tick
+  (`0x00F9F998`) reaches the interval of the game speed plus 2 ms. The speed in percent is at
+  `0x00F2A774`; the intervals, from 100 % down to 10 %, are 0, 20, 35, 55, 80, 110, 160, 240,
+  350 and 500 ms (`0x0063DA1C`). At the default 90 % that is one tick every 22 ms. The tick
+  itself (`0x00513A30`) steps the random generator, the city and every walker (`0x004CC8C0`, a
+  loop over 2,000 figures, each wrapped in the game's own profiling timers `0x004CC730` and
+  `0x004CC760`, which is why `GetTickCount` is called tens of thousands of times a second).
+  Since ticks only happen inside loop turns, a host that paces the loop must wake up when the
+  next tick is due; see `PeekMessageA` in `src/win32/user32.cpp`.
 - **DirectDraw calls.** Every call site that goes through the DirectDraw objects kept at
   `0x00F2AB20` (DirectDraw), `0x00F2AB48` (clipper), `0x00F2AB4C`/`50`/`54` (surfaces) and
   `0x00F0E624` (JPEG backdrop) was listed. The game uses `SetCooperativeLevel`,

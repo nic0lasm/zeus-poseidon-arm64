@@ -49,9 +49,15 @@ fan noise on a laptop.
 
 - **Native sprite dispatcher** — done ([#21](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/21)):
   42 % less computing time in a large city.
-- **Stop the busy wait** ([#22](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/22)). Sampling
-  a running city shows the game polling the clock about 32,000 times a second while it waits for
-  its next turn; that loop, not the drawing, now keeps the core busy.
+- **The right game speed, with fewer loop turns** — done
+  ([#32](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/32)). Looking for a busy wait showed
+  something else: the game ticks only when a loop turn finds its interval elapsed, and the host's
+  fixed 16 ms pacing stretched the 22 ms interval of the default speed to 33 ms. The game had been
+  running at two thirds of its speed; it now ticks 45 times a second as intended, on 42 % of a
+  core instead of 52 %.
+- **Less work per turn** ([#22](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/22)). The
+  clock calls turned out to be the game's own profiling timers around each walker, not a wait:
+  what keeps the core busy is the simulation and the drawing of every turn, still emulated.
 - **Taller wide modes** ([#23](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/23)), so that
   a 16:10 screen shows more of the city instead of scaling up 768 lines.
 
@@ -144,8 +150,11 @@ modders and tool makers.
 
 - *Measure before optimising, and check the measure.* An early profiler overstated short loops;
   the first native functions brought nothing; the 3.5-second start-up turned out to be one loop
-  of 18 million string comparisons; and today's CPU use comes from a busy wait, not from
-  drawing.
+  of 18 million string comparisons; and the clock calls that looked like a busy wait were the
+  game's own profiling timers.
+- *Deterministic tests do not see time.* The scenarios run on a virtual clock, so they could not
+  notice that the host's pacing slowed the game down to two thirds of its speed from 0.2 to 1.0.
+  Real-time measurements of ticks per second now complement them.
 - *Emulator overhead hides in unexpected places.* Without paging, every memory write took the
   emulator's slow path; mapping data as non-executable gave a fourfold speed-up.
 - *Releases need the same care as code.* Two early archives carried build paths of the machine

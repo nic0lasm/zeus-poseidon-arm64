@@ -5,6 +5,11 @@ pull request.
 
 ## Unreleased
 
+- **The game runs at its real speed.** A simulation tick happens only when a turn of the game's
+  loop finds its interval elapsed (22 ms at the default 90 % speed), and the host's fixed 16 ms
+  pacing rounded that up to 33 ms: since 0.2 the game ran at two thirds of its speed. The host
+  now wakes up when the next tick is due: 45 ticks a second at 90 % instead of 30, on 42 % of a
+  core instead of 52 %. Scenarios are unaffected (they run on a virtual clock).
 - **Native sprite dispatcher.** The function every sprite goes through runs natively for its two
   common cases (run-length and opaque images, neither clipped sideways nor mirrored, 95 % of
   the calls); every other case falls back to the original code. A large city needs 42 % less

@@ -48,7 +48,7 @@ on the machines people own, proven identical to the original.
 
 | Next | What it brings | Follow it |
 |---|---|---|
-| **1.1 — Cool and quiet** | as little CPU as the game needs (native drawing done, busy wait next), taller wide modes | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/1) |
+| **1.1 — Cool and quiet** | the right game speed and as little CPU as needed (native drawing and pacing done), taller wide modes | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/1) |
 | **1.2 — Every edition** | German, Spanish, Italian, Polish… packs from your own CDs — **testers wanted** | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/2) |
 | **2.0 — Everywhere** | the same host on Linux (x86-64, arm64) and Intel Macs | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/3) |
 | **3.0 — Recompiled** | no emulator: your own copy translated to native code on your machine, proven frame by frame; the way to iPad | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/4) |
