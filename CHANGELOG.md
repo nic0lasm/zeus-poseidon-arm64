@@ -5,6 +5,7 @@ pull request.
 
 ## Unreleased
 
+- **Contact sheet of screenshots.** `tools/contact_sheet.py OUT.bmp COLUMNS SHOT.bmp …` puts several captures, halved, in one grid, to review a scripted run at a glance (standard library only).
 - **Scenarios in parallel.** `tools/check_scenarios.py --jobs N` (default: cores minus one) plays the eight scenarios at the same time, each in a fresh write directory, and prints the results in alphabetical order as before: 2 min 10 s instead of about 8 to 20 min depending on the load. `tools/publish.py merge` now stops at once on a pull request in conflict with `main`, or whose branch was not pushed.
 - **Counting passes and measuring the game speed without editing code.** `zeus-run --count ADDRESS[,…]` prints how many times execution reached each game address, natively rewritten functions included; `--ticks` prints the simulation ticks per second in real time, pauses left out. Code hooks on the same address now chain instead of replacing each other.
 - **Unit tests.** A new `zeus-tests` executable, run by the automated build, tests the host parts that do not need the game: WAV reader, test-script parser, Windows-1252 ↔ UTF-8, case-insensitive file lookup, and the sprite dispatcher's clipping (now in `sprite_clip.h`).
