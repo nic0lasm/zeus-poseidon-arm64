@@ -5,6 +5,8 @@ pull request.
 
 ## Unreleased
 
+## 0.3 — 2026-10-14
+
 - **Language packs from the application.** Pick a folder with the images of the original CDs:
   the application builds the pack itself, with its own Python interpreter. Hold Option at
   launch to choose the language again. `zeus-run --make-pack` does the same from the command
