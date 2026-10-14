@@ -5,6 +5,10 @@ pull request.
 
 ## Unreleased
 
+## 0.9 — 2026-10-14
+
+Release candidate for 1.0, meant to be played and reported on before it gets that number.
+
 - **Lighter.** The host keeps in memory only the game files of 4 MB or less, which the game
   reopens all the time; its large picture files are read once per game and the game keeps them
   itself. A running large city uses about 530 MB instead of 700. Memory stays flat over a
@@ -16,6 +20,7 @@ pull request.
   them, looked up its name in a table of 4,172 entries one comparison at a time: 18 million
   calls, three to four seconds of black window. The host now does that look-up natively. The
   table it produces is identical, in English and in French.
+- Documentation brought up to date: what works, what runs natively, what is left.
 
 ## 0.4 — 2026-10-14
 
