@@ -23,7 +23,7 @@ struct Sound {
 std::shared_ptr<Sound> decode_wav(const uint8_t* data, size_t size);
 // Taille totale d'un fichier WAV d'après son en-tête RIFF, ou 0.
 size_t wav_size(const uint8_t* header, size_t available);
-// Décode un fichier audio (MP3, WAV…) en arrière-plan avec AudioToolbox.
+// Décode un fichier audio (MP3, WAV…) en arrière-plan avec FFmpeg.
 std::shared_ptr<Sound> decode_file_async(const std::filesystem::path& path);
 
 class Mixer {

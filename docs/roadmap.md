@@ -88,7 +88,7 @@ The host is about 7,000 lines of C++ on SDL2, Unicorn and FFmpeg, all portable. 
 it to macOS — MP3 and JPEG decoding, the dialogs, the application bundle — and each has a
 portable replacement ([#25](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/25)):
 
-- [ ] MP3 decoding without AudioToolbox; done when `--check-audio` passes the 929 MP3 files with
+- [x] MP3 decoding without AudioToolbox; done when `--check-audio` passes the 929 MP3 files with
   the same durations ([#37](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/37));
 - [ ] JPEG decoding without ImageIO, same pixels ([#38](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/38));
 - [ ] first-launch dialogs, Option key and screen size through SDL ([#39](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/39));

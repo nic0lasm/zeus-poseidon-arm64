@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Compile un FFmpeg réduit aux décodeurs Bink, sous licence LGPL, dans build/deps/ffmpeg.
+"""Compile un FFmpeg réduit aux décodeurs du jeu, sous licence LGPL, dans build/deps/ffmpeg.
 
 Le FFmpeg de Homebrew est compilé sous GPL version 3 : il convient pour compiler et jouer chez
 soi, pas pour distribuer une application qui embarque aussi Unicorn (GPL-2.0). Cette version
 réduite, en bibliothèques statiques, ne contient que ce que le jeu utilise : le démultiplexeur
-Bink, ses décodeurs vidéo et audio, et les conversions d'image et de son.
+Bink, ses décodeurs vidéo et audio, le démultiplexeur et le décodeur MP3 (musiques et voix), le
+les conversions d'image et de son.
 
 Usage : python3 tools/build_ffmpeg.py
 Puis  : cmake -S . -B build -G Ninja -DZEUS_FFMPEG=build/deps/ffmpeg && cmake --build build
@@ -25,7 +26,8 @@ CONFIGURE = [
     "--disable-everything", "--disable-programs", "--disable-doc", "--disable-network",
     "--disable-autodetect", "--disable-avdevice", "--disable-avfilter",
     "--enable-static", "--disable-shared", "--enable-pic",
-    "--enable-demuxer=bink", "--enable-decoder=bink,binkaudio_rdft,binkaudio_dct",
+    "--enable-demuxer=bink,mp3", "--enable-decoder=bink,binkaudio_rdft,binkaudio_dct,mp3float",
+    "--enable-parser=mpegaudio",
     "--enable-protocol=file", "--enable-swscale", "--enable-swresample",
 ]
 

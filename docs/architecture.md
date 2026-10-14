@@ -138,8 +138,7 @@ decodes them with macOS ImageIO.
 The game drives the Miles Sound System: *samples* (whole WAV files handed over in memory, for
 effects and ambience) and *streams* (files opened by name, for MP3 music). The host maps both
 onto voices of a small software mixer feeding SDL's audio output. WAV data is read directly;
-MP3 files are decoded in a background thread by macOS AudioToolbox, so no extra dependency is
-needed. Volume, pan, loop counts, status polling and stream positions follow Miles semantics.
+MP3 files are decoded in a background thread by FFmpeg, which is already linked for the videos. Volume, pan, loop counts, status polling and stream positions follow Miles semantics.
 The host offers one software 3D sound provider, which the game uses for ambience placed around
 the listener: the position becomes a volume (linear fall-off between Miles's default distances,
 1 and 200) and a pan. Reverb and filters need no code: this build of the game never turns them
