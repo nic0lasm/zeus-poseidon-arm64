@@ -5,6 +5,11 @@ pull request.
 
 ## Unreleased
 
+- **Native sprite dispatcher.** The function every sprite goes through runs natively for its two
+  common cases (run-length and opaque images, neither clipped sideways nor mirrored, 95 % of
+  the calls); every other case falls back to the original code. A large city needs 42 % less
+  computing time; frames are identical.
+
 ## 1.0 — 2026-10-14
 
 First stable version. The code is that of 0.9, which has now been played by hand: adventures

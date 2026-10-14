@@ -108,6 +108,7 @@ sprite dispatcher 11 %, system calls 10 %, the city drawing loop 8.7 %, `_strcmp
 | `0x0050B410` | clears the frame buffer |
 | `0x005CC640` | `_strcmpi` from the C runtime |
 | `0x005059F8` | the loop that looks up each key of `Model\Zeus eventmsg.txt` at start-up (18 million `_strcmpi` calls) |
+| `0x005ACF50` | the sprite dispatcher, for its two common cases (see below), with its clipping (`0x00509C20`, `0x00509CD0`) |
 
 All eight scenarios (38,593 frames) give the same frame logs with and without them.
 
@@ -119,12 +120,15 @@ The look-up loop is replaced on its own, not its whole function: a jump to the l
 preceded by a hook that leaves registers and stack exactly as the loop would. Time to the first
 frame went from 3.5–5 s to under a second; the parsed table hashes the same with and without it.
 
-**Where it stands.** In a running city the profile is now led by the sprite dispatcher
-(`0x005ACF50`, about a fifth of the time: called 65,000 times a second, some thirty blocks of
-branching each time) and by the text routines of the control panel. The dispatcher calls some
-forty other functions; rewriting it by hand with the same guarantee of fidelity is a project of
-its own, for after version 1.0. The game is already fast enough to play: a small city uses
-about half of one core.
+**The sprite dispatcher.** Every sprite of every frame goes through `0x005ACF50` (65,000 calls
+a second in a large city): it finds the image, clips it to the drawing rectangle, then picks one
+of some forty drawing routines. Two cases make 95 % of the calls — a run-length image or an
+opaque one, neither clipped sideways nor mirrored — and those run natively, clipping included.
+Every other case falls back to the original code, untouched: the function's entry jumps to a
+small trampoline where the host either answers or lets the original carry on
+(`Cpu::add_fast_path`). The native path decides before it writes anything, so a fall-back
+starts from a clean state. On the large-city scenario the computing time dropped from 17.8 s to
+10.4 s; the dispatcher's own share went from 21 % to 1 %. The frames are identical.
 
 ## Milestone 5 — plan
 

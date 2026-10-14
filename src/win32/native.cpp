@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
+#include <optional>
 #include <stdexcept>
 
 #include "win32/process.h"
@@ -40,6 +41,12 @@ constexpr uint32_t kFrameBuffer = 0x00F9C100,  // adresse du tampon d'affichage
 
 int32_t i32(Cpu& cpu, uint32_t address) { return static_cast<int32_t>(u32(cpu, address)); }
 
+uint16_t u16(Cpu& cpu, uint32_t address) {
+    uint16_t value;
+    std::memcpy(&value, cpu.host(address), 2);
+    return value;
+}
+
 int32_t image_width(Cpu& cpu) {
     int16_t value;
     std::memcpy(&value, cpu.host(kImageWidth), 2);
@@ -66,8 +73,8 @@ void require_555(Cpu& cpu) {
 }
 
 // FUN_00413dc0(source) : copie un rectangle d'image opaque vers le tampon d'affichage.
-uint32_t copy_rectangle(Cpu& cpu) {
-    const uint8_t* source = cpu.host(cpu.arg(0));
+void copy_rectangle_from(Cpu& cpu, uint32_t image) {
+    const uint8_t* source = cpu.host(image);
     uint8_t* out = target(cpu);
     const int32_t rows = i32(cpu, kRows);
     const uint32_t row_bytes = u32(cpu, kColumns) * 2;
@@ -77,6 +84,10 @@ uint32_t copy_rectangle(Cpu& cpu) {
         source += row_bytes + source_skip;
         out += row_bytes + target_skip;
     }
+}
+
+uint32_t copy_rectangle(Cpu& cpu) {
+    copy_rectangle_from(cpu, cpu.arg(0));
     return 0u;
 }
 
@@ -127,9 +138,8 @@ const uint8_t* skip_rows(Cpu& cpu, const uint8_t* p) {
 
 // FUN_004161b0(image, ombre) : dessine une image compressée, sans rognage horizontal.
 // Avec `ombre`, un pixel 0x7C00 de l'image assombrit de moitié le pixel déjà présent.
-uint32_t draw_runs(Cpu& cpu) {
-    const uint8_t* p = skip_rows(cpu, cpu.host(cpu.arg(0)));
-    const bool shadow = (cpu.arg(1) & 0xFF) != 0;
+void draw_runs_from(Cpu& cpu, uint32_t image, bool shadow) {
+    const uint8_t* p = skip_rows(cpu, cpu.host(image));
     uint8_t* out = target(cpu);
     const uint32_t target_skip = u32(cpu, kTargetSkip);
     if (shadow) require_555(cpu);
@@ -172,6 +182,10 @@ uint32_t draw_runs(Cpu& cpu) {
         }
         out += target_skip;
     }
+}
+
+uint32_t draw_runs(Cpu& cpu) {
+    draw_runs_from(cpu, cpu.arg(0), (cpu.arg(1) & 0xFF) != 0);
     return 0u;
 }
 
@@ -243,6 +257,166 @@ uint32_t strcmpi(Cpu& cpu) {
     }
 }
 
+// Répartiteur de sprites, FUN_005acf50(this, identifiant, x, y, mode, couleur, miroir) : choisit
+// l'image désignée par l'identifiant, la rogne au rectangle de dessin (FUN_00509c20 en largeur,
+// FUN_00509cd0 en hauteur), puis appelle la routine de dessin qui convient. Il est appelé pour
+// chaque sprite de chaque image affichée (65 000 fois par seconde dans une grande ville).
+//
+// Seuls les deux cas qui font l'essentiel des appels sont traités ici : image compressée par
+// suites, ni rognée en largeur ni retournée, et image opaque ni rognée ni retournée. Pour tous
+// les autres, la fonction rend la main au code d'origine sans avoir rien écrit : le répartiteur
+// d'origine refait alors tout depuis ses arguments. Quand le cas est traité, les variables
+// écrites sont celles qu'écrit l'original sur ce chemin, avec les mêmes largeurs.
+namespace sprite {
+
+constexpr uint32_t kId = 0x00F139E0, kArgX = 0x00F139DC, kArgY = 0x00F139D8,
+                   kImage = 0x00F13A18, kHeight = 0x00F13A1C, kKind = 0x00F13A14,
+                   kClipX = 0x00F13991, kClipY = 0x00F13990,  // 0 entière, 1 à 4 rognée, 5 invisible
+                   kSkipLeft = 0x00F139AC, kRight = 0x00F139A8, kVisibleRows = 0x00F13994,
+                   kClipLeft = 0x00F139BC, kClipRight = 0x00F139B8,
+                   kClipTop = 0x00F139B4, kClipBottom = 0x00F139B0,
+                   kTargetPixels = 0x00F2A6A0,  // pixels par ligne du tampon
+                   kOverlay = 0x0078C570;       // couleur de surimpression, 16 bits
+
+void put8(Cpu& cpu, uint32_t address, uint8_t value) { *cpu.host(address) = value; }
+void put16(Cpu& cpu, uint32_t address, int16_t value) { std::memcpy(cpu.host(address), &value, 2); }
+void put32(Cpu& cpu, uint32_t address, int32_t value) { std::memcpy(cpu.host(address), &value, 4); }
+int16_t s16(Cpu& cpu, uint32_t address) { return static_cast<int16_t>(u16(cpu, address)); }
+
+std::optional<uint32_t> dispatch(Cpu& cpu) {
+    const uint32_t self = cpu.reg(Cpu::Reg::ECX);
+    const int32_t id = static_cast<int32_t>(cpu.arg(0)), x = static_cast<int32_t>(cpu.arg(1)),
+                  y = static_cast<int32_t>(cpu.arg(2)), mode = static_cast<int32_t>(cpu.arg(3));
+    const uint8_t mirror_arg = static_cast<uint8_t>(cpu.arg(5));
+    // Identifiant : banque * 16384 + numéro, en divisions entières signées comme l'original.
+    const int32_t bank = id / 16384, number = id % 16384;
+    if (number < 1 && bank == 0) return std::nullopt;
+    const uint32_t base = self + static_cast<uint32_t>(bank) * 0xCC44;
+    const int32_t count = i32(cpu, base + 0xDC34);
+    if (count <= number) return std::nullopt;
+    const uint32_t table = u32(cpu, base + 0x1000);
+    uint32_t entry = table + static_cast<uint32_t>(number) * 0x48;
+    if (entry == 0) return std::nullopt;
+    uint8_t mirror = 0;
+    if (*cpu.host(entry + 0x3E)) {  // image retournée d'une autre entrée
+        const int32_t other = i32(cpu, entry + 0x10) + number;
+        entry = count < other ? table : table + static_cast<uint32_t>(other) * 0x48;
+        mirror = 1;
+        if (entry == 0) return std::nullopt;
+    }
+    const int32_t image = i32(cpu, entry);
+    if (image < 1) return std::nullopt;
+    const int16_t width16 = s16(cpu, entry + 0x14), height16 = s16(cpu, entry + 0x16);
+    const uint8_t kind = *cpu.host(entry + 0x32);
+    mirror ^= mirror_arg;
+    const bool shadow = *cpu.host(entry + 0x3B) != 0;
+    if (*cpu.host(entry + 0x34)) return std::nullopt;  // image chargée à part (fond d'écran…)
+    // Écrans où le fond de la carte se dessine d'un bloc (0x005AD65B).
+    const uint8_t screen = *cpu.host(0x00F2A6DD);
+    const int32_t submode = i32(cpu, 0x00781894);
+    const bool special = screen == 0x15 || screen == 0x14 || screen == 0x1A || screen == 0x34 || screen == 0x2D ||
+                         (screen == 3 && (submode == 0x14 || submode == 0x15)) ||
+                         (screen == 9 && *cpu.host(0x00FFA180) == 0x14);
+    if (special && static_cast<uint32_t>(id) == u32(cpu, u32(cpu, 0x0136F3E8) + 4) + 0x3C000) return std::nullopt;
+    if (kind == 0x1E) return std::nullopt;
+
+    // FUN_00509c20 : rognage horizontal.
+    const int32_t width = width16;
+    int32_t left = x, skip_left = 0, right = width, visible = 0;
+    uint8_t clip_x = 0;
+    const int32_t clip_left = i32(cpu, kClipLeft), clip_right = i32(cpu, kClipRight);
+    if (width16 < 1) {
+        clip_x = 5;
+    } else if (x < clip_left) {
+        if (width + x <= clip_left) {
+            clip_x = 5;
+        } else {
+            clip_x = 1;
+            skip_left = clip_left - x;
+            left = clip_left;
+        }
+    } else if (clip_right - width < x) {
+        if (clip_right <= x) {
+            clip_x = 5;
+        } else {
+            right = clip_right - x;
+            clip_x = 2;
+        }
+    }
+    if (clip_x != 5) visible = right - skip_left;
+    const int32_t source_skip = (width - visible) * 2, target_skip = (i32(cpu, kTargetPixels) - visible) * 2;
+
+    // FUN_00509cd0 : rognage vertical.
+    const int32_t height = height16;
+    int32_t top = y, rows = height, skipped = 0, drawn = 0;
+    uint8_t clip_y = 0;
+    const int32_t clip_top = i32(cpu, kClipTop), clip_bottom = i32(cpu, kClipBottom);
+    if (height16 < 1) {
+        clip_y = 5;
+    } else if (y < clip_top) {
+        if (rows + y <= clip_top) {
+            clip_y = 5;
+        } else {
+            top = clip_top;
+            skipped = clip_top - y;
+            clip_y = 3;
+            const int32_t limit = (clip_bottom - clip_top) + skipped;
+            if (limit < rows) rows = limit;
+        }
+    } else if (clip_bottom - rows < y) {
+        if (y < clip_bottom) {
+            clip_y = 4;
+            rows = clip_bottom - y;
+        } else {
+            clip_y = 5;
+        }
+    }
+    if (clip_y != 5) drawn = rows - skipped;
+    if (clip_x == 5) clip_y = 5;
+
+    // Choix de la routine (0x005AD748 et suivantes) : seuls deux cas sont traités.
+    enum class Draw { None, Runs, Opaque } draw = Draw::None;
+    if (clip_y != 5) {
+        if (mirror != 0 || clip_x != 0 || u16(cpu, kOverlay) != 0) return std::nullopt;
+        if (kind == 0) {
+            if (mode == 1 || *cpu.host(entry + 0x33) == 0 || u32(cpu, entry + 0x40) != 0) return std::nullopt;
+            draw = Draw::Runs;
+        } else {
+            if (kind == 0x0C || kind == 0x14 || clip_y != 0) return std::nullopt;
+            draw = Draw::Opaque;
+        }
+    }
+
+    put32(cpu, kArgX, x);
+    put32(cpu, kArgY, y);
+    put32(cpu, kId, id);
+    put32(cpu, kImage, image);
+    put16(cpu, kImageWidth, width16);
+    put16(cpu, kHeight, height16);
+    put8(cpu, kKind, kind);
+    put32(cpu, kTargetX, left);
+    put32(cpu, kTargetY, top);
+    put8(cpu, kClipX, clip_x);
+    put32(cpu, kSkipLeft, skip_left);
+    put32(cpu, kRight, right);
+    put32(cpu, kColumns, visible);
+    put32(cpu, kSourceSkip, source_skip);
+    put32(cpu, kTargetSkip, target_skip);
+    put32(cpu, kVisibleRows, rows);
+    put8(cpu, kClipY, clip_y);
+    put32(cpu, kSkippedRows, skipped);
+    put32(cpu, kRows, drawn);
+    switch (draw) {
+        case Draw::None: return 0u;  // invisible : l'original renvoie alors 0
+        case Draw::Runs: draw_runs_from(cpu, static_cast<uint32_t>(image), shadow); break;
+        // Ni rognée ni retournée : le décalage que l'original ajoute à l'image est nul.
+        case Draw::Opaque: copy_rectangle_from(cpu, static_cast<uint32_t>(image)); break;
+    }
+    return static_cast<uint32_t>(visible);
+}
+
+}  // namespace sprite
+
 // Au démarrage, FUN_00505770 lit « Model\Zeus eventmsg.txt » et, pour chaque clé du fichier,
 // cherche son nom dans une table de plusieurs milliers d'entrées en appelant _strcmpi sur chacune :
 // 18 millions d'appels, l'essentiel du temps de démarrage. La boucle (0x005059F8 à 0x00505A33) se
@@ -298,6 +472,11 @@ void install_native_functions(Process& p) {
     for (const Replacement& r : kReplacements) {
         if (std::memcmp(cpu.host(r.address), r.first_bytes, sizeof r.first_bytes) != 0) continue;
         cpu.replace_function(r.address, r.arg_bytes, r.fn);
+        ++installed;
+    }
+    constexpr uint8_t kDispatchBytes[] = {0x81, 0xEC, 0x14, 0x01, 0x00, 0x00, 0x8B, 0x84, 0x24, 0x1C, 0x01, 0x00, 0x00};
+    if (std::memcmp(cpu.host(0x005ACF50), kDispatchBytes, sizeof kDispatchBytes) == 0) {
+        cpu.add_fast_path(0x005ACF50, 0x18, 6, sprite::dispatch);  // « SUB ESP,0x114 » déplacé
         ++installed;
     }
     if (std::memcmp(cpu.host(kKeySearch), kKeySearchBytes, sizeof kKeySearchBytes) == 0) {

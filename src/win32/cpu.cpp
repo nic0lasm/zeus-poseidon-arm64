@@ -18,6 +18,8 @@ namespace {
 constexpr uint32_t kThunkBase = 0xF0000000;
 constexpr uint32_t kThunkSize = 0x00010000;
 constexpr uint32_t kThunkStride = 4;
+// Tremplins des chemins rapides (add_fast_path) : code écrit par l'hôte, juste après les imports.
+constexpr uint32_t kTrampolineBase = kThunkBase + kThunkSize, kTrampolineSize = 0x1000;
 constexpr uint32_t kPage = 0x1000;
 constexpr size_t kAddressSpace = size_t{1} << 32;
 
@@ -58,6 +60,9 @@ Cpu::Cpu() {
     check(uc_hook_add(uc_, &hook, UC_HOOK_CODE, reinterpret_cast<void*>(&Cpu::on_thunk), this,
                       kThunkBase, kThunkBase + kThunkSize - 1),
           "interception des imports");
+    map_region(kTrampolineBase, kTrampolineSize, UC_PROT_READ | UC_PROT_EXEC, "zone des tremplins");
+    code_ranges_.push_back({kTrampolineBase, kTrampolineBase + kTrampolineSize});
+    trampoline_next_ = kTrampolineBase;
     // La case 0 est réservée au retour des fonctions du programme appelées depuis l'hôte.
     functions_.push_back({"<retour d'appel>", 0, nullptr});
 }
@@ -291,6 +296,39 @@ void Cpu::replace_function(uint32_t address, uint32_t arg_bytes, std::function<u
                              static_cast<uint8_t>(arg_bytes >> 8)};
     std::memcpy(host(address), code, arg_bytes ? 3 : 1);
     add_code_hook(address, [fn = std::move(fn)](Cpu& cpu) { cpu.set_reg(Reg::EAX, fn(cpu)); });
+}
+
+void Cpu::add_fast_path(uint32_t address, uint32_t arg_bytes, uint32_t displaced,
+                        std::function<std::optional<uint32_t>(Cpu&)> fn) {
+    if (displaced < 5 || displaced > 16) throw std::runtime_error("chemin rapide : octets déplacés hors limites");
+    // Données (indicateur « traité » puis valeur de retour), puis le code du tremplin.
+    const uint32_t data = trampoline_next_, code = data + 8;
+    const uint32_t size = 8 + 0x11 + displaced + 5;
+    if (data + size > kTrampolineBase + kTrampolineSize) throw std::runtime_error("trop de chemins rapides");
+    trampoline_next_ = (data + size + 15) & ~15u;
+    auto put32 = [](uint8_t* p, uint32_t v) { std::memcpy(p, &v, 4); };
+    uint8_t* t = host(code);
+    t[0] = 0x80; t[1] = 0x3D; put32(t + 2, data); t[6] = 0x00;  // cmp byte [indicateur], 0
+    t[7] = 0x74; t[8] = 0x08;                                    // je vers le code d'origine
+    t[9] = 0xA1; put32(t + 10, data + 4);                        // mov eax, [valeur]
+    if (arg_bytes) {
+        t[14] = 0xC2; t[15] = static_cast<uint8_t>(arg_bytes); t[16] = static_cast<uint8_t>(arg_bytes >> 8);
+    } else {
+        t[14] = 0xC3; t[15] = 0x90; t[16] = 0x90;
+    }
+    std::memcpy(t + 0x11, host(address), displaced);              // instructions déplacées
+    t[0x11 + displaced] = 0xE9;                                   // jmp vers la suite de la fonction
+    put32(t + 0x12 + displaced, (address + displaced) - (code + 0x11 + displaced + 5));
+    uint8_t* entry = host(address);
+    entry[0] = 0xE9;
+    put32(entry + 1, code - (address + 5));
+    std::memset(entry + 5, 0x90, displaced - 5);
+    add_code_hook(code, [fn = std::move(fn), data](Cpu& cpu) {
+        const std::optional<uint32_t> result = fn(cpu);
+        uint8_t* d = cpu.host(data);
+        d[0] = result ? 1 : 0;
+        if (result) std::memcpy(d + 4, &*result, 4);
+    });
 }
 
 void Cpu::add_code_hook(uint32_t address, std::function<void(Cpu&)> fn) {

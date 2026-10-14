@@ -80,6 +80,16 @@ public:
     // `arg_bytes` : octets d'arguments dépilés par la fonction d'origine (0 en cdecl).
     void replace_function(uint32_t address, uint32_t arg_bytes, std::function<uint32_t(Cpu&)> fn);
 
+    // Chemin rapide de l'hôte devant une fonction du programme, dont le code d'origine reste
+    // disponible : `fn` s'exécute à l'entrée de la fonction et renvoie la valeur de retour quand
+    // elle a traité l'appel, ou rien pour laisser faire le code d'origine. Les `displaced`
+    // premiers octets de la fonction (instructions entières, sans adresse relative, au moins 5)
+    // sont recopiés dans un tremplin, et un saut vers celui-ci prend leur place. Le tremplin teste
+    // le résultat de `fn` : il revient à l'appelant (`ret arg_bytes`) ou exécute les octets
+    // déplacés puis retourne dans la fonction. À faire avant le début de l'exécution.
+    void add_fast_path(uint32_t address, uint32_t arg_bytes, uint32_t displaced,
+                       std::function<std::optional<uint32_t>(Cpu&)> fn);
+
     // Appelle `fn` chaque fois que l'exécution atteint `address`, avant l'instruction.
     void add_code_hook(uint32_t address, std::function<void(Cpu&)> fn);
     // n-ième argument (à partir de 0) de la fonction hôte en cours d'appel.
@@ -106,6 +116,7 @@ private:
     uint64_t profile_since_ = 0;
     static void on_code_hook(uc_struct* uc, uint64_t address, uint32_t size, void* user);
     std::map<uint32_t, std::function<void(Cpu&)>> code_hooks_;
+    uint32_t trampoline_next_ = 0;  // prochaine place libre dans la zone des tremplins
     void enable_paging();
     std::vector<std::pair<uint32_t, uint32_t>> code_ranges_;  // zones exécutables [début, fin[
     bool paging_ = false;

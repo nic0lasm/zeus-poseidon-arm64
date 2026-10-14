@@ -68,7 +68,10 @@ never needs do nothing and return zero.
 function becomes a `ret`, and a hook runs the host version just before it, so entering it
 costs about 75 ns. A loop inside a function can be replaced the same way: its first
 instruction becomes a jump to its exit, and the hook leaves registers and stack as the loop
-would have. Each replacement checks the original bytes first and is proven by the frame logs
+would have. A function can also get a native fast path while keeping its original code: its
+first instructions move to a trampoline, which runs the host version and either returns to the
+caller or carries on into the original (`Cpu::add_fast_path`, used by the sprite dispatcher).
+Each replacement checks the original bytes first and is proven by the frame logs
 of the scenarios, which must be identical with and without `--no-native`.
 
 ### Calling from the host into the game
