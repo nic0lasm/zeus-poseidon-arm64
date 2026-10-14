@@ -5,6 +5,7 @@ pull request.
 
 ## Unreleased
 
+- **Event messages documented.** `formats/eventmsg.md` describes `Zeus eventmsg.txt` (4,172 phrases looked up by name in a table of the executable, how the game skips unknown words and stops at an inner quote) and `Zeus event message categories.txt`; `tools/eventmsg.py` reads all 11 files of the game and, given the executable, checks every phrase name.
 - **Building plans documented.** `formats/layout.md` describes the sanctuary, pyramid and palace plans of `Model/` (piece records, the two lists, how the game's `sscanf` copes with damaged lines); `tools/layout.py` reads all 102 files of the game.
 - **`Model/*.txt` documented.** `formats/model.md` describes the difficulty tables (buildings and houses, figures and enemies, tax sentiment, monster strength) and how the game reads them; `tools/model.py` reads all 63 files of the game and checks them against a re-implementation of the game's own parser.
 - **Download in one click, honest first-launch steps.** The README (English and French) opens with a direct link to `releases/latest/download/Zeus-Poseidon-macos-arm64.zip` (`tools/publish.py release` now also writes the archive under that version-free name, same bytes), gives the exact macOS 15 steps (*Privacy & Security → Open Anyway*; right-click → *Open* no longer works), says where to get the GOG installer from a Mac, and that an Apple Silicon Mac is required ([#55](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/55)).
