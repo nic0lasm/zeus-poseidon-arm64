@@ -210,7 +210,10 @@ public:
                                                     }});
     }
 
-    bool report() const {
+    bool report() {
+        // Partie terminée (--seconds, --frames) au milieu d'un passage vérifié.
+        if (phase_ == Phase::Original || phase_ == Phase::Native)
+            failure_ = "passage " + std::to_string(calls_) + " inachevé à la fin de l'exécution\n";
         char what[48];
         if (end_) std::snprintf(what, sizeof what, "%#010x:%#010x", start_, end_);
         else std::snprintf(what, sizeof what, "%#010x", start_);
@@ -225,6 +228,17 @@ private:
     enum class Phase { Idle, Original, Native, Failed };
 
     void enter() {
+        if (restarting_) {  // reprise voulue par start_run
+            restarting_ = false;
+            return;
+        }
+        // DÉBUT atteint de nouveau sans appel plus profond : le morceau de code en est sorti sans
+        // passer par FIN, ou la fonction a été quittée autrement que par son retour.
+        if ((phase_ == Phase::Original || phase_ == Phase::Native) && cpu_.reg(Cpu::Reg::ESP) >= entry_esp_) {
+            fail(std::string(phase_ == Phase::Original ? "l'original" : "la version native") +
+                 " repasse par le début sans être arrivé à la fin de la zone vérifiée\n");
+            return;
+        }
         if (phase_ != Phase::Idle || calls_++ % every_ != 0) return;
         cpu_.save_context(entry_);
         entry_esp_ = cpu_.reg(Cpu::Reg::ESP);
@@ -244,6 +258,7 @@ private:
         host_calls_ = cpu_.host_calls();
         cpu_.set_native(native);
         phase_ = native ? Phase::Native : Phase::Original;
+        restarting_ = true;
         cpu_.jump(start_);
     }
 
@@ -395,6 +410,7 @@ private:
     uint32_t ignored_ = 0;
     uint32_t return_thunk_ = 0;
     Phase phase_ = Phase::Idle;
+    bool restarting_ = false;
     uint64_t calls_ = 0, compared_ = 0, host_calls_ = 0;
     CpuContext entry_;
     uint32_t entry_esp_ = 0, caller_ = 0, return_address_ = 0;
@@ -412,6 +428,6 @@ std::shared_ptr<Verifier> install_verifier(Process& process, const std::string& 
     return std::make_shared<Verifier>(process, start, end, every);
 }
 
-bool report_verifier(const Verifier& verifier) { return verifier.report(); }
+bool report_verifier(Verifier& verifier) { return verifier.report(); }
 
 }  // namespace zeus::win32

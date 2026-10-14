@@ -381,7 +381,7 @@ void Cpu::add_code_hook(uint32_t address, std::function<void(Cpu&)> fn) {
         // Une seule interception Unicorn par adresse : les fonctions s'enchaînent.
         found->second = [first = std::move(found->second), then = std::move(fn)](Cpu& cpu) {
             first(cpu);
-            then(cpu);
+            if (!cpu.redirect_) then(cpu);  // après jump(), l'instruction n'est pas exécutée
         };
         return;
     }

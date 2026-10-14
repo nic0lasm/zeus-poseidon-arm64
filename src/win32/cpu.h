@@ -107,7 +107,8 @@ public:
                        std::function<std::optional<uint32_t>(Cpu&)> fn);
 
     // Appelle `fn` chaque fois que l'exécution atteint `address`, avant l'instruction. Une
-    // adresse déjà interceptée garde sa fonction, appelée d'abord, puis `fn`.
+    // adresse déjà interceptée garde sa fonction, appelée d'abord, puis `fn` (sauf si la première
+    // a appelé jump() : l'instruction n'est alors pas exécutée).
     void add_code_hook(uint32_t address, std::function<void(Cpu&)> fn);
 
     // Remplacements natifs (replace_function, add_fast_path, add_code_jump, add_native_hook,

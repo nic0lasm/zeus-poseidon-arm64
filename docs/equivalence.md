@@ -23,8 +23,9 @@ say *where* a difference comes from.
 The zones are the variables the game writes into a saved game. A game saved with the GOG
 `Zeus.exe` under `zeus-run` (*File → Save adventure* in the last tutorial) was traced:
 
-- `0x00510ED0` is the save routine: one pass while saving, none otherwise (`--count`);
-- `0x0050CB80` writes one block: 139 passes for that one save, one per block of the file;
+- `0x00510ED0` is the save routine and `0x0050E2C0` writes the file: one pass each while
+  saving, none otherwise (`--count`);
+- `0x0050CB80` is called once per block: 139 passes for that one save;
 - the file's own block table (block 2, kept at `0x00F9C1D0` while saving) gives, for each block,
   the address of the variable in this executable, the size of an element and the number of
   elements. The file format itself is described in `formats/map.md`.
@@ -88,7 +89,7 @@ Compared: `EAX`, `EBX`, `ESP`, `EBP`, `ESI`, `EDI` and every byte of writable me
 stack below the final stack pointer (locals of finished calls). Not compared: `ECX` and `EDX`
 after a function (never read by a caller with Visual C++'s calling conventions), `EAX` after a
 function that returns nothing (signatures from Ghidra, listed in `equivalence.cpp`), the flags,
-the x87 registers. For a piece of code, the registers left out are those its replacement proves
+the x87 and SSE registers (none of today's replacements returns a value there). For a piece of code, the registers left out are those its replacement proves
 dead (`EAX` and `ECX` for the key lookup loop).
 
 On the first difference the run stops (exit code 1) with the pass number, the caller and the
@@ -104,7 +105,11 @@ mémoire : 2 octets diffèrent, le premier en 0x1027b16e (tampon d'affichage, x 
 
 (a deliberate fault: the native clear stopping one pixel short.)
 
-**Limits.** A call during which the original calls a host function (a Windows import, the
+If the checked code reaches its start again at the same stack depth without having reached its
+end, or if the run ends in the middle of a checked pass, that is reported as a failure too.
+
+**Limits.** Other interceptions on the checked address (`--count`, `--state-log` on the same
+address) see each of the two executions. A call during which the original calls a host function (a Windows import, the
 clock, sound) cannot be replayed identically: the host's own state moved. The check refuses it
 and stops. Each checked pass copies all writable memory three times (about 25 ms for a city),
 hence the sampling for functions called millions of times. The inputs of a failing pass are
