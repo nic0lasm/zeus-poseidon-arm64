@@ -37,6 +37,7 @@ analysis/notes reverse-engineering notes kept under version control
 | `pe_image.*` | loads the PE executable and lists its imports |
 | `process.*` | stack, heap, thread block, binding of every import to a host function |
 | `vfs.*` | the file system the game sees |
+| `game_gog.h` | every address of the GOG executable the host uses, named, and the check of expected bytes |
 | `native.cpp` | game functions rewritten for the host |
 | `widescreen.cpp` | wide display mode, in place of the game's 1024×768 |
 | `language.cpp` | in-memory text adjustments for language packs |
@@ -71,8 +72,10 @@ instruction becomes a jump to its exit, and the hook leaves registers and stack 
 would have. A function can also get a native fast path while keeping its original code: its
 first instructions move to a trampoline, which runs the host version and either returns to the
 caller or carries on into the original (`Cpu::add_fast_path`, used by the sprite dispatcher).
-Each replacement checks the original bytes first and is proven by the frame logs
-of the scenarios, which must be identical with and without `--no-native`.
+Each replacement checks the original bytes first (`gog::matches`, `game_gog.h`) and is proven by
+the frame logs of the scenarios, which must be identical with and without `--no-native`.
+Every address of the game the host touches is listed in `game_gog.h`, with the original
+function that uses it.
 
 ### Calling from the host into the game
 

@@ -12,7 +12,7 @@
 //   3. l'absence de la liste d'exceptions polonaises, qui remonte de 2 pixels des caractères
 //      comme ê, œ ou ñ.
 //
-// Adresses de l'exécutable GOG (SHA-256 382bcd28…) : table en 0x0063BE2C ; groupes de polices
+// Adresses de l'exécutable GOG (win32/game_gog.h) : table en 0x0063BE2C ; groupes de polices
 // dans le tableau pointé par 0x012AFBEC (8 octets par groupe, identifiant d'image à +4,
 // dernier rang en 0x012BC820). Deux routines dessinent un glyphe :
 //   - FUN_00508b50 (textes d'une ligne) lit la hauteur de ligne en 0x00F13960 et applique les
@@ -28,23 +28,16 @@
 #include <memory>
 #include <vector>
 
+#include "win32/game_gog.h"
 #include "win32/process.h"
 
 namespace zeus::win32 {
 namespace {
 
-constexpr uint32_t kCharTable = 0x0063BE2C, kFontGroups = 0x012AFBEC, kLastFontGroup = 0x012BC820;
-constexpr uint32_t kDrawGlyph = 0x00508B50, kLineHeight = 0x00F13960, kPolishException = 0x00508C7F;
-constexpr uint32_t kPanelGlyph = 0x004F59B0, kPanelSubtract = 0x004F5A33, kPanelPolishException = 0x004F5ACF;
+using namespace gog;
 
 // Hauteur de ligne par rang de police dans Zeus_Fonts.sg3 (0 : SPR_FONTS … 16 : SPR_FONTS_DKMESSAGE).
 constexpr int kLineHeights[17] = {10, 16, 16, 16, 16, 16, 29, 29, 12, 16, 12, 11, 11, 11, 11, 16, 10};
-
-bool matches(Cpu& cpu, uint32_t address, std::initializer_list<uint8_t> expected) {
-    for (uint8_t byte : expected)
-        if (cpu.read_u8(address++) != byte) return false;
-    return true;
-}
 
 // Rang d'une police dans Zeus_Fonts.sg3 d'après l'identifiant de sa première image, ou -1.
 int font_rank(Cpu& c, uint32_t font) {
@@ -63,7 +56,7 @@ void apply_language_pack(Process& p, const std::filesystem::path& pack) {
     if (table.empty()) return;  // pack sans adaptation du texte
     Cpu& cpu = p.cpu();
     // On ne touche qu'à l'exécutable connu : mêmes octets aux trois endroits modifiés.
-    const bool known = table.size() == 224 && cpu.read_u8(kCharTable + 'A' - 0x20) == 27 &&
+    const bool known = table.size() == 224 && matches(cpu, kCharTable + 'A' - 0x20, {27}) &&
                        matches(cpu, kDrawGlyph, {0x51, 0x8B, 0x44, 0x24, 0x0C}) &&
                        matches(cpu, kPolishException, {0xB9, 0x02, 0x00, 0x00, 0x00}) &&
                        matches(cpu, kPanelGlyph, {0x53, 0x8B, 0x5C, 0x24, 0x0C}) &&

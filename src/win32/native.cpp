@@ -5,8 +5,8 @@
 // exécutées à la place du code d'origine ; le reste du jeu reste émulé. Chaque réécriture doit
 // laisser le journal d'images d'une exécution --deterministic strictement identique.
 //
-// Adresses de l'exécutable GOG (SHA-256 382bcd28…). Une fonction n'est remplacée que si ses
-// premiers octets sont ceux attendus.
+// Adresses : win32/game_gog.h. Une fonction n'est remplacée que si ses premiers octets sont ceux
+// attendus.
 
 #include <algorithm>
 #include <cstdio>
@@ -14,10 +14,13 @@
 #include <optional>
 #include <stdexcept>
 
+#include "win32/game_gog.h"
 #include "win32/process.h"
 
 namespace zeus::win32 {
 namespace {
+
+using namespace gog;
 
 uint32_t u32(Cpu& cpu, uint32_t address) {
     uint32_t value;
@@ -25,19 +28,8 @@ uint32_t u32(Cpu& cpu, uint32_t address) {
     return value;
 }
 
-// Variables du jeu utilisées par ses routines de dessin. Avant d'appeler l'une d'elles, le jeu a
-// calculé la partie visible de l'image (FUN_00509c20 et FUN_00509cd0).
-constexpr uint32_t kFrameBuffer = 0x00F9C100,  // adresse du tampon d'affichage
-                   kRowBytes = 0x00F2A698,     // octets par ligne du tampon
-                   kTargetY = 0x00F13A3C, kTargetX = 0x00F13A40,
-                   kRows = 0x00F13A34,         // lignes à dessiner
-                   kColumns = 0x00F139A4,      // pixels visibles par ligne
-                   kSourceSkip = 0x00F139A0,   // octets de source à sauter après chaque ligne
-                   kTargetSkip = 0x00F1399C,   // octets de destination à sauter après chaque ligne
-                   kImageWidth = 0x00F13A1E,   // largeur de l'image, sur 16 bits
-                   kSkippedRows = 0x00F13998,  // lignes de l'image masquées en haut
-                   kPixelFormat = 0x00F2AB24,  // 0x565 ou 0x555
-                   kScreenWidth = 0x00F2A6B4, kScreenHeight = 0x00F2A6B0;
+// Les routines de dessin lisent la partie visible de l'image que le jeu a calculée avant de les
+// appeler (FUN_00509c20 et FUN_00509cd0) : kTargetX, kRows, kColumns… dans game_gog.h.
 
 int32_t i32(Cpu& cpu, uint32_t address) { return static_cast<int32_t>(u32(cpu, address)); }
 
@@ -108,10 +100,10 @@ uint32_t copy_rectangle_keyed(Cpu& cpu) {
     return 0u;
 }
 
-// FUN_0050b410 : efface le tampon d'affichage, sauf quand 0x63C040 l'interdit.
+// FUN_0050b410 : efface le tampon d'affichage, sauf quand kNoClear l'interdit.
 uint32_t clear_frame(Cpu& cpu) {
     const uint32_t buffer = u32(cpu, kFrameBuffer);
-    if (u32(cpu, 0x0063C040) != 0 || buffer == 0) return 0u;
+    if (u32(cpu, kNoClear) != 0 || buffer == 0) return 0u;
     const uint32_t pixels = u32(cpu, kScreenWidth) * u32(cpu, kScreenHeight);
     std::memset(cpu.host(buffer), 0, static_cast<size_t>((pixels & 0x7FFFFFFF) >> 1) * 4 + ((pixels * 2) & 3));
     return 0u;
@@ -242,11 +234,11 @@ uint32_t draw_runs_blended(Cpu& cpu) {
     return 0u;
 }
 
-// __strcmpi de la bibliothèque C de Visual C++ 6, sans paramètres régionaux (0x160BFA4 nul,
+// __strcmpi de la bibliothèque C de Visual C++ 6, sans paramètres régionaux (kLocale nul,
 // ce qui est toujours le cas : le jeu n'appelle pas setlocale) : comparaison sans tenir compte
 // de la casse des lettres ASCII ; résultat -1, 0 ou 1.
 uint32_t strcmpi(Cpu& cpu) {
-    if (u32(cpu, 0x0160BFA4) != 0) throw std::runtime_error("_strcmpi : paramètres régionaux inattendus");
+    if (u32(cpu, kLocale) != 0) throw std::runtime_error("_strcmpi : paramètres régionaux inattendus");
     const uint8_t* a = cpu.host(cpu.arg(0));
     const uint8_t* b = cpu.host(cpu.arg(1));
     auto lower = [](uint8_t c) { return c >= 'A' && c <= 'Z' ? static_cast<uint8_t>(c + 0x20) : c; };
@@ -268,15 +260,6 @@ uint32_t strcmpi(Cpu& cpu) {
 // d'origine refait alors tout depuis ses arguments. Quand le cas est traité, les variables
 // écrites sont celles qu'écrit l'original sur ce chemin, avec les mêmes largeurs.
 namespace sprite {
-
-constexpr uint32_t kId = 0x00F139E0, kArgX = 0x00F139DC, kArgY = 0x00F139D8,
-                   kImage = 0x00F13A18, kHeight = 0x00F13A1C, kKind = 0x00F13A14,
-                   kClipX = 0x00F13991, kClipY = 0x00F13990,  // 0 entière, 1 à 4 rognée, 5 invisible
-                   kSkipLeft = 0x00F139AC, kRight = 0x00F139A8, kVisibleRows = 0x00F13994,
-                   kClipLeft = 0x00F139BC, kClipRight = 0x00F139B8,
-                   kClipTop = 0x00F139B4, kClipBottom = 0x00F139B0,
-                   kTargetPixels = 0x00F2A6A0,  // pixels par ligne du tampon
-                   kOverlay = 0x0078C570;       // couleur de surimpression, 16 bits
 
 void put8(Cpu& cpu, uint32_t address, uint8_t value) { *cpu.host(address) = value; }
 void put16(Cpu& cpu, uint32_t address, int16_t value) { std::memcpy(cpu.host(address), &value, 2); }
@@ -312,12 +295,12 @@ std::optional<uint32_t> dispatch(Cpu& cpu) {
     const bool shadow = *cpu.host(entry + 0x3B) != 0;
     if (*cpu.host(entry + 0x34)) return std::nullopt;  // image chargée à part (fond d'écran…)
     // Écrans où le fond de la carte se dessine d'un bloc (0x005AD65B).
-    const uint8_t screen = *cpu.host(0x00F2A6DD);
-    const int32_t submode = i32(cpu, 0x00781894);
+    const uint8_t screen = *cpu.host(kScreen);
+    const int32_t submode = i32(cpu, kSubmode);
     const bool special = screen == 0x15 || screen == 0x14 || screen == 0x1A || screen == 0x34 || screen == 0x2D ||
                          (screen == 3 && (submode == 0x14 || submode == 0x15)) ||
-                         (screen == 9 && *cpu.host(0x00FFA180) == 0x14);
-    if (special && static_cast<uint32_t>(id) == u32(cpu, u32(cpu, 0x0136F3E8) + 4) + 0x3C000) return std::nullopt;
+                         (screen == 9 && *cpu.host(kSubscreen) == 0x14);
+    if (special && static_cast<uint32_t>(id) == u32(cpu, u32(cpu, kBackground) + 4) + 0x3C000) return std::nullopt;
     if (kind == 0x1E) return std::nullopt;
 
     // FUN_00509c20 : rognage horizontal.
@@ -344,7 +327,7 @@ std::optional<uint32_t> dispatch(Cpu& cpu) {
         }
     }
     if (clip_x != 5) visible = right - skip_left;
-    const int32_t source_skip = (width - visible) * 2, target_skip = (i32(cpu, kTargetPixels) - visible) * 2;
+    const int32_t source_skip = (width - visible) * 2, target_skip = (i32(cpu, kRowPixels) - visible) * 2;
 
     // FUN_00509cd0 : rognage vertical.
     const int32_t height = height16;
@@ -387,13 +370,13 @@ std::optional<uint32_t> dispatch(Cpu& cpu) {
         }
     }
 
-    put32(cpu, kArgX, x);
-    put32(cpu, kArgY, y);
-    put32(cpu, kId, id);
-    put32(cpu, kImage, image);
+    put32(cpu, kSpriteX, x);
+    put32(cpu, kSpriteY, y);
+    put32(cpu, kSpriteId, id);
+    put32(cpu, kSpriteImage, image);
     put16(cpu, kImageWidth, width16);
-    put16(cpu, kHeight, height16);
-    put8(cpu, kKind, kind);
+    put16(cpu, kImageHeight, height16);
+    put8(cpu, kSpriteKind, kind);
     put32(cpu, kTargetX, left);
     put32(cpu, kTargetY, top);
     put8(cpu, kClipX, clip_x);
@@ -423,7 +406,6 @@ std::optional<uint32_t> dispatch(Cpu& cpu) {
 // termine avec l'indice trouvé, ou le nombre d'entrées, dans EDX et dans [ESP+0x10] ; EAX, ECX et
 // les indicateurs sont réécrits avant d'être relus. L'interception fait la même recherche avant
 // la première instruction de la boucle, remplacée par un saut à sa sortie.
-constexpr uint32_t kKeySearch = 0x005059F8, kKeySearchEnd = 0x00505A33;
 constexpr uint8_t kKeySearchBytes[] = {0x8B, 0x43, 0x0C, 0x33, 0xD2, 0x85, 0xC0, 0x89, 0x54, 0x24, 0x10,
                                        0x7E, 0x2E, 0xEB, 0x04, 0x8B, 0x54, 0x24, 0x10, 0x8B, 0x0B, 0x57,
                                        0x8B, 0x54, 0xD1, 0x04, 0x52, 0xE8, 0x28, 0x6C, 0x0C, 0x00};
@@ -437,7 +419,7 @@ bool same_text(const uint8_t* a, const uint8_t* b) {
 }
 
 void search_key(Cpu& cpu) {
-    if (u32(cpu, 0x0160BFA4) != 0) throw std::runtime_error("recherche de clé : paramètres régionaux inattendus");
+    if (u32(cpu, kLocale) != 0) throw std::runtime_error("recherche de clé : paramètres régionaux inattendus");
     const uint32_t table = cpu.reg(Cpu::Reg::EBX);  // EBX : l'objet ; [EBX] la table, [EBX+0xC] sa taille
     const uint8_t* key = cpu.host(cpu.reg(Cpu::Reg::EDI));
     const int32_t count = static_cast<int32_t>(u32(cpu, table + 0x0C));
@@ -456,12 +438,12 @@ struct Replacement {
 };
 
 constexpr Replacement kReplacements[] = {
-    {0x00413DC0, {0xA1, 0x98, 0xA6, 0xF2, 0x00}, 0, copy_rectangle},
-    {0x00416010, {0x55, 0x8B, 0xEC, 0x53, 0x56}, 0, copy_rectangle_keyed},
-    {0x0050B410, {0xA1, 0x40, 0xC0, 0x63, 0x00}, 0, clear_frame},
-    {0x004161B0, {0x8B, 0x44, 0x24, 0x04, 0x83}, 0, draw_runs},
-    {0x00413E30, {0xA1, 0x24, 0xAB, 0xF2, 0x00}, 0, draw_runs_blended},
-    {0x005CC640, {0x55, 0x8B, 0xEC, 0x57, 0x56}, 0, strcmpi},
+    {kCopyRectangle, {0xA1, 0x98, 0xA6, 0xF2, 0x00}, 0, copy_rectangle},
+    {kCopyRectangleKeyed, {0x55, 0x8B, 0xEC, 0x53, 0x56}, 0, copy_rectangle_keyed},
+    {kClearFrame, {0xA1, 0x40, 0xC0, 0x63, 0x00}, 0, clear_frame},
+    {kDrawRuns, {0x8B, 0x44, 0x24, 0x04, 0x83}, 0, draw_runs},
+    {kDrawRunsBlended, {0xA1, 0x24, 0xAB, 0xF2, 0x00}, 0, draw_runs_blended},
+    {kStrcmpi, {0x55, 0x8B, 0xEC, 0x57, 0x56}, 0, strcmpi},
 };
 
 }  // namespace
@@ -470,16 +452,15 @@ void install_native_functions(Process& p) {
     Cpu& cpu = p.cpu();
     int installed = 0;
     for (const Replacement& r : kReplacements) {
-        if (std::memcmp(cpu.host(r.address), r.first_bytes, sizeof r.first_bytes) != 0) continue;
+        if (!matches(cpu, r.address, r.first_bytes, sizeof r.first_bytes)) continue;
         cpu.replace_function(r.address, r.arg_bytes, r.fn);
         ++installed;
     }
-    constexpr uint8_t kDispatchBytes[] = {0x81, 0xEC, 0x14, 0x01, 0x00, 0x00, 0x8B, 0x84, 0x24, 0x1C, 0x01, 0x00, 0x00};
-    if (std::memcmp(cpu.host(0x005ACF50), kDispatchBytes, sizeof kDispatchBytes) == 0) {
-        cpu.add_fast_path(0x005ACF50, 0x18, 6, sprite::dispatch);  // « SUB ESP,0x114 » déplacé
+    if (matches(cpu, kSpriteDispatch, {0x81, 0xEC, 0x14, 0x01, 0x00, 0x00, 0x8B, 0x84, 0x24, 0x1C, 0x01, 0x00, 0x00})) {
+        cpu.add_fast_path(kSpriteDispatch, 0x18, 6, sprite::dispatch);  // « SUB ESP,0x114 » déplacé
         ++installed;
     }
-    if (std::memcmp(cpu.host(kKeySearch), kKeySearchBytes, sizeof kKeySearchBytes) == 0) {
+    if (matches(cpu, kKeySearch, kKeySearchBytes, sizeof kKeySearchBytes)) {
         const uint8_t jump[2] = {0xEB, static_cast<uint8_t>(kKeySearchEnd - (kKeySearch + 2))};
         std::memcpy(cpu.host(kKeySearch), jump, sizeof jump);
         cpu.add_code_hook(kKeySearch, search_key);

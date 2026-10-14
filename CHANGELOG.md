@@ -5,6 +5,7 @@ pull request.
 
 ## Unreleased
 
+- **Every game address in one place.** The addresses of the GOG executable the host reads, writes or intercepts are named and commented in `src/win32/game_gog.h`, and checked for their expected bytes by one function; behaviour unchanged.
 - **Text file format documented.** `formats/eng.md` and `tools/engtext.py` describe `Zeus_Text.eng`, `Zeus_Editor_Text.eng` and `Zeus_MM.eng` (header, string groups, help records, `@` formatting codes, character coding), with evidence from the game's loader and lookup code; the reader parses and re-serializes all 14 text files of the editions we have, byte for byte.
 - New screenshots on the front page: a large city in wide mode (1324 × 768) and the main menu, both with a French language pack.
 - **A clearer front page.** The README, in English and in French, opens with three steps to play, what you get, the next steps as task lists linked to their issues, and the history of every version since 0.1. The roadmap splits each step into precise tasks (#34 to #42).

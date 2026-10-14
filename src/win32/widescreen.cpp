@@ -20,18 +20,20 @@
 //
 // La vue fait 60 pixels par colonne et 15 par rangée : seules les largeurs 184 + 60 n et les
 // hauteurs 33 + 15 n tombent juste, et la taille demandée est arrondie vers le bas.
-// Adresses de l'exécutable GOG (SHA-256 382bcd28…) ; rien n'est modifié si un seul des octets
-// attendus diffère.
+// Adresses : win32/game_gog.h ; rien n'est modifié si un seul des octets attendus diffère.
 
 #include <algorithm>
 #include <cstdio>
 #include <string>
 #include <vector>
 
+#include "win32/game_gog.h"
 #include "win32/process.h"
 
 namespace zeus::win32 {
 namespace {
+
+using namespace gog;
 
 struct Site {
     uint32_t address;
@@ -39,14 +41,7 @@ struct Site {
     int size;  // octets
 };
 
-constexpr uint32_t kTopBarDrawn = 0x0059EC36, kFrameBuffer = 0x00F9C100, kScreenWidth = 0x00F2A6B4,
-                   kPanelPosition = 0x010DFF34;
 constexpr int kTopBarWidth = 838, kTopBarHeight = 30, kTopBarRepeat = 500;
-
-constexpr uint32_t kWidthCompares[] = {0x00422D55, 0x005051FA, 0x0051CBC8, 0x0051CC1E, 0x0058E2BE, 0x0058E2F7, 0x0058E3FD, 0x0058E41C, 0x0058EF7C, 0x0059EBFB};
-constexpr uint32_t kHeightCompares[] = {0x00505212, 0x00571685};
-
-uint32_t read(Cpu& cpu, const Site& s) { return s.size == 4 ? cpu.read_u32(s.address) : cpu.read_u8(s.address); }
 
 void write(Cpu& cpu, const Site& s, uint32_t value) {
     if (s.size == 4) cpu.write_u32(s.address, value);
@@ -66,26 +61,26 @@ bool apply_wide_mode(Process& p, int& width, int& height) {
     height = 33 + 15 * (rows - 1);
 
     std::vector<std::pair<Site, uint32_t>> changes = {
-        {{0x0050BD03, 1024, 4}, static_cast<uint32_t>(width)},    // taille du mode 3
-        {{0x0050BD0D, 768, 4}, static_cast<uint32_t>(height)},
-        {{0x0058E2CA, 838, 4}, static_cast<uint32_t>(width - 186)},  // panneau de contrôle
-        {{0x0058E2D4, 958, 4}, static_cast<uint32_t>(width - 66)},   // panneau replié
-        {{0x0058E42F, 1024, 4}, static_cast<uint32_t>(width)},       // liseré du bas
-        {{0x0051CC29, 50, 1}, static_cast<uint32_t>(rows)},          // vue, panneau déplié
-        {{0x0051CC2B, 14, 1}, static_cast<uint32_t>(columns)},
-        {{0x0051CBD3, 50, 1}, static_cast<uint32_t>(rows)},          // vue, panneau replié
-        {{0x0051CBD5, 17, 1}, static_cast<uint32_t>(columns + 3)},
+        {{kMode3Width, 1024, 4}, static_cast<uint32_t>(width)},    // taille du mode 3
+        {{kMode3Height, 768, 4}, static_cast<uint32_t>(height)},
+        {{kPanelX, 838, 4}, static_cast<uint32_t>(width - 186)},  // panneau de contrôle
+        {{kFoldedPanelX, 958, 4}, static_cast<uint32_t>(width - 66)},   // panneau replié
+        {{kBottomBorder, 1024, 4}, static_cast<uint32_t>(width)},       // liseré du bas
+        {{kViewRows, 50, 1}, static_cast<uint32_t>(rows)},          // vue, panneau déplié
+        {{kViewColumns, 14, 1}, static_cast<uint32_t>(columns)},
+        {{kFoldedViewRows, 50, 1}, static_cast<uint32_t>(rows)},          // vue, panneau replié
+        {{kFoldedViewColumns, 17, 1}, static_cast<uint32_t>(columns + 3)},
     };
     for (uint32_t address : kWidthCompares) changes.push_back({{address, 1024, 4}, static_cast<uint32_t>(width)});
     for (uint32_t address : kHeightCompares) changes.push_back({{address, 768, 4}, static_cast<uint32_t>(height)});
 
     for (const auto& [site, value] : changes) {
-        if (read(cpu, site) != site.expected) {
+        if (!matches_value(cpu, site.address, site.expected, static_cast<size_t>(site.size))) {
             std::fprintf(stderr, "[hôte] écran large : exécutable inconnu (%#x), mode non modifié\n", site.address);
             return false;
         }
     }
-    if (cpu.read_u8(kTopBarDrawn - 5) != 0xE8) {
+    if (!matches(cpu, kTopBarDrawn - 5, {0xE8})) {  // CALL
         std::fprintf(stderr, "[hôte] écran large : exécutable inconnu (%#x), mode non modifié\n", kTopBarDrawn);
         return false;
     }

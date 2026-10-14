@@ -8,6 +8,7 @@
 #include <optional>
 #include <thread>
 
+#include "win32/game_gog.h"
 #include "win32/process.h"
 #include "win32/text.h"
 
@@ -31,14 +32,14 @@ struct State {
 };
 
 // Instant où le jeu fera son prochain tour de simulation, d'après FUN_005168a0 : un tour est dû
-// quand le temps écoulé depuis le dernier (0x00F9F998, horloge de timeGetTime) atteint
-// l'intervalle de la vitesse du jeu (pourcentage en 0x00F2A774 ; 0, 20, 35… ms en 0x0063DA1C,
-// de 100 % à 10 %) plus 2 ms. Rien si la vitesse sort de la table.
+// quand le temps écoulé depuis le dernier (gog::kLastTurn, horloge de timeGetTime) atteint
+// l'intervalle de la vitesse du jeu (pourcentage en gog::kGameSpeed ; 0, 20, 35… ms en
+// gog::kSpeedIntervals, de 100 % à 10 %) plus 2 ms. Rien si la vitesse sort de la table.
 std::optional<uint32_t> next_simulation_turn(Cpu& cpu) {
-    const int32_t speed = static_cast<int32_t>(cpu.read_u32(0x00F2A774));
+    const int32_t speed = static_cast<int32_t>(cpu.read_u32(gog::kGameSpeed));
     const int32_t index = std::max((100 - speed) / 10, 0);
     if (index >= 10) return std::nullopt;
-    return cpu.read_u32(0x00F9F998) + cpu.read_u32(0x0063DA1C + 4 * static_cast<uint32_t>(index)) + 2;
+    return cpu.read_u32(gog::kLastTurn) + cpu.read_u32(gog::kSpeedIntervals + 4 * static_cast<uint32_t>(index)) + 2;
 }
 
 void write_message(Cpu& cpu, uint32_t address, const Message& m) {
@@ -249,8 +250,8 @@ void install_user32(Process& p) {
         uint32_t wait = now - st->last_idle_poll < kTurn ? kTurn - (now - st->last_idle_poll) : 0;
         std::optional<uint32_t> exact;  // instant à atteindre au plus près
         if (!st->knows_turns) {
-            constexpr uint8_t kExpected[] = {0x56, 0x57, 0xFF, 0x15, 0x24, 0x82, 0x5D, 0x00, 0x8B, 0xF8, 0xA1, 0x98, 0xF9, 0xF9, 0x00};
-            st->knows_turns = std::memcmp(cpu.host(0x005168A0), kExpected, sizeof kExpected) == 0;
+            st->knows_turns = gog::matches(cpu, gog::kSimulationDue, {0x56, 0x57, 0xFF, 0x15, 0x24, 0x82, 0x5D, 0x00,
+                                                                      0x8B, 0xF8, 0xA1, 0x98, 0xF9, 0xF9, 0x00});
         }
         if (*st->knows_turns) {
             if (const std::optional<uint32_t> due = next_simulation_turn(cpu)) {
