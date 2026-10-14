@@ -5,6 +5,10 @@ pull request.
 
 ## Unreleased
 
+- **Lighter.** The host keeps in memory only the game files of 4 MB or less, which the game
+  reopens all the time; its large picture files are read once per game and the game keeps them
+  itself. A running large city uses about 530 MB instead of 700. Memory stays flat over a
+  20-minute session.
 - In wide mode the display options read the real size ("1324 x 768 resolution", or
   "Résolution 1324 x 768" in French), as does the help for the F7 key. The game's text files
   are left alone: the host replaces the label in the copy it hands to the game.

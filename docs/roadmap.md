@@ -47,6 +47,10 @@ is far less work than a rewrite.
 - Endurance: the large city of the last tutorial, 25 minutes in real time at full game speed,
   several game years with autosaves, an earthquake, a god and a monster walking the streets,
   without a stop.
+- Memory: a 20-minute session in the large city, resident size sampled every minute, stays
+  flat (about 530 MB since the file cache is limited to small files).
+- Save and load in a Poseidon adventure with the French pack, under an accented name (`Cité`):
+  the file is read to the last byte by `tools/mapfile.py`, listed and loaded back.
 - Every sound file of the game (703 WAV, 929 MP3, 311 minutes) decodes through the code paths
   of the mixer (`zeus-run --check-audio`); so do the files of a French pack.
 - The eight scenarios of `tests/scenarios` give the same frames with and without the native

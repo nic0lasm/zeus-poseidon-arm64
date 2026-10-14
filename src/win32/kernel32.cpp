@@ -42,7 +42,9 @@ struct State {
     explicit State(Process& p) : vfs(p.vfs()) {}
     Vfs& vfs;
     std::map<uint32_t, std::unique_ptr<OpenFile>> files;
-    // Contenu des fichiers de l'installation déjà lus (jusqu'à 32 Mo chacun, 512 Mo en tout).
+    // Contenu des fichiers de l'installation déjà lus, jusqu'à 4 Mo chacun et 512 Mo en tout : le
+    // jeu rouvre sans cesse ses petits fichiers (cartes, réglages, sons d'ambiance), mais ne lit
+    // qu'une fois par partie ses gros fichiers d'images, qu'il garde lui-même en mémoire.
     std::map<std::string, std::shared_ptr<const std::vector<uint8_t>>> contents;
     size_t contents_size = 0;
     std::map<uint32_t, FindState> finds;
@@ -424,7 +426,7 @@ void install_kernel32(Process& p) {
             const auto known = st->contents.find(existing->string());
             if (known != st->contents.end()) {
                 file->data = known->second;
-            } else if (!ec && size > 0 && size <= (32u << 20)) {
+            } else if (!ec && size > 0 && size <= (4u << 20)) {
                 std::ifstream in(*existing, std::ios::binary);
                 auto bytes = std::make_shared<std::vector<uint8_t>>(static_cast<size_t>(size));
                 if (in.read(reinterpret_cast<char*>(bytes->data()), static_cast<std::streamsize>(size))) {
