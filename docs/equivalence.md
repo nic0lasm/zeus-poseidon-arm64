@@ -28,7 +28,7 @@ The zones are the variables the game writes into a saved game. A game saved with
 - `0x0050CB80` is called once per block: 139 passes for that one save;
 - the file's own block table (block 2, kept at `0x00F9C1D0` while saving) gives, for each block,
   the address of the variable in this executable, the size of an element and the number of
-  elements. The file format itself is described in `formats/map.md`.
+  elements. The file format itself is described in `formats/sav.md`.
 
 Blocks 0 to 2 describe the file (version, number of blocks, the table) and are left out. The 136
 others are the state zones, in save order: 4.5 MB in all. One zone is added that the save does
@@ -48,6 +48,9 @@ blocks 43 and 42) and derives six values from them (`0x00F137C4` to `0x00F137D8`
 | everything else | 107 smaller blocks | written by the save routine; meaning not established here |
 
 During the tutorial scenario 33 of the 137 zones change; no two ticks have the same state.
+Some zones hold heap addresses (block 101 keeps a pointer at +4 of each element, which the save
+routine frees first, see `formats/sav.md`). They are fingerprinted as they are: the host's heap
+hands out the same addresses in the same order in every deterministic run.
 
 ### `--state-log`
 
