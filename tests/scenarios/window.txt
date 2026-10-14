@@ -1,0 +1,3 @@
+5:key 27; 12:click 220,101; 17:char 78; 20:click 556,320; 27:click 644,523; 33:click 212,120; 45:rclick 300,300; 50.5:blur; 60:focus; 70:click 130,10; 72:click 160,40; 75:move 300,300; 76:wheel -2; 79:wheel 1; 82:rclick 780,590
+# durée : 90
+# Fenêtre : passage à l'arrière-plan (le jeu attend) puis retour, molette dans la liste de l'aide.

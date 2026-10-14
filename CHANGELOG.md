@@ -13,6 +13,9 @@ pull request.
 - **3D sound.** The host offers a software 3D provider: with "3D sounds" on in the game's sound
   options, ambience is placed around the listener. Reverb and filters turn out never to be
   enabled by this build of the game.
+- **Mouse wheel.** The wheel (or a two-finger swipe) scrolls the game's lists and texts.
+- **Pause in the background.** When the window is no longer in front, the game is told so, as
+  under Windows: it silences its sounds and waits, then carries on when you come back.
 - **Wider automated coverage.** Four more scenarios: the first Poseidon adventure, the
   adventure editor, every window of the *Options* menu, and the large city of the last
   tutorial. All sixteen tutorials were loaded in turn, and the large city was left running for
@@ -20,7 +23,8 @@ pull request.
 - `zeus-run --check-audio FOLDER` decodes every sound file the way the mixer does: the 1,632
   files of the game pass. It also showed that one voice file of the French CDs is empty on the
   discs themselves.
-- Scripts can drag: `down X,Y` and `up X,Y` press and release separately.
+- Scripts can drag (`down X,Y`, `up X,Y`), turn the wheel (`wheel N`) and simulate the window
+  losing and regaining focus (`blur`, `focus`).
 - `tools/ghidra/Listing.java` prints the disassembly of code Ghidra attached to no function,
   such as the window procedure. The notes now describe how the game reads the mouse, list
   every DirectDraw method it calls (all provided) and explain why `RaiseException` and

@@ -37,8 +37,8 @@
 //     --screenshot SORTIE.bmp  enregistre la dernière image affichée
 //     --window-shot SORTIE.bmp enregistre le contenu de la fenêtre, mise à l'échelle comprise
 //     --script "T:ACTION; …"   joue des actions à T secondes : click X,Y ; rclick X,Y ;
-//                              move X,Y ; down X,Y ; up X,Y ; key CODE ; char CODE ;
-//                              shot SORTIE.bmp
+//                              move X,Y ; down X,Y ; up X,Y ; wheel N ; blur ; focus ;
+//                              key CODE ; char CODE ; shot SORTIE.bmp
 
 #include <algorithm>
 #include <cctype>

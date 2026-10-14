@@ -21,10 +21,10 @@ struct Message {
 
 // Action de diagnostic déclenchée à un instant donné, à la place du joueur.
 struct ScriptEvent {
-    enum class Kind { Move, LeftDown, LeftUp, RightDown, RightUp, KeyDown, KeyUp, Char, Shot };
+    enum class Kind { Move, LeftDown, LeftUp, RightDown, RightUp, Wheel, KeyDown, KeyUp, Char, Blur, Focus, Shot };
     double at = 0;  // secondes depuis le lancement
     Kind kind = Kind::Move;
-    int x = 0, y = 0, key = 0;
+    int x = 0, y = 0, key = 0;  // key : touche, caractère ou crans de molette
     std::string path;  // pour Shot : fichier BMP à écrire
 };
 
@@ -46,7 +46,8 @@ public:
     std::string frame_log_path;   // une ligne par image affichée : son empreinte
     // Ajoute au scénario les actions décrites par `text`, de la forme
     // « 5:click 400,300; 7:rclick 10,10; 8:move 5,5; 9:key 27; 9.5:char 65; 10:shot f.bmp ».
-    // Un glissement s'écrit « 5:down 100,100; 6:move 130,115; 7:up 160,130 ».
+    // Autres actions : down X,Y et up X,Y (glissement), wheel N (crans de molette), blur et
+    // focus (fenêtre à l'arrière-plan puis de retour).
     void add_script(const std::string& text);
 
     // Taille de l'écran annoncée au programme tant qu'il n'a pas choisi de mode d'affichage.
@@ -102,6 +103,11 @@ private:
     std::FILE* frame_log_ = nullptr;
     std::vector<ScriptEvent> script_;  // trié par instant
     size_t script_next_ = 0;
+    // Passage de la fenêtre à l'arrière-plan : le jeu en est prévenu après un court délai, pour
+    // ne pas réagir aux pertes de focus passagères (bascule en plein écran).
+    bool focus_lost_ = false, inactive_told_ = false;
+    uint64_t focus_lost_at_ = 0;
+    void tell_active(bool active, uint32_t now);
 };
 
 }  // namespace zeus::win32

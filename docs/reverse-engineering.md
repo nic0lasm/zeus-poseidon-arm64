@@ -48,6 +48,13 @@ saved game is essentially a list of memory blocks.
   "clicked" flag at `0x00F2A706`. The game reads these once per frame. Consequence for scripted
   input: a press must come at least one frame after the move that precedes it, and a drag
   (road, wall) needs intermediate moves.
+- **Mouse wheel.** At start-up (`0x005C35E0`) the game looks for the pre-Windows 98 wheel
+  helper window and falls back to 3 lines per notch. `WM_MOUSEWHEEL` adds its delta to
+  `0x0160AC90`; scroll bars (`0x005A0C00`) consume it as `delta / 120 × lines`.
+- **Focus.** The main loop (`0x005C37C0`) only runs a game turn while the "active" flag at
+  `0x00F2AB04` is set and waits for a message otherwise. `WM_ACTIVATEAPP` sets or clears the
+  flag; `WM_KILLFOCUS` and a minimising `WM_ACTIVATE` stop the sound channels (`0x005A1330`).
+  The host sends these messages when its window leaves the foreground for more than 0.4 s.
 - **DirectDraw calls.** Every call site that goes through the DirectDraw objects kept at
   `0x00F2AB20` (DirectDraw), `0x00F2AB48` (clipper), `0x00F2AB4C`/`50`/`54` (surfaces) and
   `0x00F0E624` (JPEG backdrop) was listed. The game uses `SetCooperativeLevel`,

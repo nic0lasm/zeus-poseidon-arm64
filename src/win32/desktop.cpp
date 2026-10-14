@@ -14,10 +14,14 @@ namespace zeus::win32 {
 namespace {
 
 // Messages Windows produits à partir des événements SDL.
-constexpr uint32_t WM_CLOSE = 0x0010, WM_KEYDOWN = 0x0100, WM_KEYUP = 0x0101, WM_CHAR = 0x0102,
+constexpr uint32_t WM_ACTIVATE = 0x0006, WM_SETFOCUS = 0x0007, WM_KILLFOCUS = 0x0008,
+                   WM_CLOSE = 0x0010, WM_ACTIVATEAPP = 0x001C,
+                   WM_KEYDOWN = 0x0100, WM_KEYUP = 0x0101, WM_CHAR = 0x0102,
                    WM_MOUSEMOVE = 0x0200, WM_LBUTTONDOWN = 0x0201, WM_LBUTTONUP = 0x0202,
                    WM_RBUTTONDOWN = 0x0204, WM_RBUTTONUP = 0x0205, WM_MBUTTONDOWN = 0x0207,
-                   WM_MBUTTONUP = 0x0208;
+                   WM_MBUTTONUP = 0x0208, WM_MOUSEWHEEL = 0x020A;
+constexpr int kWheelDelta = 120;  // un cran de molette, pour Windows
+constexpr uint64_t kFocusDelayMs = 400;
 constexpr uint32_t MK_LBUTTON = 1, MK_RBUTTON = 2, MK_MBUTTON = 0x10;
 
 // Code de touche virtuelle Windows pour une touche SDL, ou 0.
@@ -245,6 +249,9 @@ void Desktop::add_script(const std::string& text) {
         // l'arrivée de la souris et le bouton, sinon il part de la case d'avant.
         else if (verb == "down") { point(); push(Kind::Move, 0); push(Kind::LeftDown, 0.5); }
         else if (verb == "up") { point(); push(Kind::Move, 0); push(Kind::LeftUp, 0.5); }
+        else if (verb == "wheel") { rest >> e.key; push(Kind::Wheel, 0); }
+        else if (verb == "blur") push(Kind::Blur, 0);
+        else if (verb == "focus") push(Kind::Focus, 0);
         else if (verb == "key") { rest >> e.key; push(Kind::KeyDown, 0); push(Kind::KeyUp, 0.15); }
         else if (verb == "char") { rest >> e.key; push(Kind::Char, 0); }
         else if (verb == "shot") { rest >> e.path; push(Kind::Shot, 0); }
@@ -291,10 +298,34 @@ double Desktop::elapsed(uint32_t now) {
     return (now - first_now_) / 1000.0;
 }
 
+// Prévient le jeu que sa fenêtre passe à l'arrière-plan ou en revient, avec les messages que
+// Windows envoie alors. Inactif, le jeu coupe ses sons et attend au lieu de faire tourner la
+// ville (boucle principale, 0x005C37C0).
+void Desktop::tell_active(bool active, uint32_t now) {
+    auto post = [&](uint32_t message, uint32_t wparam) {
+        queue.push_back({hwnd, message, wparam, 0, now, mouse_x, mouse_y});
+    };
+    if (active) {
+        post(WM_ACTIVATEAPP, 1);
+        post(WM_ACTIVATE, 1);
+        post(WM_SETFOCUS, 0);
+    } else {
+        post(WM_ACTIVATE, 0);
+        post(WM_ACTIVATEAPP, 0);
+        post(WM_KILLFOCUS, 0);
+    }
+    inactive_told_ = !active;
+}
+
 bool Desktop::pump(uint32_t now) {
     if (max_seconds > 0 && elapsed(now) >= max_seconds) stop_ = true;
     auto post = [&](uint32_t message, uint32_t wparam, uint32_t lparam) {
         queue.push_back({hwnd, message, wparam, lparam, now, mouse_x, mouse_y});
+    };
+    auto wheel = [&](int notches) {
+        const uint32_t delta = static_cast<uint16_t>(static_cast<int16_t>(notches * kWheelDelta));
+        post(WM_MOUSEWHEEL, delta << 16 | mouse_buttons_,
+             static_cast<uint32_t>(mouse_y) << 16 | (static_cast<uint32_t>(mouse_x) & 0xFFFF));
     };
     auto mouse = [&](uint32_t message) {
         // Comme Windows, on ne garde en file que le dernier déplacement de souris : sinon les
@@ -314,6 +345,9 @@ bool Desktop::pump(uint32_t now) {
             case Kind::LeftUp: mouse_buttons_ &= ~MK_LBUTTON; mouse(WM_LBUTTONUP); break;
             case Kind::RightDown: mouse_buttons_ |= MK_RBUTTON; mouse(WM_RBUTTONDOWN); break;
             case Kind::RightUp: mouse_buttons_ &= ~MK_RBUTTON; mouse(WM_RBUTTONUP); break;
+            case Kind::Wheel: wheel(s.key); break;
+            case Kind::Blur: tell_active(false, now); break;
+            case Kind::Focus: tell_active(true, now); break;
             case Kind::KeyDown: if (vk < 256) keys_[vk] = true; post(WM_KEYDOWN, vk, 1); break;
             case Kind::KeyUp: if (vk < 256) keys_[vk] = false; post(WM_KEYUP, vk, 0xC0000001u); break;
             case Kind::Char: post(WM_CHAR, vk, 1); break;
@@ -351,6 +385,20 @@ bool Desktop::pump(uint32_t now) {
                 mouse(message);
                 break;
             }
+            case SDL_MOUSEWHEEL:
+                // La molette fait défiler les listes et les textes du jeu.
+                if (e.wheel.y) wheel(e.wheel.y);
+                break;
+            case SDL_WINDOWEVENT:
+                if (headless || virtual_time) break;
+                if (e.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
+                    focus_lost_ = true;
+                    focus_lost_at_ = SDL_GetTicks64();
+                } else if (e.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
+                    focus_lost_ = false;
+                    if (inactive_told_) tell_active(true, now);
+                }
+                break;
             case SDL_KEYDOWN:
             case SDL_KEYUP: {
                 // Les raccourcis ⌘ sont ceux de l'hôte : le jeu ne les voit pas.
@@ -384,6 +432,7 @@ bool Desktop::pump(uint32_t now) {
                 break;
         }
     }
+    if (focus_lost_ && !inactive_told_ && SDL_GetTicks64() - focus_lost_at_ >= kFocusDelayMs) tell_active(false, now);
     return !stop_;
 }
 

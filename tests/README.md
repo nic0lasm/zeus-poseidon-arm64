@@ -35,6 +35,7 @@ versioned. A scenario also fails if the game stops on a missing function.
 | `poseidon` | first Poseidon adventure, a road drawn by dragging, housing, world map and back |
 | `editor` | adventure editor: adventure list, editor screen, city map, terrain brush, menus |
 | `options` | *File* menu, every window of the *Options* menu, in-game help, *About* |
+| `window` | window sent to the background and back (the game waits), mouse wheel in a list |
 | `working-city` | the last tutorial's large city: sanctuaries, stadium, a god and a monster |
 
 Scenarios were written for the English GOG edition at 800×600. Lines starting with `#` are

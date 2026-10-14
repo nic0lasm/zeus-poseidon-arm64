@@ -68,7 +68,9 @@ picture keeps its 4:3 proportions and stays sharp at any size. For a larger view
 choose *Options → Display options → 1024 x 768* in the game. Started with `--wide auto` (the
 application always does), that mode becomes a wide one fitted to your screen. Saves and settings are written to `run/zeus/`.
 
-The intro video plays first; press Esc to skip it.
+The intro video plays first; press Esc to skip it. The mouse wheel, or a two-finger swipe,
+scrolls the game's lists and texts. When you switch to another application the game pauses and
+goes quiet, as it did under Windows; it carries on when you come back.
 
 ## Build the application
 
@@ -123,7 +125,7 @@ another Mac, the first launch needs a right-click → *Open*.
 | `--frames N`, `--seconds S` | stop after N displayed frames or S seconds |
 | `--screenshot FILE.bmp` | save the last displayed frame |
 | `--window-shot FILE.bmp` | save what the window shows, scaling included |
-| `--script "T:ACTION; …"` | replay input at T seconds: `click X,Y`, `rclick X,Y`, `move X,Y`, `down X,Y` and `up X,Y` (press and release separately, to drag), `key CODE` (Windows virtual key), `char CODE`, `shot FILE.bmp` |
+| `--script "T:ACTION; …"` | replay input at T seconds: `click X,Y`, `rclick X,Y`, `move X,Y`, `down X,Y` and `up X,Y` (press and release separately, to drag), `wheel N`, `blur` and `focus` (window sent to the background and back), `key CODE` (Windows virtual key), `char CODE`, `shot FILE.bmp` |
 
 Example — reach the main menu without a window and capture it:
 
