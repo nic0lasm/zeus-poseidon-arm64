@@ -5,6 +5,9 @@ pull request.
 
 ## Unreleased
 
+- **3D sound.** The host offers a software 3D provider: with "3D sounds" on in the game's sound
+  options, ambience is placed around the listener. Reverb and filters turn out never to be
+  enabled by this build of the game.
 ## 0.3 — 2026-10-14
 
 - The application bundle is stripped of debugging information, and `tools/make_app.py` refuses

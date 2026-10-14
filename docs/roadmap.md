@@ -43,7 +43,8 @@ is far less work than a rewrite.
 
 ## Known limits
 
-- Sound: reverb, filters and 3D positioning are ignored.
+- Sound: the fall-off of 3D ambience with distance is an assumption (linear, between Miles's
+  default distances); the original providers may have sounded quieter or louder.
 - Video: audio and picture are paced independently, so they may drift slightly.
 - **Performance**: a running city uses about half of one CPU core; loading screens use a full
   core. The game itself caps its display rate at 20 frames per second.

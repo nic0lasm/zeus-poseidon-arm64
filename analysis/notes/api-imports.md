@@ -6,12 +6,12 @@ Produit par `tools/api_imports.py` à partir de `tools/pe_triage.py --imports` e
 Une fonction **non écrite** arrête le programme en la nommant le jour où le jeu l'appelle.
 Seules les fonctions de son et de vidéo non écrites sont sans effet et renvoient 0.
 
-Total : 202 fonctions dans 10 bibliothèques, dont 179 écrites.
+Total : 202 fonctions dans 10 bibliothèques, dont 199 écrites.
 
 | Bibliothèque | Nombre | Écrites | Rôle | Réalisation |
 |---|---|---|---|---|
 | `kernel32.dll` | 82 | 80 | fichiers, mémoire, temps, environnement | `kernel32.cpp`, fichiers par `vfs.cpp` |
-| `mss32.dll` | 50 | 30 | son : Miles Sound System | `mss.cpp` sur le mixeur de `audio.cpp` (SDL2, AudioToolbox) |
+| `mss32.dll` | 50 | 50 | son : Miles Sound System | `mss.cpp` sur le mixeur de `audio.cpp` (SDL2, AudioToolbox) ; un fournisseur 3D logiciel |
 | `user32.dll` | 45 | 45 | fenêtre, messages, souris, clavier | `user32.cpp` et `desktop.cpp` (SDL2) |
 | `binkw32.dll` | 14 | 13 | vidéos Bink | `bink.cpp`, décodage par ffmpeg |
 | `gdi32.dll` | 3 | 3 | capacités d'écran, palette | `user32.cpp` |
@@ -30,8 +30,6 @@ Non écrites : `RaiseException`, `RtlUnwind`.
 ## `mss32.dll` (50)
 
 `_AIL_3D_provider_attribute@12`, `_AIL_3D_sample_playback_rate@4`, `_AIL_3D_sample_status@4`, `_AIL_allocate_3D_sample_handle@4`, `_AIL_allocate_sample_handle@4`, `_AIL_close_3D_provider@4`, `_AIL_close_stream@4`, `_AIL_end_3D_sample@4`, `_AIL_end_sample@4`, `_AIL_enumerate_3D_providers@12`, `_AIL_file_read@8`, `_AIL_get_preference@4`, `_AIL_init_sample@4`, `_AIL_mem_free_lock@4`, `_AIL_open_3D_listener@4`, `_AIL_open_3D_provider@4`, `_AIL_open_stream@12`, `_AIL_release_3D_sample_handle@4`, `_AIL_release_sample_handle@4`, `_AIL_sample_status@4`, `_AIL_serve@0`, `_AIL_set_3D_orientation@28`, `_AIL_set_3D_position@16`, `_AIL_set_3D_room_type@8`, `_AIL_set_3D_sample_effects_level@8`, `_AIL_set_3D_sample_file@8`, `_AIL_set_3D_sample_loop_count@8`, `_AIL_set_3D_sample_playback_rate@8`, `_AIL_set_3D_sample_volume@8`, `_AIL_set_filter_sample_preference@12`, `_AIL_set_preference@8`, `_AIL_set_sample_file@12`, `_AIL_set_sample_loop_count@8`, `_AIL_set_sample_pan@8`, `_AIL_set_sample_processor@12`, `_AIL_set_sample_reverb@16`, `_AIL_set_sample_volume@8`, `_AIL_set_stream_loop_count@8`, `_AIL_set_stream_position@8`, `_AIL_set_stream_volume@8`, `_AIL_shutdown@0`, `_AIL_start_3D_sample@4`, `_AIL_start_sample@4`, `_AIL_start_stream@4`, `_AIL_startup@0`, `_AIL_stream_position@4`, `_AIL_stream_status@4`, `_AIL_stream_volume@4`, `_AIL_WAV_info@8`, `_AIL_waveOutOpen@16`
-
-Sans effet pour l'instant (renvoient 0) : `_AIL_3D_provider_attribute@12`, `_AIL_3D_sample_playback_rate@4`, `_AIL_3D_sample_status@4`, `_AIL_allocate_3D_sample_handle@4`, `_AIL_close_3D_provider@4`, `_AIL_end_3D_sample@4`, `_AIL_open_3D_listener@4`, `_AIL_release_3D_sample_handle@4`, `_AIL_set_3D_orientation@28`, `_AIL_set_3D_position@16`, `_AIL_set_3D_room_type@8`, `_AIL_set_3D_sample_effects_level@8`, `_AIL_set_3D_sample_file@8`, `_AIL_set_3D_sample_loop_count@8`, `_AIL_set_3D_sample_playback_rate@8`, `_AIL_set_3D_sample_volume@8`, `_AIL_set_filter_sample_preference@12`, `_AIL_set_sample_processor@12`, `_AIL_set_sample_reverb@16`, `_AIL_start_3D_sample@4`.
 
 ## `user32.dll` (45)
 

@@ -1,10 +1,14 @@
 // MSS32 : Miles Sound System, la bibliothèque de son du jeu, réalisée sur le mixeur de l'hôte.
 //
 // Le jeu joue des « échantillons » (fichiers WAV entiers placés en mémoire : bruitages, voix) et
-// des « flux » (fichiers lus depuis le disque : musiques MP3). Les fournisseurs de son 3D ne sont
-// pas proposés : l'énumération n'en renvoie aucun. Les signatures viennent de la documentation
-// publique de Miles 6 ; les fonctions pas encore écrites ne font rien et renvoient 0.
+// des « flux » (fichiers lus depuis le disque : musiques MP3). Quand son option « 3D sounds » est
+// active, il joue aussi des échantillons placés dans l'espace, par un fournisseur de son 3D :
+// l'hôte en propose un, logiciel, qui traduit la position en volume et en panoramique.
+// Les signatures viennent de la documentation publique de Miles 6 ; les fonctions pas encore
+// écrites ne font rien et renvoient 0.
 
+#include <algorithm>
+#include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <fstream>
@@ -20,16 +24,27 @@ namespace {
 // États d'un échantillon ou d'un flux.
 constexpr uint32_t SMP_DONE = 2, SMP_PLAYING = 4, SMP_STOPPED = 8;
 
+// Fournisseur de son 3D de l'hôte : poignée opaque et distances par défaut de Miles.
+constexpr uint32_t kProvider = 0x00D36000;
+constexpr float kMinDistance = 1.0f, kMaxDistance = 200.0f;
+
 struct Handle {
     int voice = 0;
     bool stream = false;
     uint32_t file_size = 0;  // flux : taille du fichier, unité des positions
+    // Échantillon 3D : volume demandé par le jeu et position par rapport à l'auditeur.
+    bool spatial = false;
+    int volume = 127;
+    float x = 0, y = 0, z = 0;
 };
 
 struct State {
     Mixer* mixer = nullptr;  // celui du processus, une fois la sortie son ouverte
     std::map<uint32_t, Handle> handles;  // adresse émulée de la poignée -> voix
     std::map<uint32_t, uint32_t> preferences;
+    uint32_t provider_name = 0;        // nom du fournisseur 3D, dans la mémoire du programme
+    uint32_t listener = 0;             // poignée de l'auditeur
+    float listener_x = 0, listener_y = 0, listener_z = 0;
 };
 
 std::vector<uint8_t> read_file(const std::filesystem::path& path) {
@@ -207,6 +222,13 @@ void install_mss(Process& p) {
         return 0u;
     });
 
+    // Réverbération et filtre : acceptés, sans effet. Le jeu ne met jamais de réverbération (son
+    // drapeau, en +0xA8 du gestionnaire de son, n'est écrit qu'à zéro) et ne désigne jamais de
+    // fournisseur de filtre : voir docs/reverse-engineering.md.
+    def("_AIL_set_sample_reverb@16", 4, [] { return 0u; });
+    def("_AIL_set_sample_processor@12", 3, [] { return 0u; });
+    def("_AIL_set_filter_sample_preference@12", 3, [] { return 0u; });
+
     // --- flux ------------------------------------------------------------------------
     // AIL_open_stream(pilote, nom de fichier, mémoire) : poignée, ou 0 si le fichier manque.
     def("_AIL_open_stream@12", 3, [&p, &cpu, st, new_handle] {
@@ -267,9 +289,122 @@ void install_mss(Process& p) {
         return 0u;
     });
 
-    // --- son 3D : aucun fournisseur proposé -------------------------------------------
-    def("_AIL_enumerate_3D_providers@12", 3, [] { return 0u; });
-    def("_AIL_open_3D_provider@4", 1, [] { return 1u; });  // échec
+    // --- son 3D ----------------------------------------------------------------------
+    // Un seul fournisseur, logiciel. Le jeu (FUN_005c8770) choisit le premier disponible parmi
+    // ceux dont le nom contient « EAX », « A3D », « Hardware », « RSX » puis « Software », place
+    // l'auditeur à l'origine, tourné vers +Z, et donne à chaque son un volume et une position.
+    //
+    // Le jeu s'en sert pour des ambiances placées autour de l'auditeur (FUN_005a2c30) : positions
+    // tirées au hasard, à une soixantaine d'unités, parfois en mouvement.
+    //
+    // Modèle retenu : le volume décroît linéairement de la distance minimale à la distance
+    // maximale, où le son s'éteint, et la part latérale de la direction donne le panoramique.
+    // Hypothèses : c'est le comportement des fournisseurs logiciels de Miles, et les distances
+    // sont celles par défaut (minimale 1, maximale 200), que le jeu ne modifie jamais.
+    auto place = [st](Handle& h) {
+        const float dx = h.x - st->listener_x, dy = h.y - st->listener_y, dz = h.z - st->listener_z;
+        const float distance = std::sqrt(dx * dx + dy * dy + dz * dz);
+        const float gain = std::clamp((kMaxDistance - distance) / (kMaxDistance - kMinDistance), 0.0f, 1.0f);
+        const float side = distance > 0.001f ? dx / distance : 0.0f;  // -1 à gauche, +1 à droite
+        st->mixer->set_volume(h.voice, static_cast<int>(std::lround(h.volume * gain)));
+        st->mixer->set_pan(h.voice, static_cast<int>(std::lround(63.5f + 63.5f * side)));
+    };
+    def("_AIL_enumerate_3D_providers@12", 3, [&p, &cpu, st] {
+        // AIL_enumerate_3D_providers(suivant*, fournisseur*, nom**) : 0 quand la liste est finie.
+        if (!st->mixer || cpu.read_u32(p.arg(0)) != 0) return 0u;
+        if (!st->provider_name) st->provider_name = p.alloc_string("DirectSound3D Software Emulation");
+        cpu.write_u32(p.arg(0), 1);
+        cpu.write_u32(p.arg(1), kProvider);
+        cpu.write_u32(p.arg(2), st->provider_name);
+        return 1u;
+    });
+    def("_AIL_open_3D_provider@4", 1, [&p] { return p.arg(0) == kProvider ? 0u : 1u; });  // 0 : succès
+    def("_AIL_close_3D_provider@4", 1, [] { return 0u; });
+    // Aucun attribut propre : le jeu demande « EAX environment selection » et lit -1 pour « absent ».
+    def("_AIL_3D_provider_attribute@12", 3, [&p, &cpu] {
+        if (p.arg(2)) cpu.write_u32(p.arg(2), 0xFFFFFFFF);
+        return 0u;
+    });
+    def("_AIL_set_3D_room_type@8", 2, [] { return 0u; });
+    def("_AIL_open_3D_listener@4", 1, [&p, st] {
+        if (!st->listener) st->listener = p.alloc(16);
+        return st->listener;
+    });
+    def("_AIL_set_3D_orientation@28", 7, [] { return 0u; });  // le jeu garde l'orientation par défaut
+    def("_AIL_set_3D_position@16", 4, [&p, st, handle, place] {
+        auto real = [&p](int n) {
+            const uint32_t bits = p.arg(n);
+            float value;
+            std::memcpy(&value, &bits, 4);
+            return value;
+        };
+        if (p.trace) std::fprintf(stderr, "    position 3D de %#x : %.2f %.2f %.2f\n", p.arg(0), real(1), real(2), real(3));
+        if (p.arg(0) == st->listener && st->listener) {
+            st->listener_x = real(1);
+            st->listener_y = real(2);
+            st->listener_z = real(3);
+            for (auto& [address, h] : st->handles)
+                if (h.spatial && st->mixer) place(h);
+        } else if (Handle* h = handle(p.arg(0))) {
+            h->x = real(1);
+            h->y = real(2);
+            h->z = real(3);
+            place(*h);
+        }
+        return 0u;
+    });
+    def("_AIL_allocate_3D_sample_handle@4", 1, [st, new_handle] {
+        if (!st->mixer) return 0u;
+        const uint32_t address = new_handle(false);
+        st->handles[address].spatial = true;
+        return address;
+    });
+    def("_AIL_release_3D_sample_handle@4", 1, [&p, free_handle] {
+        free_handle(p.arg(0));
+        return 0u;
+    });
+    def("_AIL_set_3D_sample_file@8", 2, [&p, st, handle, guest_wav] {
+        Handle* h = handle(p.arg(0));
+        if (!h) return 0u;
+        const std::vector<uint8_t> data = guest_wav(p.arg(1));
+        auto sound = decode_wav(data.data(), data.size());
+        if (!sound) return 0u;
+        st->mixer->set_sound(h->voice, std::move(sound));
+        return 1u;
+    });
+    def("_AIL_start_3D_sample@4", 1, [&p, st, handle] {
+        if (Handle* h = handle(p.arg(0))) st->mixer->start(h->voice);
+        return 0u;
+    });
+    def("_AIL_end_3D_sample@4", 1, [&p, st, handle] {
+        if (Handle* h = handle(p.arg(0))) st->mixer->end(h->voice);
+        return 0u;
+    });
+    def("_AIL_3D_sample_status@4", 1, [&p, st, handle] {
+        Handle* h = handle(p.arg(0));
+        return h ? status_of(st->mixer->state(h->voice)) : SMP_DONE;
+    });
+    def("_AIL_set_3D_sample_volume@8", 2, [&p, handle, place] {
+        if (Handle* h = handle(p.arg(0))) {
+            h->volume = std::clamp(static_cast<int32_t>(p.arg(1)), 0, 127);
+            place(*h);
+        }
+        return 0u;
+    });
+    def("_AIL_set_3D_sample_loop_count@8", 2, [&p, st, handle] {
+        if (Handle* h = handle(p.arg(0))) st->mixer->set_loops(h->voice, static_cast<int32_t>(p.arg(1)));
+        return 0u;
+    });
+    def("_AIL_set_3D_sample_playback_rate@8", 2, [&p, st, handle] {
+        if (Handle* h = handle(p.arg(0))) st->mixer->set_rate(h->voice, static_cast<int32_t>(p.arg(1)));
+        return 0u;
+    });
+    def("_AIL_3D_sample_playback_rate@4", 1, [&p, st, handle] {
+        Handle* h = handle(p.arg(0));
+        return h ? static_cast<uint32_t>(st->mixer->rate(h->voice)) : 0u;
+    });
+    // Niveau d'effets : part de réverbération d'environnement, sans objet hors EAX.
+    def("_AIL_set_3D_sample_effects_level@8", 2, [] { return 0u; });
 }
 
 }  // namespace zeus::win32

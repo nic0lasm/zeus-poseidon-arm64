@@ -42,6 +42,26 @@ saved game is essentially a list of memory blocks.
   `BltFast(primary, 0, 0, backbuffer, &rectangle, 0)`, and only once an elapsed-time counter
   reaches `0x32`. *Hypothesis:* the counter is in milliseconds, giving 20 frames per second.
 
+### Sound
+
+The game's sound manager (constructor `0x005C7790`) drives the Miles Sound System.
+
+- **Ordinary samples** (`0x005C80B0`): file, loop count, pan, volume, then start. Positional
+  effects of ordinary sounds are the game's own: it computes pan and volume itself.
+- **Reverb.** `AIL_set_sample_reverb` receives the three values kept at `+0xAC`, `+0xB0`,
+  `+0xB4` of the manager (0.5, 0.06, 0.5) only when the byte at `+0xA8` is set. The constructor
+  clears that byte and nothing else in the executable writes it: reverb is never on.
+- **Filter.** A sound whose descriptor holds a filter provider gets a phaser
+  (`Phaser Feedback` 0.8, `Rate` 4.0, `Range` 2.5, `BaseFreq` 10000, `Mix` 0.9). The executable
+  does not import the function that enumerates filter providers, and the provider passed in
+  every observed call is null, which removes the filter.
+- **3D sound** (`0x005C8770`), when "3D sounds" is on in the sound options: the game takes the
+  first provider whose name contains `EAX`, `A3D`, `Hardware`, `RSX` or `Software`, in that
+  order, asks it for the attribute `EAX environment selection` (−1: none), allocates 16 samples,
+  and puts the listener at the origin facing +Z. It uses 3D samples for ambience placed around
+  the listener (`0x005A2C30`): random positions about 60 units away, some of them moving. Each
+  gets a file, a loop count, a volume, a position and an effects level of 0.4.
+
 ### Screen size and layout
 
 - `0x0050BCC0` sets the screen size from a mode number: 640×480, 800×600 or 1024×768, stored at

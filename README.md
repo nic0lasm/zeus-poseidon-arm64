@@ -41,7 +41,7 @@ format and stay compatible with the original.
 
 The city view can fill a wide screen: choose *1024 x 768* in the game's display options.
 
-Known limits: no 3D sound positioning yet. The game runs in English out of the box; French is
+The game runs in English out of the box; French is
 possible with a language pack built from your own French copy ([docs/languages.md](docs/languages.md)).
 
 Details: [docs/roadmap.md](docs/roadmap.md).
