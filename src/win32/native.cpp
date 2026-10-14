@@ -16,6 +16,7 @@
 
 #include "win32/game_gog.h"
 #include "win32/process.h"
+#include "win32/sprite_clip.h"
 
 namespace zeus::win32 {
 namespace {
@@ -303,58 +304,14 @@ std::optional<uint32_t> dispatch(Cpu& cpu) {
     if (special && static_cast<uint32_t>(id) == u32(cpu, u32(cpu, kBackground) + 4) + 0x3C000) return std::nullopt;
     if (kind == 0x1E) return std::nullopt;
 
-    // FUN_00509c20 : rognage horizontal.
-    const int32_t width = width16;
-    int32_t left = x, skip_left = 0, right = width, visible = 0;
-    uint8_t clip_x = 0;
-    const int32_t clip_left = i32(cpu, kClipLeft), clip_right = i32(cpu, kClipRight);
-    if (width16 < 1) {
-        clip_x = 5;
-    } else if (x < clip_left) {
-        if (width + x <= clip_left) {
-            clip_x = 5;
-        } else {
-            clip_x = 1;
-            skip_left = clip_left - x;
-            left = clip_left;
-        }
-    } else if (clip_right - width < x) {
-        if (clip_right <= x) {
-            clip_x = 5;
-        } else {
-            right = clip_right - x;
-            clip_x = 2;
-        }
-    }
-    if (clip_x != 5) visible = right - skip_left;
-    const int32_t source_skip = (width - visible) * 2, target_skip = (i32(cpu, kRowPixels) - visible) * 2;
-
-    // FUN_00509cd0 : rognage vertical.
-    const int32_t height = height16;
-    int32_t top = y, rows = height, skipped = 0, drawn = 0;
-    uint8_t clip_y = 0;
-    const int32_t clip_top = i32(cpu, kClipTop), clip_bottom = i32(cpu, kClipBottom);
-    if (height16 < 1) {
-        clip_y = 5;
-    } else if (y < clip_top) {
-        if (rows + y <= clip_top) {
-            clip_y = 5;
-        } else {
-            top = clip_top;
-            skipped = clip_top - y;
-            clip_y = 3;
-            const int32_t limit = (clip_bottom - clip_top) + skipped;
-            if (limit < rows) rows = limit;
-        }
-    } else if (clip_bottom - rows < y) {
-        if (y < clip_bottom) {
-            clip_y = 4;
-            rows = clip_bottom - y;
-        } else {
-            clip_y = 5;
-        }
-    }
-    if (clip_y != 5) drawn = rows - skipped;
+    // Rognage au rectangle de dessin (FUN_00509c20 en largeur, FUN_00509cd0 en hauteur).
+    const HorizontalClip h = clip_horizontal(x, width16, i32(cpu, kClipLeft), i32(cpu, kClipRight));
+    const int32_t left = h.left, skip_left = h.skip_left, right = h.right, visible = h.visible;
+    const uint8_t clip_x = h.state;
+    const int32_t source_skip = (width16 - visible) * 2, target_skip = (i32(cpu, kRowPixels) - visible) * 2;
+    const VerticalClip v = clip_vertical(y, height16, i32(cpu, kClipTop), i32(cpu, kClipBottom));
+    const int32_t top = v.top, rows = v.rows, skipped = v.skipped, drawn = v.drawn;
+    uint8_t clip_y = v.state;
     if (clip_x == 5) clip_y = 5;
 
     // Choix de la routine (0x005AD748 et suivantes) : seuls deux cas sont traités.

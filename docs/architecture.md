@@ -24,6 +24,7 @@ src/formats/   readers for the game's data files (sprites, maps)
 src/game/      native rendering experiments (sprite store, isometric terrain)
 src/platform/  small SDL helpers
 src/tools/     the three executables
+src/tests/     zeus-tests: the host parts that do not need the game (see tests/README.md)
 tools/         Python tools: extraction, format readers, executable triage, Ghidra scripts
 formats/       file-format specifications
 analysis/notes reverse-engineering notes kept under version control
@@ -37,6 +38,7 @@ analysis/notes reverse-engineering notes kept under version control
 | `pe_image.*` | loads the PE executable and lists its imports |
 | `process.*` | stack, heap, thread block, binding of every import to a host function |
 | `vfs.*` | the file system the game sees |
+| `sprite_clip.h` | the game's sprite clipping (FUN_00509c20, FUN_00509cd0), shared by the native dispatcher and the tests |
 | `game_gog.h` | every address of the GOG executable the host uses, named, and the check of expected bytes |
 | `native.cpp` | game functions rewritten for the host |
 | `widescreen.cpp` | wide display mode, in place of the game's 1024×768 |

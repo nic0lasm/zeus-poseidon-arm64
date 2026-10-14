@@ -66,6 +66,7 @@ Each step of the [roadmap](docs/roadmap.md) has an issue; the ones that need you
 ```bash
 cmake --build build
 ./build/zeus-run --selftest
+./build/zeus-tests
 ./build/zeus-run --run original/gog/app/Zeus.exe --headless --frames 40 \
     --screenshot menu.bmp --write-dir build/trial
 ```

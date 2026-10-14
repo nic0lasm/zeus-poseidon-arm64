@@ -5,6 +5,7 @@ pull request.
 
 ## Unreleased
 
+- **Unit tests.** A new `zeus-tests` executable, run by the automated build, tests the host parts that do not need the game: WAV reader, test-script parser, Windows-1252 ↔ UTF-8, case-insensitive file lookup, and the sprite dispatcher's clipping (now in `sprite_clip.h`).
 - **Shorter source files.** `kernel32.cpp` is split into environment and time, memory and character sets, and files; no change of behaviour.
 - **One command to merge or package a release.** `tools/publish.py merge N` waits for the pull request's checks, fast-forwards `main` locally, checks that the history has a single identity, pushes and deletes the branch; `tools/publish.py release X.Y` builds the application, verifies its signature and self-test, zips it and searches every file of the archive for words that must never be published, then prints the SHA-256.
 - **Every game address in one place.** The addresses of the GOG executable the host reads, writes or intercepts are named and commented in `src/win32/game_gog.h`, and checked for their expected bytes by one function; behaviour unchanged.

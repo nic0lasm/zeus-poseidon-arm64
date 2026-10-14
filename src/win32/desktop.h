@@ -28,6 +28,10 @@ struct ScriptEvent {
     std::string path;  // pour Shot : fichier BMP à écrire
 };
 
+// Actions décrites par un texte de scénario (voir Desktop::add_script), dans l'ordre du texte.
+// Une action mal écrite lève std::runtime_error.
+std::vector<ScriptEvent> parse_script(const std::string& text);
+
 class Desktop {
 public:
     Desktop();

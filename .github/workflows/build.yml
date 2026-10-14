@@ -16,6 +16,8 @@ jobs:
         run: |
           cmake -S . -B build -G Ninja -DCMAKE_COMPILE_WARNING_AS_ERROR=ON
           cmake --build build
+      - name: Unit tests
+        run: ./build/zeus-tests
       - name: Emulator self-test
         run: ./build/zeus-run --selftest
       - name: Emulator benchmark
