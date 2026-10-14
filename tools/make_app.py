@@ -165,6 +165,11 @@ def main(argv):
     shutil.copy2(os.path.join(ROOT, "LICENSE"), os.path.join(resources, "LICENSE.txt"))
     shutil.copy2(os.path.join(ROOT, "docs", "third-party.md"), os.path.join(resources, "THIRD-PARTY.md"))
 
+    # Les informations de mise au point contiennent les chemins de compilation, donc le nom du
+    # dossier personnel de celui qui a compilé : on les retire de tout ce qui a été copié.
+    for binary_file in [program] + ([helper] if helper else []) + sorted(copied.values()):
+        run("strip", "-S", "-x", binary_file)
+
     for library in sorted(copied.values()):
         listing = run("otool", "-l", library).splitlines()
         for i, line in enumerate(listing):
@@ -177,6 +182,17 @@ def main(argv):
     for binary_file in signed_extra:
         run("codesign", "--force", "--sign", "-", binary_file)
     run("codesign", "--force", "--sign", "-", app)
+
+    # Dernier contrôle : aucun fichier du paquet ne doit citer le dossier personnel.
+    home = os.path.expanduser("~").encode()
+    leaks = []
+    for folder, _, files in os.walk(app):
+        for name in files:
+            with open(os.path.join(folder, name), "rb") as f:
+                if home in f.read():
+                    leaks.append(os.path.relpath(os.path.join(folder, name), app))
+    if leaks:
+        raise SystemExit("paquet à ne pas diffuser, il cite le dossier personnel : " + ", ".join(leaks))
 
     size = sum(os.path.getsize(os.path.join(d, f)) for d, _, files in os.walk(app) for f in files)
     print(f"{app} : {len(copied)} bibliothèques embarquées, {size / 1e6:.0f} Mo")
