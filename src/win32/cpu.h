@@ -90,7 +90,8 @@ public:
     void add_fast_path(uint32_t address, uint32_t arg_bytes, uint32_t displaced,
                        std::function<std::optional<uint32_t>(Cpu&)> fn);
 
-    // Appelle `fn` chaque fois que l'exécution atteint `address`, avant l'instruction.
+    // Appelle `fn` chaque fois que l'exécution atteint `address`, avant l'instruction. Une
+    // adresse déjà interceptée garde sa fonction, appelée d'abord, puis `fn`.
     void add_code_hook(uint32_t address, std::function<void(Cpu&)> fn);
     // n-ième argument (à partir de 0) de la fonction hôte en cours d'appel.
     uint32_t arg(int n) const;

@@ -332,6 +332,15 @@ void Cpu::add_fast_path(uint32_t address, uint32_t arg_bytes, uint32_t displaced
 }
 
 void Cpu::add_code_hook(uint32_t address, std::function<void(Cpu&)> fn) {
+    const auto found = code_hooks_.find(address);
+    if (found != code_hooks_.end()) {
+        // Une seule interception Unicorn par adresse : les fonctions s'enchaînent.
+        found->second = [first = std::move(found->second), then = std::move(fn)](Cpu& cpu) {
+            first(cpu);
+            then(cpu);
+        };
+        return;
+    }
     code_hooks_[address] = std::move(fn);
     uc_hook hook;
     check(uc_hook_add(uc_, &hook, UC_HOOK_CODE, reinterpret_cast<void*>(&Cpu::on_code_hook), this, address, address),

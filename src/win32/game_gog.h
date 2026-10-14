@@ -50,6 +50,7 @@ constexpr uint32_t kKeySearch = 0x005059F8, kKeySearchEnd = 0x00505A33;
 // --- Code : cadencement (user32.cpp) ----------------------------------------------------------
 
 constexpr uint32_t kSimulationDue = 0x005168A0;  // FUN_005168a0 : un tour de simulation est-il dû ?
+constexpr uint32_t kSimulationTick = 0x00513A30;  // FUN_00513a30 : un tour de simulation (zeus-run --ticks)
 
 // --- Code : texte des packs de langue (language.cpp) ------------------------------------------
 

@@ -26,6 +26,9 @@
 //                              ensuite dans Options > Display options ; « auto » prend les
 //                              proportions de l'écran
 //     --watch-call ADRESSE     liste à la fin les sites d'appel d'une fonction du jeu (hexadécimal)
+//     --count ADRESSE[,…]      affiche à la fin le nombre de passages sur chaque adresse du jeu
+//                              (hexadécimal), fonctions réécrites en natif comprises
+//     --ticks                  affiche à la fin les tours de simulation par seconde, en temps réel
 //     --dump-data SORTIE.bin   écrit à la fin la section .data du programme (variables du jeu)
 //     --frame-log SORTIE.txt   empreinte de chaque image affichée
 //     --profile SORTIE.tsv     profil d'exécution du code du jeu, par bloc (ralentit beaucoup)
@@ -61,6 +64,7 @@
 
 #include "win32/audio.h"
 #include "win32/cpu.h"
+#include "win32/game_gog.h"
 #include "win32/pe_image.h"
 #include "win32/process.h"
 
@@ -258,8 +262,8 @@ int bench() {
 }
 
 struct RunOptions {
-    std::string exe, write_dir = "run/zeus", profile, frame_log, memory_dump, wide, watch, language, screenshot, window_shot, script, trace_only, break_on;
-    bool trace = false, headless = false, counts = false, mute = false, fullscreen = false, deterministic = false,
+    std::string exe, write_dir = "run/zeus", profile, frame_log, memory_dump, wide, watch, language, screenshot, window_shot, script, trace_only, break_on, count;
+    bool trace = false, ticks = false, headless = false, counts = false, mute = false, fullscreen = false, deterministic = false,
          native = true;
     int frames = 0;
     double seconds = 0;
@@ -316,6 +320,34 @@ int run(const RunOptions& o) {
     }
     if (o.native) zeus::win32::install_native_functions(process);
     if (!o.language.empty()) zeus::win32::apply_language_pack(process, o.language);
+    // Compteurs de passages, posés en dernier : ils s'ajoutent aux interceptions déjà en place.
+    std::vector<std::pair<uint32_t, std::shared_ptr<uint64_t>>> counters;
+    for (size_t start = 0; start < o.count.size();) {
+        const size_t end = std::min(o.count.find(',', start), o.count.size());
+        const uint32_t address = static_cast<uint32_t>(std::stoul(o.count.substr(start, end - start), nullptr, 16));
+        auto passes = std::make_shared<uint64_t>(0);
+        process.cpu().add_code_hook(address, [passes](Cpu&) { ++*passes; });
+        counters.emplace_back(address, passes);
+        start = end + 1;
+    }
+    // Tours de simulation, en temps réel : les intervalles de plus d'une seconde (jeu en pause,
+    // message ouvert, chargement) ne comptent pas dans la durée.
+    struct Ticks {
+        uint64_t count = 0, timed = 0;
+        double seconds = 0;
+        std::chrono::steady_clock::time_point last;
+    };
+    auto ticks = std::make_shared<Ticks>();
+    if (o.ticks)
+        process.cpu().add_code_hook(zeus::win32::gog::kSimulationTick, [ticks](Cpu&) {
+            const auto now = std::chrono::steady_clock::now();
+            const double gap = std::chrono::duration<double>(now - ticks->last).count();
+            if (ticks->count++ > 0 && gap < 1.0) {
+                ticks->seconds += gap;
+                ++ticks->timed;
+            }
+            ticks->last = now;
+        });
     int code = 0;
     std::string error;
     try {
@@ -332,6 +364,12 @@ int run(const RunOptions& o) {
                      static_cast<int32_t>(caller.args[1]), static_cast<int32_t>(caller.args[2]),
                      static_cast<int32_t>(caller.args[3]), static_cast<int32_t>(caller.args[4]),
                      static_cast<int32_t>(caller.args[5]));
+    for (const auto& [address, passes] : counters)
+        std::fprintf(stderr, "passages %#010x : %llu\n", address, static_cast<unsigned long long>(*passes));
+    if (o.ticks)
+        std::fprintf(stderr, "tours de simulation : %llu, %.1f par seconde sur %.1f s de jeu actif (temps réel%s)\n",
+                     static_cast<unsigned long long>(ticks->count), ticks->seconds > 0 ? ticks->timed / ticks->seconds : 0.0,
+                     ticks->seconds, o.deterministic ? ", sans valeur sous --deterministic" : "");
     if (!o.memory_dump.empty()) {
         // Section de données de l'exécutable, telle qu'elle est à la fin de l'exécution.
         std::ofstream out(o.memory_dump, std::ios::binary);
@@ -663,6 +701,8 @@ int main(int argc, char** argv) {
                 else if (a == "--dump-data") o.memory_dump = value();
                 else if (a == "--wide") o.wide = value();
                 else if (a == "--watch-call") o.watch = value();
+                else if (a == "--count") o.count = value();
+                else if (a == "--ticks") o.ticks = true;
                 else if (a == "--deterministic") o.deterministic = true;
                 else if (a == "--native") o.native = true;
                 else if (a == "--no-native") o.native = false;

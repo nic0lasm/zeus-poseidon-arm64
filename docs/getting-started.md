@@ -114,6 +114,8 @@ needs a right-click → *Open*.
 | `--deterministic` | virtual clock and no sound: two runs of the same script give the same frames |
 | `--frame-log FILE.txt` | write a hash of every displayed frame |
 | `--watch-call ADDRESS` | list the call sites of a game function (hexadecimal address) |
+| `--count ADDRESS[,ADDRESS…]` | print, on exit, how many times execution reached each game address (hexadecimal), one line per address; works on functions rewritten natively too |
+| `--ticks` | print, on exit, the simulation ticks per second (passes on `0x00513A30`), measured in real time over the active play (gaps longer than one second, such as a pause or an open message, are left out); meaningless with `--deterministic` |
 | `--dump-data FILE.bin` | write the game's variables at exit |
 | `--profile FILE.tsv` | time spent per block of game code (slow); summarise with `tools/profile_report.py` |
 | `--no-native` | emulate everything, without the host rewrites of some game functions |
@@ -134,6 +136,16 @@ Example — reach the main menu without a window and capture it:
 ```bash
 ./build/zeus-run --run original/gog/app/Zeus.exe --headless --frames 40 \
     --screenshot menu.bmp --write-dir build/trial
+```
+
+Example — measure the game speed and count calls to the drawing loop in a large city (the
+right-click at 45 s closes its opening message, which pauses the game). At the default 90 %
+speed the result is 45 ticks a second:
+
+```bash
+./build/zeus-run --run original/gog/app/Zeus.exe --headless --seconds 75 --write-dir build/trial-2 \
+    --ticks --count 0x00458170 \
+    --script "5:key 27; 12:click 220,101; 17:char 78; 20:click 556,320; 27:click 644,523; 33:click 588,476; 45:rclick 300,300"
 ```
 
 ## If the game stops

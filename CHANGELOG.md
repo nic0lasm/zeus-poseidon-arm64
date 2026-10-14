@@ -5,6 +5,7 @@ pull request.
 
 ## Unreleased
 
+- **Counting passes and measuring the game speed without editing code.** `zeus-run --count ADDRESS[,…]` prints how many times execution reached each game address, natively rewritten functions included; `--ticks` prints the simulation ticks per second in real time, pauses left out. Code hooks on the same address now chain instead of replacing each other.
 - **One command to merge or package a release.** `tools/publish.py merge N` waits for the pull request's checks, fast-forwards `main` locally, checks that the history has a single identity, pushes and deletes the branch; `tools/publish.py release X.Y` builds the application, verifies its signature and self-test, zips it and searches every file of the archive for words that must never be published, then prints the SHA-256.
 - **Every game address in one place.** The addresses of the GOG executable the host reads, writes or intercepts are named and commented in `src/win32/game_gog.h`, and checked for their expected bytes by one function; behaviour unchanged.
 - **Text file format documented.** `formats/eng.md` and `tools/engtext.py` describe `Zeus_Text.eng`, `Zeus_Editor_Text.eng` and `Zeus_MM.eng` (header, string groups, help records, `@` formatting codes, character coding), with evidence from the game's loader and lookup code; the reader parses and re-serializes all 14 text files of the editions we have, byte for byte.
