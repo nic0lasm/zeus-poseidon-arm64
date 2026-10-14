@@ -14,10 +14,25 @@
 #include <vector>
 
 struct uc_struct;
+struct uc_context;
 
 namespace zeus::win32 {
 
 class Cpu;
+
+// État complet du processeur émulé (registres généraux, indicateurs, x87, segments), copié par
+// Cpu::save_context et remis par Cpu::restore_context.
+class CpuContext {
+public:
+    CpuContext() = default;
+    ~CpuContext();
+    CpuContext(const CpuContext&) = delete;
+    CpuContext& operator=(const CpuContext&) = delete;
+
+private:
+    friend class Cpu;
+    uc_context* context_ = nullptr;
+};
 
 // Fonction hôte appelée à la place d'une fonction importée par le programme émulé.
 // Elle lit ses arguments avec Cpu::arg et renvoie la valeur de EAX. `arg_bytes` est le nombre
@@ -95,6 +110,30 @@ public:
     // adresse déjà interceptée garde sa fonction, appelée d'abord, puis `fn`.
     void add_code_hook(uint32_t address, std::function<void(Cpu&)> fn);
 
+    // Remplacements natifs (replace_function, add_fast_path, add_code_jump, add_native_hook,
+    // patch_code) : tous actifs par défaut. Coupés, le code d'origine s'exécute comme sous
+    // --no-native : octets d'origine remis en place, chemins rapides et aiguillages qui laissent
+    // faire l'original. Le banc d'équivalence (equivalence.cpp) s'en sert pour exécuter une même
+    // fonction des deux façons. Après un changement, poursuivre par jump() : le code déjà traduit
+    // de la fonction en cours peut être celui de l'autre mode.
+    void set_native(bool enabled);
+    bool native() const { return native_; }
+    // Comme add_code_hook, mais `fn` n'est appelée que quand les remplacements natifs sont actifs.
+    void add_native_hook(uint32_t address, std::function<void(Cpu&)> fn);
+    // Écrit `size` octets dans le code du programme pour un remplacement natif ; set_native(false)
+    // remet ceux d'origine.
+    void patch_code(uint32_t address, const void* bytes, size_t size);
+
+    // Depuis une fonction hôte ou une interception : arrête l'émulateur et reprend à `address`,
+    // avec les registres tels qu'ils sont alors (la fonction hôte ne fixe pas EAX).
+    void jump(uint32_t address);
+    void save_context(CpuContext& context);
+    void restore_context(const CpuContext& context);
+    // Nombre d'appels de fonctions hôtes depuis le début (imports, fonctions de l'hôte).
+    uint64_t host_calls() const { return host_calls_; }
+    // Zones réservées par map() sans droit d'exécution : [début, fin[.
+    const std::vector<std::pair<uint32_t, uint32_t>>& data_ranges() const { return data_ranges_; }
+
     // Aiguillage de l'hôte dans le code du programme : chaque fois que l'exécution atteint
     // `address`, `fn` s'exécute et renvoie l'adresse où poursuivre, ou 0 pour exécuter le code
     // d'origine. Les `displaced` premiers octets (instructions entières, sans adresse relative, au
@@ -129,6 +168,14 @@ private:
     uint32_t trampoline_next_ = 0;  // prochaine place libre dans la zone des tremplins
     void enable_paging();
     std::vector<std::pair<uint32_t, uint32_t>> code_ranges_;  // zones exécutables [début, fin[
+    std::vector<std::pair<uint32_t, uint32_t>> data_ranges_;  // autres zones de map() [début, fin[
+    struct Patch {
+        uint32_t address = 0;
+        std::vector<uint8_t> original, patched;
+    };
+    std::vector<Patch> patches_;  // octets écrits par patch_code
+    bool native_ = true;
+    uint64_t host_calls_ = 0;
     bool paging_ = false;
     static void on_thunk(uc_struct* uc, uint64_t address, uint32_t size, void* user);
 

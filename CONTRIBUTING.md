@@ -77,9 +77,12 @@ For a change that must not alter the game's behaviour, replay the scenarios befo
 (see [tests/README.md](tests/README.md)):
 
 ```bash
-python3 tools/check_scenarios.py record     # before
+python3 tools/check_scenarios.py record     # before (references of the pure original, --no-native)
 python3 tools/check_scenarios.py            # after: must print "ok" for each scenario
 ```
+
+Both the frames and the game state, tick by tick, must match. A native rewrite of a game function
+is also checked call by call with `--verify` (see [docs/equivalence.md](docs/equivalence.md)).
 
 Describe in the pull request what you verified and what
 remains a hypothesis, and add a line to the "Unreleased" section of `CHANGELOG.md`.

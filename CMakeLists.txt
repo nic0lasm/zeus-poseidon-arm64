@@ -65,6 +65,7 @@ add_library(zeus_win32 STATIC
     src/win32/cpu.cpp
     src/win32/ddraw.cpp
     src/win32/desktop.cpp
+    src/win32/equivalence.cpp
     src/win32/kernel32.cpp
     src/win32/kernel32_files.cpp
     src/win32/kernel32_memory.cpp

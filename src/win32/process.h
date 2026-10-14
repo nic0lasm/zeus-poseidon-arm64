@@ -68,6 +68,7 @@ public:
     uint32_t alloc(uint32_t size, bool zero = true);
     void release(uint32_t address);
     uint32_t alloc_size(uint32_t address) const;  // 0 si l'adresse n'est pas un bloc alloué
+    uint32_t heap_end() const { return heap_next_; }  // fin de la partie du tas déjà distribuée
     // Copie une chaîne dans le tas et renvoie son adresse.
     uint32_t alloc_string(const std::string& text);
 

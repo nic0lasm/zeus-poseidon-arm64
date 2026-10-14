@@ -1,18 +1,25 @@
 #!/usr/bin/env python3
-"""Rejoue les scénarios de tests/scenarios et compare leurs images à une référence.
+"""Rejoue les scénarios de tests/scenarios et compare leurs images et l'état de la partie à une référence.
 
 Usage : python3 tools/check_scenarios.py [record] [--exe ZEUS.EXE] [--no-native] [--jobs N]
+                                         [--only NOM,…] [--verify CIBLE [--every N]]
 
-  record   enregistre la référence dans build/scenarios/ au lieu de comparer
+  record   enregistre les références dans build/scenarios/ au lieu de comparer, avec le code
+           d'origine seul (zeus-run --no-native) : c'est l'original émulé qui sert de juge
   --exe    exécutable du jeu (défaut : original/gog/app/Zeus.exe)
   --no-native  passe --no-native à zeus-run : tout le code du jeu est émulé
   --jobs N scénarios joués en même temps (défaut : nombre de cœurs moins un)
+  --only   seulement ces scénarios (noms de fichiers sans .txt, séparés par des virgules)
+  --verify vérifie aussi, pendant chaque scénario, les appels d'une fonction du jeu (zeus-run
+           --verify ADRESSE ou DÉBUT:FIN) ; --every N n'en vérifie qu'un sur N
 
 Chaque scénario est joué avec une horloge fictive (zeus-run --deterministic) : deux exécutions
-donnent les mêmes images, dont l'empreinte est écrite dans un journal. Un journal différent de
-la référence signale un changement de comportement du jeu. Les scénarios joués en parallèle ne
-partagent rien (chacun a son dossier d'écriture neuf) ; les résultats sont affichés dans l'ordre
-alphabétique.
+donnent les mêmes images, dont l'empreinte est écrite dans un journal, et passent par les mêmes
+états de la partie, dont l'empreinte est écrite à chaque tour de simulation (zeus-run --state-log,
+voir docs/equivalence.md). Un journal différent de la référence signale un changement de
+comportement du jeu ; pour l'état, le premier tour différent et ses zones sont indiqués. Les
+scénarios joués en parallèle ne partagent rien (chacun a son dossier d'écriture neuf) ; les
+résultats sont affichés dans l'ordre alphabétique.
 """
 import concurrent.futures
 import glob
@@ -38,12 +45,34 @@ def read_scenario(path):
     return "; ".join(script), seconds, options
 
 
+def read_lines(path):
+    with open(path, encoding="utf-8") as f:
+        return f.read().splitlines()
+
+
+def state_difference(reference, log):
+    """Premier tour où l'état diffère et noms des zones en cause, ou None si identiques."""
+    expected, actual = read_lines(reference), read_lines(log)
+    if expected == actual:
+        return None
+    zones = [line.split(" ", 5)[5] for line in expected if line.startswith("# zone ")]
+    expected = [line.split() for line in expected if not line.startswith("#")]
+    actual = [line.split() for line in actual if not line.startswith("#")]
+    for a, b in zip(expected, actual):
+        if a != b:
+            names = [zones[i] for i in range(min(len(a), len(b)) - 1) if a[i + 1] != b[i + 1]]
+            return f"état différent au tour {a[0]} : " + ", ".join(names[:6]) + ("…" if len(names) > 6 else "")
+    return f"état : {len(actual)} tours au lieu de {len(expected)}"
+
+
 def play(path, out, exe, extra, record):
     """Joue un scénario ; renvoie (ligne de résultat, échec)."""
     name = os.path.splitext(os.path.basename(path))[0]
     script, seconds, options = read_scenario(path)
-    reference = os.path.join(out, name + ".reference.txt")
-    log = reference if record else os.path.join(out, name + ".txt")
+    frames_reference = os.path.join(out, name + ".reference.txt")
+    state_reference = os.path.join(out, name + ".state.reference.txt")
+    frames_log = frames_reference if record else os.path.join(out, name + ".txt")
+    state_log = state_reference if record else os.path.join(out, name + ".state.txt")
     run = 0
     write_dir = os.path.join(out, f"{name}-run{run}")
     while os.path.exists(write_dir):  # dossier d'écriture neuf : le jeu doit partir de zéro
@@ -51,32 +80,47 @@ def play(path, out, exe, extra, record):
         write_dir = os.path.join(out, f"{name}-run{run}")
     result = subprocess.run(
         [os.path.join(ROOT, "build", "zeus-run"), "--run", exe, "--headless", "--deterministic",
-         "--write-dir", write_dir, "--seconds", str(seconds), "--frame-log", log, "--script", script] + options + extra,
+         "--write-dir", write_dir, "--seconds", str(seconds), "--frame-log", frames_log,
+         "--state-log", state_log, "--script", script] + options + extra,
         capture_output=True, text=True)
-    last = result.stderr.strip().splitlines()[-1] if result.stderr.strip() else ""
-    frames = 0
-    if os.path.exists(log):
-        with open(log) as f:
-            frames = sum(1 for _ in f)
+    lines = result.stderr.strip().splitlines()
+    frames = len(read_lines(frames_log)) if os.path.exists(frames_log) else 0
+    ticks = sum(1 for line in read_lines(state_log) if not line.startswith("#")) - 1 if os.path.exists(state_log) else 0
+    verify = [i for i, line in enumerate(lines) if line.startswith("vérification ")]
     if result.returncode != 0:
-        return f"ÉCHEC   {name} : {last}", True
+        detail = "\n        ".join(lines[verify[0]:verify[0] + 6]) if verify else (lines[-1] if lines else "")
+        return f"ÉCHEC   {name} : {detail}", True
     if record:
-        return f"référence enregistrée : {name}, {frames} images", False
-    if not os.path.exists(reference):
+        return f"référence enregistrée : {name}, {frames} images, {ticks} tours", False
+    if not os.path.exists(frames_reference) or not os.path.exists(state_reference):
         return f"ÉCHEC   {name} : pas de référence (lancer d'abord « record »)", True
-    with open(reference) as a, open(log) as b:
-        same = a.read() == b.read()
-    return f"{'ok     ' if same else 'ÉCHEC  '} {name} : {frames} images" + ("" if same else ", journal différent de la référence"), not same
+    problems = []
+    if read_lines(frames_reference) != read_lines(frames_log):
+        problems.append("journal d'images différent de la référence")
+    state = state_difference(state_reference, state_log)
+    if state:
+        problems.append(state)
+    summary = f"{name} : {frames} images, {ticks} tours"
+    if verify:
+        summary += " ; " + lines[verify[0]].split(" : ", 1)[1]
+    return f"{'ÉCHEC  ' if problems else 'ok     '} {summary}" + "".join(", " + p for p in problems), bool(problems)
 
 
 def main(argv):
     record = "record" in argv
     exe = argv[argv.index("--exe") + 1] if "--exe" in argv else os.path.join(ROOT, "original", "gog", "app", "Zeus.exe")
-    extra = ["--no-native"] if "--no-native" in argv else []
+    extra = ["--no-native"] if "--no-native" in argv or record else []
+    if "--verify" in argv:
+        extra += ["--verify", argv[argv.index("--verify") + 1]]
+        if "--every" in argv:
+            extra += ["--verify-every", argv[argv.index("--every") + 1]]
     jobs = int(argv[argv.index("--jobs") + 1]) if "--jobs" in argv else max(1, (os.cpu_count() or 2) - 1)
     out = os.path.join(ROOT, "build", "scenarios")
     os.makedirs(out, exist_ok=True)
     paths = sorted(glob.glob(os.path.join(ROOT, "tests", "scenarios", "*.txt")))
+    if "--only" in argv:
+        only = argv[argv.index("--only") + 1].split(",")
+        paths = [p for p in paths if os.path.splitext(os.path.basename(p))[0] in only]
     # Les dossiers d'écriture se choisissent avant le lancement : deux scénarios ont des noms
     # distincts, donc des dossiers distincts.
     with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as pool:

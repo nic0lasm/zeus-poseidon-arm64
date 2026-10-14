@@ -15,6 +15,7 @@
 
 #include "tools/zeus_run/zeus_run.h"
 #include "win32/cpu.h"
+#include "win32/equivalence.h"
 #include "win32/game_gog.h"
 #include "win32/process.h"
 
@@ -76,6 +77,10 @@ int run(const RunOptions& o) {
         if (w >= 1084 && zeus::win32::apply_wide_mode(process, w, h))
             std::fprintf(stderr, "[hôte] écran large : le mode 1024 x 768 du jeu devient %d x %d\n", w, h);
     }
+    // Avant les remplacements natifs : à l'entrée de la fonction vérifiée, la vérification décide
+    // d'abord de la façon dont l'appel s'exécute.
+    std::shared_ptr<zeus::win32::Verifier> verifier;
+    if (!o.verify.empty()) verifier = zeus::win32::install_verifier(process, o.verify, o.verify_every);
     if (o.native) zeus::win32::install_native_functions(process);
     if (!o.language.empty()) zeus::win32::apply_language_pack(process, o.language);
     // Compteurs de passages, posés en dernier : ils s'ajoutent aux interceptions déjà en place.
@@ -95,6 +100,8 @@ int run(const RunOptions& o) {
         double seconds = 0;
         std::chrono::steady_clock::time_point last;
     };
+    std::shared_ptr<zeus::win32::StateLog> state_log;
+    if (!o.state_log.empty()) state_log = zeus::win32::install_state_log(process, o.state_log);
     auto ticks = std::make_shared<Ticks>();
     if (o.ticks)
         process.cpu().add_code_hook(zeus::win32::gog::kSimulationTick, [ticks](Cpu&) {
@@ -114,6 +121,8 @@ int run(const RunOptions& o) {
         error = e.what();
     }
     desktop.save_screenshot();
+    if (state_log) zeus::win32::finish_state_log(*state_log);
+    const bool verified = !verifier || zeus::win32::report_verifier(*verifier);
     uint64_t total = 0;
     for (const auto& [name, count] : process.call_counts) total += count;
     for (const auto& [address, caller] : *callers)
@@ -171,7 +180,7 @@ int run(const RunOptions& o) {
         return 1;
     }
     std::fprintf(stderr, "le programme s'est terminé avec le code %d\n", code);
-    return code;
+    return verified ? code : 1;
 }
 
 }  // namespace zeus::run

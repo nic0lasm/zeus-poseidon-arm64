@@ -30,6 +30,11 @@
 //     --count ADRESSE[,…]      affiche à la fin le nombre de passages sur chaque adresse du jeu
 //                              (hexadécimal), fonctions réécrites en natif comprises
 //     --ticks                  affiche à la fin les tours de simulation par seconde, en temps réel
+//     --state-log SORTIE.txt   empreinte de l'état de la partie à chaque tour de simulation
+//     --verify ADRESSE[:FIN]   exécute chaque appel de cette fonction du jeu (ou ce morceau de
+//                              code) deux fois, original puis natif, et compare registres et
+//                              mémoire ; s'arrête à la première différence (hexadécimal)
+//     --verify-every N         ne vérifie qu'un passage sur N
 //     --dump-data SORTIE.bin   écrit à la fin la section .data du programme (variables du jeu)
 //     --frame-log SORTIE.txt   empreinte de chaque image affichée
 //     --profile SORTIE.tsv     profil d'exécution du code du jeu, par bloc (ralentit beaucoup)
@@ -82,6 +87,9 @@ int main(int argc, char** argv) {
                 else if (a == "--watch-call") o.watch = value();
                 else if (a == "--count") o.count = value();
                 else if (a == "--ticks") o.ticks = true;
+                else if (a == "--state-log") o.state_log = value();
+                else if (a == "--verify") o.verify = value();
+                else if (a == "--verify-every") o.verify_every = static_cast<uint32_t>(std::stoul(value()));
                 else if (a == "--deterministic") o.deterministic = true;
                 else if (a == "--native") o.native = true;
                 else if (a == "--no-native") o.native = false;

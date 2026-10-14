@@ -47,6 +47,10 @@ int to_uc(Cpu::Reg r) {
 
 }  // namespace
 
+CpuContext::~CpuContext() {
+    if (context_) uc_context_free(context_);
+}
+
 Cpu::Cpu() {
     check(uc_open(UC_ARCH_X86, UC_MODE_32, &uc_), "ouverture du processeur émulé");
     // Modèle de processeur 32 bits qui connaît les pages non exécutables (voir enable_paging).
@@ -85,6 +89,7 @@ void Cpu::map(uint32_t address, uint32_t size, bool executable) {
     map_region(start, static_cast<size_t>(end - start),
                executable ? UC_PROT_READ | UC_PROT_EXEC : UC_PROT_READ | UC_PROT_WRITE, "réservation mémoire");
     if (executable) code_ranges_.push_back({start, static_cast<uint32_t>(end)});
+    else data_ranges_.push_back({start, static_cast<uint32_t>(end)});
 }
 
 // Active la pagination, avec une table qui fait correspondre chaque adresse à elle-même et
@@ -308,8 +313,8 @@ void Cpu::replace_function(uint32_t address, uint32_t arg_bytes, std::function<u
     // « ret » ou « ret n » à la place du premier octet de la fonction.
     const uint8_t code[3] = {static_cast<uint8_t>(arg_bytes ? 0xC2 : 0xC3), static_cast<uint8_t>(arg_bytes),
                              static_cast<uint8_t>(arg_bytes >> 8)};
-    std::memcpy(host(address), code, arg_bytes ? 3 : 1);
-    add_code_hook(address, [fn = std::move(fn)](Cpu& cpu) { cpu.set_reg(Reg::EAX, fn(cpu)); });
+    patch_code(address, code, arg_bytes ? 3 : 1);
+    add_native_hook(address, [fn = std::move(fn)](Cpu& cpu) { cpu.set_reg(Reg::EAX, fn(cpu)); });
 }
 
 void Cpu::add_fast_path(uint32_t address, uint32_t arg_bytes, uint32_t displaced,
@@ -333,12 +338,13 @@ void Cpu::add_fast_path(uint32_t address, uint32_t arg_bytes, uint32_t displaced
     std::memcpy(t + 0x11, host(address), displaced);              // instructions déplacées
     t[0x11 + displaced] = 0xE9;                                   // jmp vers la suite de la fonction
     put32(t + 0x12 + displaced, (address + displaced) - (code + 0x11 + displaced + 5));
-    uint8_t* entry = host(address);
+    uint8_t entry[16];
     entry[0] = 0xE9;
     put32(entry + 1, code - (address + 5));
     std::memset(entry + 5, 0x90, displaced - 5);
+    patch_code(address, entry, displaced);
     add_code_hook(code, [fn = std::move(fn), data](Cpu& cpu) {
-        const std::optional<uint32_t> result = fn(cpu);
+        const std::optional<uint32_t> result = cpu.native_ ? fn(cpu) : std::nullopt;
         uint8_t* d = cpu.host(data);
         d[0] = result ? 1 : 0;
         if (result) std::memcpy(d + 4, &*result, 4);
@@ -357,13 +363,14 @@ void Cpu::add_code_jump(uint32_t address, uint32_t displaced, std::function<uint
     std::memcpy(t, host(address), displaced);
     t[displaced] = 0xE9;
     put32(t + displaced + 1, (address + displaced) - (code + displaced + 5));
-    uint8_t* entry = host(address);
+    uint8_t entry[16];
     entry[0] = 0xFF;  // jmp dword ptr [case]
     entry[1] = 0x25;
     put32(entry + 2, slot);
     std::memset(entry + 6, 0x90, displaced - 6);
+    patch_code(address, entry, displaced);
     add_code_hook(address, [fn = std::move(fn), slot, code](Cpu& cpu) {
-        const uint32_t target = fn(cpu);
+        const uint32_t target = cpu.native_ ? fn(cpu) : 0;
         std::memcpy(cpu.host(slot), target ? &target : &code, 4);
     });
 }
@@ -384,6 +391,53 @@ void Cpu::add_code_hook(uint32_t address, std::function<void(Cpu&)> fn) {
           "interception de code");
 }
 
+void Cpu::add_native_hook(uint32_t address, std::function<void(Cpu&)> fn) {
+    add_code_hook(address, [fn = std::move(fn)](Cpu& cpu) {
+        if (cpu.native_) fn(cpu);
+    });
+}
+
+void Cpu::patch_code(uint32_t address, const void* bytes, size_t size) {
+    Patch patch;
+    patch.address = address;
+    patch.original.assign(host(address), host(address) + size);
+    patch.patched.assign(static_cast<const uint8_t*>(bytes), static_cast<const uint8_t*>(bytes) + size);
+    std::memcpy(host(address), bytes, size);
+    patches_.push_back(std::move(patch));
+}
+
+void Cpu::set_native(bool enabled) {
+    if (enabled == native_) return;
+    native_ = enabled;
+    // Dans l'ordre d'écriture pour activer, à rebours pour couper : deux correctifs qui se
+    // recouvrent retrouvent ainsi chacun l'état qu'il avait remplacé.
+    auto apply = [this, enabled](const Patch& p) {
+        const std::vector<uint8_t>& bytes = enabled ? p.patched : p.original;
+        std::memcpy(host(p.address), bytes.data(), bytes.size());
+        // Le code déjà traduit par l'émulateur reste celui de l'ancien mode sans cela.
+        check(uc_ctl_remove_cache(uc_, p.address, p.address + bytes.size()), "code modifié");
+    };
+    if (enabled)
+        for (const Patch& p : patches_) apply(p);
+    else
+        for (auto it = patches_.rbegin(); it != patches_.rend(); ++it) apply(*it);
+}
+
+void Cpu::jump(uint32_t address) {
+    redirect_ = true;
+    redirect_to_ = address;
+    uc_emu_stop(uc_);
+}
+
+void Cpu::save_context(CpuContext& context) {
+    if (!context.context_) check(uc_context_alloc(uc_, &context.context_), "contexte du processeur");
+    check(uc_context_save(uc_, context.context_), "contexte du processeur");
+}
+
+void Cpu::restore_context(const CpuContext& context) {
+    check(uc_context_restore(uc_, context.context_), "contexte du processeur");
+}
+
 void Cpu::on_code_hook(uc_struct*, uint64_t address, uint32_t, void* user) {
     Cpu& cpu = *static_cast<Cpu*>(user);
     const auto found = cpu.code_hooks_.find(static_cast<uint32_t>(address));
@@ -396,7 +450,9 @@ void Cpu::on_code_hook(uc_struct*, uint64_t address, uint32_t, void* user) {
         std::snprintf(where, sizeof where, "%#010x", static_cast<uint32_t>(address));
         cpu.host_error_ = std::string("code du jeu en ") + where + " : " + e.what();
         uc_emu_stop(cpu.uc_);
+        return;
     }
+    if (cpu.stop_requested_) uc_emu_stop(cpu.uc_);
 }
 
 void Cpu::call_guest(uint32_t address, std::vector<uint32_t> args, std::function<uint32_t(uint32_t)> then) {
@@ -451,11 +507,13 @@ void Cpu::on_thunk(uc_struct* uc, uint64_t address, uint32_t, void* user) {
         const uint32_t esp = cpu.reg(Reg::ESP);
         const uint32_t return_address = cpu.read_u32(esp);
         cpu.current_ = f.name;
+        ++cpu.host_calls_;
         const uint32_t result = f.call(cpu);
         if (cpu.stop_requested_) {
             uc_emu_stop(uc);
             return;
         }
+        if (cpu.redirect_) return;  // jump() : registres fixés par la fonction hôte
         if (cpu.has_pending_) {
             uc_emu_stop(uc);
             cpu.continuations_.push_back({return_address, esp, f.arg_bytes, cpu.pending_.then});

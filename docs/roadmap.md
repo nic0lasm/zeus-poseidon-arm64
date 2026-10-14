@@ -58,8 +58,9 @@ effect of Phase C rather than a goal of its own.
 
 Before rewriting anything, the means to prove it.
 
-- **Equivalence harness** ([#26](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/26)): run one game function emulated and native from the same
-  state and compare the whole game state, not only the output.
+- **Equivalence harness** ([#26](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/26), done): the whole game state compared tick by tick between the
+  pure original and the host, and one game function run original and native from the same
+  state with registers and memory compared ([equivalence.md](equivalence.md)).
 - **Code map and counters** ([#69](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/69)): each of the 4,872 functions of the GOG executable filed under a module, and two
   public numbers — functions understood out of 4,872, and the share of the computation done
   natively.
@@ -240,7 +241,7 @@ exit), and a function can get a native fast path that falls back to the original
 | `0x00457900` | the ground of one city tile, for its common case: flat land in the normal view, animated water included |
 | `0x00458170` | the city drawing loop, its first pass over the visible tiles (the ground), through a host jump at the head of the loop that hands back to the original for any other case |
 
-All eight scenarios (38,593 frames) give the same frame logs with and without them.
+All nine scenarios (43,159 frames, 13,073 simulation ticks) give the same frames and the same game state, tick by tick, with and without them, and each of them passes the call-by-call check of [equivalence.md](equivalence.md).
 
 **Also on the host side.** The game reopens the same small files thousands of times a minute;
 read-only files of 4 MB or less are kept in memory and directory listings are cached.

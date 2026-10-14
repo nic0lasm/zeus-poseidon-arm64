@@ -24,12 +24,17 @@ alter the game.
 
 ```bash
 python3 tools/check_scenarios.py record     # before your change: store the reference logs
-python3 tools/check_scenarios.py            # after: replay and compare, frame by frame
+python3 tools/check_scenarios.py            # after: replay and compare, frame by frame and tick by tick
 python3 tools/check_scenarios.py --no-native   # same, with every game function emulated
+python3 tools/check_scenarios.py --only tutorial --verify 0x0050B410   # also check one function call by call
 ```
 
-Reference logs are kept in `build/scenarios/`; they depend on the game files and are not
-versioned. A scenario also fails if the game stops on a missing function.
+`record` plays the scenarios with every game function emulated (`--no-native`): the references
+are those of the original code. Each run writes two logs, the fingerprint of every displayed
+frame and the fingerprint of the game state at every simulation tick
+([docs/equivalence.md](../docs/equivalence.md)); both must match the reference. Reference logs
+are kept in `build/scenarios/`; they depend on the game files and are not versioned. A scenario
+also fails if the game stops on a missing function.
 
 | Scenario | What it plays |
 |---|---|

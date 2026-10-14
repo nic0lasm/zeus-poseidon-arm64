@@ -439,8 +439,8 @@ void install_native_functions(Process& p) {
     }
     if (matches(cpu, kKeySearch, kKeySearchBytes, sizeof kKeySearchBytes)) {
         const uint8_t jump[2] = {0xEB, static_cast<uint8_t>(kKeySearchEnd - (kKeySearch + 2))};
-        std::memcpy(cpu.host(kKeySearch), jump, sizeof jump);
-        cpu.add_code_hook(kKeySearch, search_key);
+        cpu.patch_code(kKeySearch, jump, sizeof jump);
+        cpu.add_native_hook(kKeySearch, search_key);
         ++installed;
     }
     installed += install_native_drawing(p);

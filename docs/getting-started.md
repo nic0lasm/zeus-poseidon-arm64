@@ -122,6 +122,9 @@ needs *System Settings → Privacy & Security → Open Anyway* (on macOS 15 and 
 | `--profile FILE.tsv` | time spent per block of game code (slow); summarise with `tools/profile_report.py` |
 | `--no-native` | emulate everything, without the host rewrites of some game functions |
 | `--check-audio FOLDER` | (alone, instead of `--run`) decode every sound file of a folder the way the mixer does |
+| `--state-log FILE` | write a fingerprint of every memory zone of the game state at each simulation tick (`docs/equivalence.md`) |
+| `--verify ADDRESS[:END]` | run each call of this game function (or this piece of code) twice from the same state, native replacements off then on, compare registers and memory, stop at the first difference (`docs/equivalence.md`) |
+| `--verify-every N` | with `--verify`, check one pass in N |
 | `--counts` | print, on exit, how many times each Windows function was called and the time spent in it |
 | `--trace-only PREFIX` | trace only functions whose name starts with PREFIX, e.g. `mss32.dll` |
 | `--headless` | hidden window, sound muted |
