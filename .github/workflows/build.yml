@@ -6,6 +6,21 @@ on:
   pull_request:
 
 jobs:
+  linux-x86-64:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependencies
+        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build pkg-config libsdl2-dev libunicorn-dev libavformat-dev libavcodec-dev libswscale-dev libswresample-dev libavutil-dev zlib1g-dev
+      - name: Build
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_COMPILE_WARNING_AS_ERROR=ON
+          cmake --build build -- -k 0
+      - name: Unit tests
+        run: ./build/zeus-tests
+      - name: Emulator self-test
+        run: ./build/zeus-run --selftest
+
   macos-arm64:
     runs-on: macos-14
     steps:

@@ -87,7 +87,7 @@ class Viewer {
 public:
     Viewer(const Options& options, std::vector<fs::path> maps)
         : maps_(std::move(maps)), images_(find_subdir(options.data_dir, "data")), zoom_(options.zoom) {
-        const Uint32 flags = options.screenshot.empty() ? SDL_WINDOW_RESIZABLE
+        const Uint32 flags = options.screenshot.empty() ? static_cast<Uint32>(SDL_WINDOW_RESIZABLE)
                                                         : static_cast<Uint32>(SDL_WINDOW_HIDDEN);
         window_ = SDL_CreateWindow("Zeus", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                    options.width, options.height, flags);

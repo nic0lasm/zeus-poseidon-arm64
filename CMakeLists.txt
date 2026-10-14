@@ -24,8 +24,11 @@ if(ZEUS_FFMPEG)
     foreach(lib avformat avcodec swscale swresample avutil)
         target_link_libraries(zeus_ffmpeg INTERFACE "${ZEUS_FFMPEG_DIR}/lib/lib${lib}.a")
     endforeach()
-    target_link_libraries(zeus_ffmpeg INTERFACE m "-framework CoreFoundation" "-framework CoreVideo"
-        "-framework CoreMedia")
+    target_link_libraries(zeus_ffmpeg INTERFACE m)
+    if(APPLE)
+        target_link_libraries(zeus_ffmpeg INTERFACE "-framework CoreFoundation" "-framework CoreVideo"
+            "-framework CoreMedia")
+    endif()
     add_library(PkgConfig::FFMPEG ALIAS zeus_ffmpeg)
 else()
     pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET libavformat libavcodec libswscale libswresample libavutil)
@@ -76,8 +79,11 @@ add_library(zeus_win32 STATIC
     src/win32/vfs.cpp
     src/win32/widescreen.cpp)
 target_include_directories(zeus_win32 PUBLIC src)
-target_link_libraries(zeus_win32 PUBLIC PkgConfig::UNICORN PkgConfig::FFMPEG SDL2::SDL2
-    "-framework ImageIO" "-framework CoreGraphics" "-framework CoreFoundation")
+target_link_libraries(zeus_win32 PUBLIC PkgConfig::UNICORN PkgConfig::FFMPEG SDL2::SDL2)
+if(APPLE)
+    target_link_libraries(zeus_win32 PUBLIC "-framework ImageIO" "-framework CoreGraphics"
+        "-framework CoreFoundation")
+endif()
 
 add_executable(zeus-run
     src/tools/zeus_run/app.cpp

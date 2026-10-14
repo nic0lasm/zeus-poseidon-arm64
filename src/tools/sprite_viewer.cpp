@@ -98,7 +98,7 @@ public:
     Viewer(const Options& options, std::vector<fs::path> files)
         : files_(std::move(files)), zoom_(std::clamp(options.zoom, 1, 4)) {
         const Uint32 flags = options.screenshot.empty()
-                                 ? SDL_WINDOW_RESIZABLE
+                                 ? static_cast<Uint32>(SDL_WINDOW_RESIZABLE)
                                  : static_cast<Uint32>(SDL_WINDOW_HIDDEN);
         window_ = SDL_CreateWindow("Zeus", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280,
                                    800, flags);

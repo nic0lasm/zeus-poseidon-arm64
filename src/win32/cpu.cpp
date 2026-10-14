@@ -3,11 +3,13 @@
 #include <cstring>
 #include <ctime>
 #include <sys/mman.h>
+
 #include <unicorn/unicorn.h>
 #include <cstdlib>
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <cstdio>
 #include <stdexcept>
 
@@ -90,7 +92,16 @@ void Cpu::map(uint32_t address, uint32_t size, bool executable) {
 // Sans pagination, Unicorn tient toute page pour exécutable et fait passer chaque écriture
 // mémoire par un chemin lent qui surveille le code modifié : une écriture coûte alors une
 // trentaine de nanosecondes, contre moins d'une pour les autres instructions.
+//
+// Les pages non exécutables demandent Unicorn 2.1 : avant, la première page marquée ainsi fait
+// fauter le programme émulé (vu avec 2.0.1, celui d'Ubuntu 24.04). On s'en passe alors, au prix de
+// la lenteur décrite ci-dessus.
 void Cpu::enable_paging() {
+    // uc_version() : majeur << 24 | mineur << 16 | correctif << 8 | extra (UC_MAKE_VERSION varie selon les versions).
+    if (uc_version(nullptr, nullptr) < (2u << 24 | 1u << 16)) {
+        paging_ = true;
+        return;
+    }
     constexpr uint32_t kTables = 0xF0040000, kLarge = 0x200000;
     constexpr uint64_t kPresent = 1, kWritable = 2, kUser = 4, kLargePage = 0x80, kNoExecute = 1ull << 63;
     std::vector<uint64_t> tables(5 * 512, 0);  // PDPT, puis quatre répertoires de 512 entrées
@@ -280,7 +291,7 @@ void Cpu::start_profile() {
 
 void Cpu::on_block(uc_struct*, uint64_t address, uint32_t, void* user) {
     Cpu& cpu = *static_cast<Cpu*>(user);
-    const uint64_t now = clock_gettime_nsec_np(CLOCK_UPTIME_RAW);
+    const uint64_t now = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count());
     if (cpu.profile_block_) {
         BlockTime& block = cpu.profile_[cpu.profile_block_];
         block.nanoseconds += now - cpu.profile_since_;

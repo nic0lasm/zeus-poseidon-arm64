@@ -43,7 +43,7 @@ void append_frame(Av& av, int channels, Sound& out) {
     const size_t at = out.samples.size();
     out.samples.resize(at + static_cast<size_t>(capacity) * static_cast<size_t>(channels));
     uint8_t* target = reinterpret_cast<uint8_t*>(out.samples.data() + at);
-    const int got = swr_convert(av.resampler, &target, capacity, av.frame->extended_data, av.frame->nb_samples);
+    const int got = swr_convert(av.resampler, &target, capacity, const_cast<const uint8_t**>(av.frame->extended_data), av.frame->nb_samples);
     out.samples.resize(at + static_cast<size_t>(std::max(got, 0)) * static_cast<size_t>(channels));
 }
 

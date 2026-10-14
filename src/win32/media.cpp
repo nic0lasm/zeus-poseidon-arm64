@@ -1,9 +1,17 @@
-// IJL10 : la bibliothèque JPEG d'Intel, réalisée avec ImageIO de macOS.
+// IJL10 : la bibliothèque JPEG d'Intel, réalisée avec ImageIO sur macOS, avec FFmpeg ailleurs.
 
+#ifdef __APPLE__
 #include <CoreGraphics/CoreGraphics.h>
 #include <ImageIO/ImageIO.h>
+#else
+extern "C" {
+#include <libavcodec/avcodec.h>
+#include <libswscale/swscale.h>
+}
+#endif
 
 #include <cstdio>
+#include <cstring>
 #include <fstream>
 #include <stdexcept>
 #include <vector>
@@ -18,6 +26,7 @@ struct Jpeg {
     std::vector<uint8_t> rgb;  // 3 octets par pixel, de haut en bas
 };
 
+#ifdef __APPLE__
 // Décode un JPEG ; `with_pixels` à faux ne lit que les dimensions.
 bool decode_jpeg(const std::vector<uint8_t>& data, bool with_pixels, Jpeg& out) {
     CFDataRef cf = CFDataCreate(nullptr, data.data(), static_cast<CFIndex>(data.size()));
@@ -56,6 +65,41 @@ bool decode_jpeg(const std::vector<uint8_t>& data, bool with_pixels, Jpeg& out) 
     if (cf) CFRelease(cf);
     return ok;
 }
+
+#else  // décodeur MJPEG de FFmpeg (l'écart de pixels avec ImageIO est documenté dans #38)
+
+bool decode_jpeg(const std::vector<uint8_t>& data, bool with_pixels, Jpeg& out) {
+    const AVCodec* decoder = avcodec_find_decoder(AV_CODEC_ID_MJPEG);
+    AVCodecContext* codec = decoder ? avcodec_alloc_context3(decoder) : nullptr;
+    AVPacket* packet = av_packet_alloc();
+    AVFrame* frame = av_frame_alloc();
+    bool ok = false;
+    if (codec && packet && frame && avcodec_open2(codec, decoder, nullptr) >= 0 &&
+        av_new_packet(packet, static_cast<int>(data.size())) >= 0) {
+        std::memcpy(packet->data, data.data(), data.size());
+        if (avcodec_send_packet(codec, packet) >= 0 && avcodec_receive_frame(codec, frame) >= 0 && frame->width > 0 &&
+            frame->height > 0) {
+            out.width = frame->width;
+            out.height = frame->height;
+            ok = true;
+            if (with_pixels) {
+                out.rgb.resize(static_cast<size_t>(out.width) * out.height * 3);
+                SwsContext* sws = sws_getContext(out.width, out.height, static_cast<AVPixelFormat>(frame->format),
+                                                 out.width, out.height, AV_PIX_FMT_RGB24, SWS_POINT, nullptr, nullptr, nullptr);
+                uint8_t* dst[4] = {out.rgb.data(), nullptr, nullptr, nullptr};
+                int stride[4] = {out.width * 3, 0, 0, 0};
+                ok = sws && sws_scale(sws, frame->data, frame->linesize, 0, out.height, dst, stride) == out.height;
+                if (sws) sws_freeContext(sws);
+            }
+        }
+    }
+    av_frame_free(&frame);
+    av_packet_free(&packet);
+    avcodec_free_context(&codec);
+    return ok;
+}
+
+#endif
 
 // Champs utilisés de JPEG_CORE_PROPERTIES (Intel JPEG Library 1.x).
 constexpr uint32_t kDibBytes = 4, kDibWidth = 8, kDibHeight = 12, kDibPadBytes = 16, kDibChannels = 20,
