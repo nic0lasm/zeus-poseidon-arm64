@@ -11,9 +11,13 @@ original game, with no Windows, no Wine and no virtual machine.**
 *[Version française](README.fr.md)*
 
 <p align="center">
-  <img src="docs/images/city.png" width="49%" alt="A city running in the first tutorial">
+  <img src="docs/images/city-wide-fr.jpg" width="100%" alt="A large city in wide mode (1324 × 768), with a French language pack">
+</p>
+<p align="center">
+  <img src="docs/images/menu-fr.png" width="49%" alt="The main menu with a French language pack">
   <img src="docs/images/tutorials.png" width="49%" alt="The tutorials screen">
 </p>
+<p align="center"><sub>A large city in wide mode, and the main menu in French — both built from your own copy of the game.</sub></p>
 
 *Zeus* (Impressions Games, 2000) is a 32-bit Windows game, and recent Macs can no longer run it.
 This project runs the game's **original, unmodified code** inside a small sandboxed x86

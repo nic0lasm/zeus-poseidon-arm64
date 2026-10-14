@@ -11,9 +11,13 @@ Silicon — le jeu d'origine, sans Windows, sans Wine et sans machine virtuelle.
 *[English version](README.md)*
 
 <p align="center">
-  <img src="docs/images/city.png" width="49%" alt="Une ville dans le premier tutoriel">
+  <img src="docs/images/city-wide-fr.jpg" width="100%" alt="Une grande ville en mode large (1324 × 768), avec le pack français">
+</p>
+<p align="center">
+  <img src="docs/images/menu-fr.png" width="49%" alt="Le menu principal avec le pack français">
   <img src="docs/images/tutorials.png" width="49%" alt="L'écran des tutoriels">
 </p>
+<p align="center"><sub>Une grande ville en mode large, et le menu principal en français — à partir de votre propre exemplaire du jeu.</sub></p>
 
 *Zeus* (Impressions Games, 2000) est un jeu Windows 32 bits que les Mac récents ne savent plus
 lancer. Ce projet exécute son **code d'origine, non modifié**, dans un petit émulateur x86

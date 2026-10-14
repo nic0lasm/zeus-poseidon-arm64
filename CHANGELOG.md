@@ -5,6 +5,7 @@ pull request.
 
 ## Unreleased
 
+- New screenshots on the front page: a large city in wide mode (1324 × 768) and the main menu, both with a French language pack.
 - **A clearer front page.** The README, in English and in French, opens with three steps to play, what you get, the next steps as task lists linked to their issues, and the history of every version since 0.1. The roadmap splits each step into precise tasks (#34 to #42).
 
 ## 1.0.1 — 2026-10-14
