@@ -1,24 +1,12 @@
-// Commandes du système et dialogues AppleScript du mode application.
+// Commandes du système, communes à toutes les plateformes (dialogues : dialogs_macos.cpp, dialogs_sdl.cpp).
 
 #include <cstdio>
-#include <mach-o/dyld.h>
 
-#include <filesystem>
 #include <string>
 
 #include "tools/zeus_run/zeus_run.h"
 
 namespace zeus::run {
-namespace {
-
-// Vrai si la langue du système est le français : les dialogues du mode application sont
-// en français ou en anglais.
-bool french() {
-    static const bool value = command_output("/usr/bin/defaults read -g AppleLanguages 2>/dev/null").find("\"fr") != std::string::npos;
-    return value;
-}
-
-}  // namespace
 
 // Lance une commande et renvoie sa sortie, sans le saut de ligne final.
 std::string command_output(const std::string& command) {
@@ -32,7 +20,11 @@ std::string command_output(const std::string& command) {
     return out;
 }
 
-const char* tr(const char* fr, const char* en) { return french() ? fr : en; }
+// Les dialogues du mode application sont en français ou en anglais.
+const char* tr(const char* fr, const char* en) {
+    static const bool french = system_is_french();
+    return french ? fr : en;
+}
 
 // Entoure un texte d'apostrophes pour le passer à l'interpréteur de commandes.
 std::string quoted(const std::string& text) {
@@ -41,22 +33,8 @@ std::string quoted(const std::string& text) {
     return out + "'";
 }
 
-// Exécute un script AppleScript d'une ligne et renvoie ce qu'il affiche.
-std::string applescript(const std::string& script) {
-    return command_output("/usr/bin/osascript -e " + quoted(script) + " 2>/dev/null");
-}
-
-void alert(const std::string& title, const std::string& text) {
-    applescript("display alert \"" + title + "\" message \"" + text + "\"");
-}
-
-// Dossier du programme en cours d'exécution.
-std::filesystem::path program_dir() {
-    char self[4096];
-    uint32_t size = sizeof self;
-    std::error_code error;
-    if (_NSGetExecutablePath(self, &size) != 0) return {};
-    return std::filesystem::canonical(self, error).parent_path();
+std::string find_in_path(const std::string& name) {
+    return command_output("command -v " + quoted(name) + " 2>/dev/null");
 }
 
 }  // namespace zeus::run

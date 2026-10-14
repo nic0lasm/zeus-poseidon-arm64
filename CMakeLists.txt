@@ -83,6 +83,7 @@ add_executable(zeus-run
     src/tools/zeus_run/app.cpp
     src/tools/zeus_run/diagnostics.cpp
     src/tools/zeus_run/dialogs.cpp
+    $<IF:$<PLATFORM_ID:Darwin>,src/tools/zeus_run/dialogs_macos.cpp,src/tools/zeus_run/dialogs_sdl.cpp>
     src/tools/zeus_run/launch.cpp
     src/tools/zeus_run/main.cpp
     src/tools/zeus_run/packs.cpp)

@@ -48,15 +48,11 @@ std::string make_language_pack(const std::filesystem::path& cd_folder, const std
 // Dialogues de fabrication d'un pack, depuis le mode application.
 void build_language_pack(const std::filesystem::path& game_dir, const std::filesystem::path& packs_dir) {
     namespace fs = std::filesystem;
-    const std::string folder = applescript(
-        std::string("POSIX path of (choose folder with prompt \"") +
+    const std::string folder = ask_folder(
         tr("Dossier qui contient les images des deux CD (Zeus et Poséidon) et, si possible, les mises à jour 1.1 et 2.1",
-           "Folder that holds the images of both CDs (Zeus and Poseidon) and, if possible, the 1.1 and 2.1 updates") +
-        "\")");
+           "Folder that holds the images of both CDs (Zeus and Poseidon) and, if possible, the 1.1 and 2.1 updates"));
     if (folder.empty()) return;
-    const std::string name = applescript(std::string("text returned of (display dialog \"") +
-                                         tr("Nom de cette langue dans la liste", "Name of this language in the list") +
-                                         "\" default answer \"Français\" with title \"Zeus + Poseidon\")");
+    const std::string name = ask_text(tr("Nom de cette langue dans la liste", "Name of this language in the list"), "Français");
     std::string safe;
     for (unsigned char c : name)
         if (std::isalnum(c) || c >= 0x80 || c == '-' || c == '_' || c == ' ') safe += static_cast<char>(c);
@@ -67,14 +63,11 @@ void build_language_pack(const std::filesystem::path& game_dir, const std::files
         alert(tr("Ce nom est déjà pris", "This name is already taken"), safe);
         return;
     }
-    applescript(std::string("display notification \"") +
-                tr("Fabrication du pack de langue : environ une minute, 3 Go d'espace temporaire.",
-                   "Building the language pack: about a minute, 3 GB of temporary space.") +
-                "\" with title \"Zeus + Poseidon\"");
+    notify(tr("Fabrication du pack de langue : environ une minute, 3 Go d'espace temporaire.",
+              "Building the language pack: about a minute, 3 GB of temporary space."));
     const std::string failure = make_language_pack(folder, game_dir, packs_dir / safe);
     if (failure.empty()) {
-        applescript(std::string("display notification \"") + tr("Pack de langue prêt : ", "Language pack ready: ") + safe +
-                    "\" with title \"Zeus + Poseidon\"");
+        notify(tr("Pack de langue prêt : ", "Language pack ready: ") + safe);
         return;
     }
     std::string reason;

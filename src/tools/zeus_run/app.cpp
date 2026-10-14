@@ -1,7 +1,5 @@
 // Mode application : demande le jeu au premier lancement, puis la langue, et lance le jeu.
 
-#include <CoreGraphics/CoreGraphics.h>
-
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
@@ -38,7 +36,7 @@ std::string innoextract_path() {
     if (fs::exists(bundled)) return bundled.string();
     for (const char* candidate : {"/opt/homebrew/bin/innoextract", "/usr/local/bin/innoextract"})
         if (fs::exists(candidate)) return candidate;
-    return {};
+    return find_in_path("innoextract");
 }
 
 // Déballe un installateur GOG dans `destination` et renvoie le chemin de Zeus.exe, ou vide.
@@ -71,9 +69,7 @@ std::string unpack_installer(const std::string& installer, const std::filesystem
 int run_app(const std::string& installer) {
     namespace fs = std::filesystem;
     const char* forced = std::getenv("ZEUS_SUPPORT_DIR");
-    const char* home = std::getenv("HOME");
-    if (!forced && !home) throw std::runtime_error("dossier personnel introuvable");
-    const fs::path support = forced ? fs::path(forced) : fs::path(home) / "Library/Application Support/Zeus Poseidon";
+    const fs::path support = forced ? fs::path(forced) : default_support_dir();
     fs::create_directories(support);
     const fs::path memo = support / "dossier-du-jeu.txt", unpacked = support / "Jeu-origine";
     std::string folder;
@@ -85,27 +81,24 @@ int run_app(const std::string& installer) {
         folder = unpacked.string();
     }
     while (exe.empty()) {
-        const std::string choice = applescript(
-            std::string("button returned of (display dialog \"") +
-            tr("Zeus + Poseidon a besoin du jeu d'origine, que vous devez posséder.\\n\\nIndiquez l'installateur GOG "
+        const std::string quit = tr("Quitter", "Quit"), pick_folder = tr("Dossier…", "Folder…"),
+                          pick_installer = tr("Installateur GOG…", "GOG installer…");
+        const int choice = ask_choice(
+            "Zeus + Poseidon",
+            tr("Zeus + Poseidon a besoin du jeu d'origine, que vous devez posséder.\n\nIndiquez l'installateur GOG "
                "(setup_zeus_and_poseidon_….exe) : il sera déballé, ce qui prend environ une minute et 800 Mo. Ou bien "
                "indiquez un dossier où le jeu est déjà déballé.",
-               "Zeus + Poseidon needs the original game, which you must own.\\n\\nPick the GOG installer "
+               "Zeus + Poseidon needs the original game, which you must own.\n\nPick the GOG installer "
                "(setup_zeus_and_poseidon_….exe): it will be unpacked, which takes about a minute and 800 MB. Or pick "
-               "a folder where the game is already unpacked.") +
-            "\" buttons {\"" + tr("Quitter", "Quit") + "\", \"" + tr("Dossier…", "Folder…") + "\", \"" +
-            tr("Installateur GOG…", "GOG installer…") + "\"} default button 3 with title \"Zeus + Poseidon\")");
-        if (choice == tr("Installateur GOG…", "GOG installer…")) {
-            const std::string file = applescript(std::string("POSIX path of (choose file with prompt \"") +
-                                                 tr("Installateur GOG de Zeus + Poseidon", "GOG installer of Zeus + Poseidon") +
-                                                 "\" of type {\"exe\"})");
+               "a folder where the game is already unpacked."),
+            {quit, pick_folder, pick_installer}, 2);
+        if (choice == 2) {
+            const std::string file = ask_file(tr("Installateur GOG de Zeus + Poseidon", "GOG installer of Zeus + Poseidon"));
             if (file.empty()) continue;
             exe = unpack_installer(file, unpacked);
             folder = unpacked.string();
-        } else if (choice == tr("Dossier…", "Folder…")) {
-            folder = applescript(std::string("POSIX path of (choose folder with prompt \"") +
-                                 tr("Dossier du jeu (celui qui contient Zeus.exe)", "Game folder (the one that contains Zeus.exe)") +
-                                 "\")");
+        } else if (choice == 1) {
+            folder = ask_folder(tr("Dossier du jeu (celui qui contient Zeus.exe)", "Game folder (the one that contains Zeus.exe)"));
             if (folder.empty()) continue;
             exe = find_game(folder);
             if (exe.empty())
@@ -128,7 +121,7 @@ int run_app(const std::string& installer) {
     std::string choice;
     bool chosen = static_cast<bool>(std::ifstream(choice_file));
     if (std::ifstream in{choice_file}) std::getline(in, choice);
-    if (CGEventSourceFlagsState(kCGEventSourceStateCombinedSessionState) & kCGEventFlagMaskAlternate) chosen = false;
+    if (option_key_down()) chosen = false;
     while (!chosen) {
         std::vector<std::string> packs;
         std::error_code error;
@@ -136,12 +129,11 @@ int run_app(const std::string& installer) {
             if (fs::exists(entry.path() / "remplace.txt")) packs.push_back(entry.path().filename().string());
         std::sort(packs.begin(), packs.end());
         const std::string build = tr("Autre langue, depuis les CD d'origine…", "Another language, from the original CDs…");
-        std::string list = "\"English\"";
-        for (const std::string& pack : packs) list += ", \"" + pack + "\"";
-        list += ", \"" + build + "\"";
-        const std::string answer = applescript("choose from list {" + list + "} with title \"Zeus + Poseidon\" with prompt \"" +
-                                               tr("Langue du jeu", "Game language") + "\" default items {\"English\"}");
-        if (answer == "false" || answer.empty()) return 0;  // annulé
+        std::vector<std::string> items{"English"};
+        items.insert(items.end(), packs.begin(), packs.end());
+        items.push_back(build);
+        const std::string answer = ask_list("Zeus + Poseidon", tr("Langue du jeu", "Game language"), items);
+        if (answer.empty()) return 0;  // annulé
         if (answer == build) {
             build_language_pack(fs::path(exe).parent_path(), packs_dir);
             continue;  // le nouveau pack apparaît dans la liste
