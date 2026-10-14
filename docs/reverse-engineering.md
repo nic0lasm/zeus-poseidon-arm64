@@ -119,6 +119,26 @@ The game's sound manager (constructor `0x005C7790`) drives the Miles Sound Syste
 - The game's frame buffer is at the address held in `0x00F9C100`, two bytes per pixel, one
   screen wide.
 
+Above 768 lines (checked at 1444×903 and 1324×1023):
+
+- The control panel background is an image 768 pixels high, drawn at (panel x, 0) by the calls
+  returning at `0x00517B83` (`0x00517B10`), `0x0052531F` (`0x00525280`) and `0x00597ECF`
+  (`0x00597E60`, world map screen). It is drawn rarely (6 times in 97 s of a large city) and
+  stays in the frame buffer. Its last six rows (762–767) carry only the background texture.
+- The building information window (`0x005715A0`) opens at y = 760 − 16 n (`MOV ECX,0x2F8` at
+  `0x005716A2`) when the value at `0x00F2A734` is at most 396 (`0x0057168B`), at the top
+  otherwise. The 800×600 branch uses 592 − 16 n and 312: both values follow the height
+  (height − 8, height / 2 + 12).
+- The world map (`0x00599DA0`) copies a window of its image in one block (`0x005ACF50`, path at
+  `0x005AD6D1`): `[0x00F139D4]` columns, `[0x00F139D0]` rows, from (`[0x00F139CC]`,
+  `[0x00F139C8]`). Columns are capped to the image width (`0x005FB7AC`), rows are not: buffer
+  height − 30, written at `0x00599E20`. The image is 838×738, so a taller screen read past it.
+- The full-screen backgrounds drawn the same way (`0x00420020`, `0x00422270`, `0x00422C60`,
+  `0x0042F380`) are centred with (1024 − width) / 2 and (768 − height) / 2; they belong to menus,
+  which always run in 800×600.
+- The folded panel flag `0x010DFF60` is only ever written with 0 (`0x0042015C`, `0x004201D6`),
+  so the folded layout is not reachable in this build.
+
 `src/win32/widescreen.cpp` uses all of the above to offer a wide mode.
 
 ### Text rendering and languages

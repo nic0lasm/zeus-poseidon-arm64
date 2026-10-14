@@ -67,7 +67,8 @@ cmake --build build
 The game opens in an 800×600 window. **⌘F** or **⌘↩** switches to full screen and back; the
 picture keeps its 4:3 proportions and stays sharp at any size. For a larger view of the city,
 choose *Options → Display options → 1024 x 768* in the game. Started with `--wide auto` (the
-application always does), that mode becomes a wide one fitted to your screen, and the option
+application always does), that mode becomes a wide one fitted to your screen (taller than 768 lines on a screen taller than
+16:9), and the option
 shows its real size. Saves and settings are written to `run/zeus/`.
 
 The intro video plays first; press Esc to skip it. The mouse wheel, or a two-finger swipe,

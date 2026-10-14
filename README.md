@@ -78,7 +78,7 @@ As little CPU as the game needs, so that a laptop stays cool and silent.
 - [ ] Native city drawing loop ([#34](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/34))
 - [ ] Native control panel texts ([#35](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/35))
 - [ ] Can unseen redraws be skipped? — research ([#36](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/36))
-- [ ] Taller wide modes, without a black band under the panel ([#23](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/23))
+- [x] Taller wide modes, without a black band under the panel ([#23](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/23))
 
 **Target:** a small city under 20 % of one core (about 42 % today), the large city of the last
 tutorial under 35 %.

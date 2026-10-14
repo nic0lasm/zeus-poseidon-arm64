@@ -79,7 +79,7 @@ Le moins de processeur possible, pour un portable qui reste frais et silencieux.
 - [ ] Boucle de dessin de la ville en natif ([#34](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/34))
 - [ ] Textes du panneau de contrôle en natif ([#35](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/35))
 - [ ] Peut-on éviter les dessins jamais affichés ? — étude ([#36](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/36))
-- [ ] Modes larges plus hauts, sans bande noire sous le panneau ([#23](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/23))
+- [x] Modes larges plus hauts, sans bande noire sous le panneau ([#23](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/23))
 
 **Objectif :** une petite ville sous 20 % d'un cœur (environ 42 % aujourd'hui), la grande ville
 du dernier tutoriel sous 35 %.

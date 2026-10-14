@@ -75,6 +75,20 @@ constexpr uint32_t kWidthCompares[] = {0x00422D55, 0x005051FA, 0x0051CBC8, 0x005
 constexpr uint32_t kHeightCompares[] = {0x00505212, 0x00571685};
 // FUN_0059ebe0 : retour de l'appel qui dessine le fond de la barre du haut (mode 1024).
 constexpr uint32_t kTopBarDrawn = 0x0059EC36;
+// Retours des appels qui dessinent le fond du panneau de contrôle en (x du panneau, 0), image de
+// 768 pixels de haut : FUN_00517b10 (panneau déplié) et FUN_00525280 (dernier des deux dessins).
+constexpr uint32_t kPanelDrawn = 0x00517B83, kPanelOverlayDrawn = 0x0052531F;
+constexpr uint32_t kWorldPanelDrawn = 0x00597ECF;  // FUN_00597e60 : même fond, carte du monde
+// FUN_00599da0, carte du monde : fenêtre copiée d'un bloc par FUN_005acf50 (0x005AD6D1). Sa
+// largeur est bornée à celle de l'image (0x005FB7AC), pas sa hauteur : hauteur du tampon - 30,
+// écrite en 0x00599E20 (MOV [0x00F139D0],EDX ; JL en 0x00599E26).
+constexpr uint32_t kWorldWindowRowsSet = 0x00599E20, kWorldWindowRowsChecked = 0x00599E26;
+constexpr uint32_t kWindowRows = 0x00F139D0;     // lignes de la fenêtre copiée d'un bloc
+constexpr uint32_t kWorldImageHeight = 0x005FB7B0;  // hauteur de l'image de la carte du monde
+// FUN_005715a0, fenêtre d'information en mode 1024x768 : ouverte en bas de l'écran (y = 760 - 16 n,
+// MOV ECX,0x2F8) si la valeur en 0x00F2A734 (ordonnée du clic, hypothèse) vaut au plus 396
+// (CMP [0x00F2A734],0x18C), sinon en haut. Le mode 800x600 suit la même règle : 592 - 16 n et 312.
+constexpr uint32_t kInfoWindowBottom = 0x005716A3, kInfoWindowMiddle = 0x00571691;
 
 // --- Variables ---------------------------------------------------------------------------------
 

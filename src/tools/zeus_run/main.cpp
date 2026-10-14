@@ -24,7 +24,8 @@
 //     --deterministic          horloge fictive et son coupé : exécution reproductible
 //     --wide auto | LxH        remplace le mode 1024 x 768 du jeu par un mode large, à choisir
 //                              ensuite dans Options > Display options ; « auto » prend les
-//                              proportions de l'écran
+//                              proportions de l'écran, et plus de 768 lignes s'il est plus
+//                              haut que 16:9
 //     --watch-call ADRESSE     liste à la fin les sites d'appel d'une fonction du jeu (hexadécimal)
 //     --count ADRESSE[,…]      affiche à la fin le nombre de passages sur chaque adresse du jeu
 //                              (hexadécimal), fonctions réécrites en natif comprises

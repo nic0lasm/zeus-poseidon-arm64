@@ -64,9 +64,14 @@ int run(const RunOptions& o) {
         });
     }
     if (!o.wide.empty()) {
-        // « auto » : même hauteur que le mode d'origine, largeur selon les proportions de l'écran.
+        // « auto » : les proportions de l'écran, avec la largeur d'un écran 16:9 en 768 lignes
+        // (1366) ; un écran plus haut (16:10, 3:2, 4:3) gagne des lignes, jusqu'à 1023.
         int w = 0, h = 768;
-        if (o.wide == "auto") w = static_cast<int>(h * desktop.screen_aspect());
+        if (o.wide == "auto") {
+            const double aspect = desktop.screen_aspect();
+            h = std::clamp(static_cast<int>(1366 / aspect), 768, 1023);
+            w = static_cast<int>(h * aspect);
+        }
         else if (std::sscanf(o.wide.c_str(), "%dx%d", &w, &h) != 2) throw std::runtime_error("--wide attend « auto » ou LARGEURxHAUTEUR");
         if (w >= 1084 && zeus::win32::apply_wide_mode(process, w, h))
             std::fprintf(stderr, "[hôte] écran large : le mode 1024 x 768 du jeu devient %d x %d\n", w, h);
