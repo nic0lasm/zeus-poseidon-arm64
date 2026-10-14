@@ -5,6 +5,10 @@ pull request.
 
 ## Unreleased
 
+## 1.0.1 — 2026-10-14
+
+The game now runs at its real speed (it ran at two thirds of it since 0.2), with less CPU.
+
 - **The game runs at its real speed.** A simulation tick happens only when a turn of the game's
   loop finds its interval elapsed (22 ms at the default 90 % speed), and the host's fixed 16 ms
   pacing rounded that up to 33 ms: since 0.2 the game ran at two thirds of its speed. The host
