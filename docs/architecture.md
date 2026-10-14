@@ -42,7 +42,7 @@ analysis/notes reverse-engineering notes kept under version control
 | `widescreen.cpp` | wide display mode, in place of the game's 1024×768 |
 | `language.cpp` | in-memory text adjustments for language packs |
 | `text.*` | conversion between the game's Windows-1252 text and UTF-8 |
-| `kernel32.cpp` | start-up, memory, strings, time, files |
+| `kernel32.cpp` | start-up, environment, time; `kernel32_memory.cpp`: heap, virtual memory, character sets; `kernel32_files.cpp`: files and folders (state shared through `kernel32_state.h`) |
 | `user32.cpp` | window, messages, mouse, keyboard (also GDI32, WINMM, OLE32, SHELL32) |
 | `desktop.*` | the SDL window, message queue, 16-bit frame presentation, scripted input |
 | `ddraw.cpp` | DirectDraw |

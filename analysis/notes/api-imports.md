@@ -10,7 +10,7 @@ Total : 202 fonctions dans 10 bibliothèques, dont 199 écrites.
 
 | Bibliothèque | Nombre | Écrites | Rôle | Réalisation |
 |---|---|---|---|---|
-| `kernel32.dll` | 82 | 80 | fichiers, mémoire, temps, environnement | `kernel32.cpp`, fichiers par `vfs.cpp` |
+| `kernel32.dll` | 82 | 80 | fichiers, mémoire, temps, environnement | `kernel32*.cpp`, fichiers par `vfs.cpp` |
 | `mss32.dll` | 50 | 50 | son : Miles Sound System | `mss.cpp` sur le mixeur de `audio.cpp` (SDL2, AudioToolbox) ; un fournisseur 3D logiciel |
 | `user32.dll` | 45 | 45 | fenêtre, messages, souris, clavier | `user32.cpp` et `desktop.cpp` (SDL2) |
 | `binkw32.dll` | 14 | 13 | vidéos Bink | `bink.cpp`, décodage par ffmpeg |

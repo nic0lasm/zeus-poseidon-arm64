@@ -63,6 +63,8 @@ add_library(zeus_win32 STATIC
     src/win32/ddraw.cpp
     src/win32/desktop.cpp
     src/win32/kernel32.cpp
+    src/win32/kernel32_files.cpp
+    src/win32/kernel32_memory.cpp
     src/win32/language.cpp
     src/win32/media.cpp
     src/win32/mss.cpp
