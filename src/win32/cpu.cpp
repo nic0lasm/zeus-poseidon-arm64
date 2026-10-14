@@ -20,7 +20,8 @@ namespace {
 constexpr uint32_t kThunkBase = 0xF0000000;
 constexpr uint32_t kThunkSize = 0x00010000;
 constexpr uint32_t kThunkStride = 4;
-// Tremplins des chemins rapides (add_fast_path) : code écrit par l'hôte, juste après les imports.
+// Tremplins des chemins rapides (add_fast_path) et des aiguillages (add_code_jump) : code écrit
+// par l'hôte, juste après les imports.
 constexpr uint32_t kTrampolineBase = kThunkBase + kThunkSize, kTrampolineSize = 0x1000;
 constexpr uint32_t kPage = 0x1000;
 constexpr size_t kAddressSpace = size_t{1} << 32;
@@ -339,6 +340,29 @@ void Cpu::add_fast_path(uint32_t address, uint32_t arg_bytes, uint32_t displaced
         uint8_t* d = cpu.host(data);
         d[0] = result ? 1 : 0;
         if (result) std::memcpy(d + 4, &*result, 4);
+    });
+}
+
+void Cpu::add_code_jump(uint32_t address, uint32_t displaced, std::function<uint32_t(Cpu&)> fn) {
+    if (displaced < 6 || displaced > 16) throw std::runtime_error("aiguillage : octets déplacés hors limites");
+    // Case de l'adresse choisie, puis le tremplin : octets déplacés et saut vers la suite.
+    const uint32_t slot = trampoline_next_, code = slot + 4;
+    const uint32_t size = 4 + displaced + 5;
+    if (slot + size > kTrampolineBase + kTrampolineSize) throw std::runtime_error("trop de tremplins");
+    trampoline_next_ = (slot + size + 15) & ~15u;
+    auto put32 = [](uint8_t* p, uint32_t v) { std::memcpy(p, &v, 4); };
+    uint8_t* t = host(code);
+    std::memcpy(t, host(address), displaced);
+    t[displaced] = 0xE9;
+    put32(t + displaced + 1, (address + displaced) - (code + displaced + 5));
+    uint8_t* entry = host(address);
+    entry[0] = 0xFF;  // jmp dword ptr [case]
+    entry[1] = 0x25;
+    put32(entry + 2, slot);
+    std::memset(entry + 6, 0x90, displaced - 6);
+    add_code_hook(address, [fn = std::move(fn), slot, code](Cpu& cpu) {
+        const uint32_t target = fn(cpu);
+        std::memcpy(cpu.host(slot), target ? &target : &code, 4);
     });
 }
 

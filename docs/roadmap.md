@@ -59,7 +59,10 @@ fan noise on a laptop.
   clock calls turned out to be the game's own profiling timers around each walker, not a wait:
   what keeps the core busy is the simulation and the drawing of every turn, still emulated. In
   the order of the profile:
-  - [ ] the city drawing loop `0x00458170` ([#34](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/34));
+  - [x] the city drawing loop `0x00458170`, first pass (the ground of every tile): a small city
+    went from 51–60 % to 35 % of a core, the large city barely moved (85 % to 84 %); the second
+    pass, buildings and walkers, is still emulated
+    ([#34](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/34));
   - [ ] the control panel text routines, about 8 % of the time ([#35](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/35));
   - [ ] research: the game redraws every turn but shows a frame at most every 50 ms — can the
     unseen drawings be skipped without changing what the game computes?
@@ -260,7 +263,7 @@ exit), and a function can get a native fast path that falls back to the original
 **Where the time goes.** `zeus-run --profile` measures time per block of game code and
 `tools/profile_report.py` sums it per function, subtracting the cost of the measurement itself.
 
-**What is native today** (`src/win32/native.cpp`, on by default, `--no-native` to compare):
+**What is native today** (`src/win32/native.cpp` and `native_draw.cpp`, on by default, `--no-native` to compare):
 
 | Game function | What it does |
 |---|---|
@@ -271,7 +274,10 @@ exit), and a function can get a native fast path that falls back to the original
 | `0x0050B410` | clears the frame buffer |
 | `0x005CC640` | `_strcmpi` from the C runtime |
 | `0x005059F8` | the loop that looks up each key of `Model\Zeus eventmsg.txt` at start-up (18 million `_strcmpi` calls): start-up went from 3.5–5 s to under a second |
-| `0x005ACF50` | the sprite dispatcher, for its two common cases (run-length and opaque images, neither clipped sideways nor mirrored, 95 % of the calls), with its clipping (`0x00509C20`, `0x00509CD0`); every other case falls back to the original |
+| `0x005ACF50` | the sprite dispatcher, for its common cases (run-length and opaque images, neither clipped sideways nor mirrored, 95 % of the calls, and ground tiles not clipped sideways), with its clipping (`0x00509C20`, `0x00509CD0`); every other case falls back to the original |
+| `0x00435070` | draws a ground tile, a 58 × 30 diamond (`src/win32/native_draw.cpp`) |
+| `0x00457900` | the ground of one city tile, for its common case: flat land in the normal view, animated water included |
+| `0x00458170` | the city drawing loop, its first pass over the visible tiles (the ground), through a host jump at the head of the loop that hands back to the original for any other case |
 
 All eight scenarios (38,593 frames) give the same frame logs with and without them.
 
