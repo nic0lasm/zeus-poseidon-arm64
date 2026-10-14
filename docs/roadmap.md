@@ -128,14 +128,16 @@ now top the profile.
 ### Wide screens — done
 
 `zeus-run --wide auto` (always on in the application) replaces the game's 1024×768 mode by a
-wider one that matches the proportions of the screen, for instance 1324×768 on a 16:10
-display. Choose *Options → Display options → 1024 x 768 resolution* in the game: the map view
+wider one that matches the proportions of the screen, for instance 1204×768 on a 16:10
+display and 1324×768 on a 16:9 one. Choose the largest resolution in *Options → Display
+options*: the map view
 grows, the control panel stays at the right edge. Menus and briefing screens are drawn by the
 game in 800×600 whatever the mode, and are unaffected. Nothing is changed on disk.
 
-How it works is described in [reverse-engineering.md](reverse-engineering.md). Two limits:
+How it works is described in [reverse-engineering.md](reverse-engineering.md). The labels of
+the display options and of the F7 key show the real size: the host serves the game a copy of
+its text files where "1024 x 768" is replaced, at equal length. One limit:
 
-- The label in the game still reads "1024 x 768".
 - The control panel artwork is 768 pixels high. A taller mode (`--wide 1444x903`) works but
   leaves a black band under the panel, which is why `auto` keeps the height at 768.
 

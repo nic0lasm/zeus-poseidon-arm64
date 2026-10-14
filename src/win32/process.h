@@ -49,6 +49,14 @@ public:
     void allow_silent_stubs(const std::string& dll) { silent_dlls_.push_back(dll); }
 
     Vfs& vfs() { return vfs_; }
+    // Remplacement d'octets, de même longueur, dans le contenu d'un fichier de l'installation tel
+    // que le programme le lit (le fichier lui-même n'est pas touché). `file` : nom sans dossier,
+    // en minuscules.
+    struct FilePatch {
+        std::string file, from, to;
+    };
+    void add_file_patch(FilePatch patch);
+    const std::vector<FilePatch>& file_patches() const { return file_patches_; }
     // Fenêtre et écran, créés à la première utilisation.
     Desktop& desktop();
     // Sortie son, ouverte à la première utilisation ; nul si elle n'a pas pu l'être.
@@ -94,6 +102,7 @@ private:
     mutable Cpu cpu_;
     Vfs vfs_;
     std::vector<std::string> silent_dlls_;
+    std::vector<FilePatch> file_patches_;
     PeImage image_;
     std::map<std::string, HostFunction> functions_;  // clé « dll!fonction », dll en minuscules
     std::map<uint32_t, uint32_t> blocks_;            // adresse -> taille

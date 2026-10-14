@@ -177,6 +177,11 @@ void Process::send_messages(std::vector<Message> messages, uint32_t result) {
     send_from(*this, std::make_shared<std::vector<Message>>(std::move(messages)), 0, result);
 }
 
+void Process::add_file_patch(FilePatch patch) {
+    if (patch.from.size() != patch.to.size()) throw std::runtime_error("correctif de fichier de longueur variable");
+    file_patches_.push_back(std::move(patch));
+}
+
 void Process::exit(int code) {
     exit_code_ = code;
     cpu_.request_stop();

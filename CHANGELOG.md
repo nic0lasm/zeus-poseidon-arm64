@@ -5,6 +5,9 @@ pull request.
 
 ## Unreleased
 
+- In wide mode the display options read the real size ("1324 x 768 resolution", or
+  "Résolution 1324 x 768" in French), as does the help for the F7 key. The game's text files
+  are left alone: the host replaces the label in the copy it hands to the game.
 - **Starts in under a second.** At launch the game reads its event messages and, for each of
   them, looked up its name in a table of 4,172 entries one comparison at a time: 18 million
   calls, three to four seconds of black window. The host now does that look-up natively. The

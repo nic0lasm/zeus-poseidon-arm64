@@ -25,6 +25,7 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <string>
 #include <vector>
 
 #include "win32/process.h"
@@ -103,6 +104,14 @@ bool apply_wide_mode(Process& p, int& width, int& height) {
             }
         }
     });
+    // Libellés « 1024 x 768 » de la fenêtre des options d'affichage et de l'aide de la touche F7 :
+    // ils donnent la vraie taille, à longueur égale (une largeur de quatre chiffres).
+    const std::string size = std::to_string(width) + " x " + std::to_string(height);
+    const std::string compact = std::to_string(width) + "x" + std::to_string(height);
+    if (size.size() == 10) {
+        p.add_file_patch({"zeus_text.eng", "1024 x 768", size});
+        p.add_file_patch({"zeus_mm.eng", "1024x768", compact});
+    }
     return true;
 }
 

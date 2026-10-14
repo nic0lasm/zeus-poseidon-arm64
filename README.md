@@ -39,7 +39,8 @@ construction, time, treasury), map scrolling, save and load, music, ambience, so
 Save files are the game's own
 format and stay compatible with the original.
 
-The city view can fill a wide screen: choose *1024 x 768* in the game's display options.
+The city view can fill a wide screen: pick the largest resolution in the game's display options
+(it reads, for instance, *1324 x 768*).
 
 The game runs in English out of the box; French is
 possible with a language pack built from your own French copy ([docs/languages.md](docs/languages.md)).

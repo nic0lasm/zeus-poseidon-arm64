@@ -428,6 +428,13 @@ void install_kernel32(Process& p) {
                 std::ifstream in(*existing, std::ios::binary);
                 auto bytes = std::make_shared<std::vector<uint8_t>>(static_cast<size_t>(size));
                 if (in.read(reinterpret_cast<char*>(bytes->data()), static_cast<std::streamsize>(size))) {
+                    const std::string name = lower(existing->filename().string());
+                    for (const Process::FilePatch& patch : p.file_patches()) {
+                        if (patch.file != name) continue;
+                        auto at = std::search(bytes->begin(), bytes->end(), patch.from.begin(), patch.from.end());
+                        for (; at != bytes->end(); at = std::search(at, bytes->end(), patch.from.begin(), patch.from.end()))
+                            at = std::copy(patch.to.begin(), patch.to.end(), at);
+                    }
                     if (st->contents_size + size > (512u << 20)) {
                         st->contents.clear();
                         st->contents_size = 0;
