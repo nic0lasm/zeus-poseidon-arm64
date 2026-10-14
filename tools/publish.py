@@ -45,9 +45,16 @@ def merge(number):
     branch = run("gh", "pr", "view", number, "--json", "headRefName", "--jq", ".headRefName")
     if branch in ("", "main"):
         sys.exit(f"PR {number} : branche « {branch} » inattendue")
-    # Attente de la CI : toutes les vérifications terminées (au moins une).
+    # Attente de la CI du dernier commit de la branche : toutes les vérifications terminées (au
+    # moins une). Une PR en conflit avec main n'a pas de CI : on s'arrête au lieu d'attendre.
+    local = run("git", "rev-parse", f"refs/heads/{branch}")
     while True:
-        checks = json.loads(run("gh", "pr", "view", number, "--json", "statusCheckRollup"))["statusCheckRollup"]
+        pr = json.loads(run("gh", "pr", "view", number, "--json", "statusCheckRollup,mergeable,headRefOid"))
+        if pr["mergeable"] == "CONFLICTING":
+            sys.exit(f"PR {number} en conflit avec main : fusionner origin/main dans {branch}, pousser, relancer")
+        if pr["headRefOid"] != local:
+            sys.exit(f"PR {number} : la branche locale {branch} diffère de celle de GitHub (pousser d'abord)")
+        checks = pr["statusCheckRollup"]
         if checks and all(c.get("status") == "COMPLETED" for c in checks):
             break
         time.sleep(15)
@@ -68,6 +75,8 @@ def merge(number):
     run("git", "fetch", "origin", "main", cwd=main_dir)
     # Avance rapide de main jusqu'à origin/main puis jusqu'à la branche, sans rien réécrire.
     run("git", "merge", "--ff-only", "origin/main", cwd=main_dir)
+    if subprocess.run(["git", "merge-base", "--is-ancestor", "main", branch], cwd=main_dir).returncode != 0:
+        sys.exit(f"main a avancé depuis la branche : fusionner origin/main dans {branch}, pousser, relancer")
     run("git", "merge", "--ff-only", branch, cwd=main_dir)
     identities = sorted(set(run("git", "log", "--format=%an %ae %cn %ce", "main", cwd=main_dir).splitlines()))
     if identities != [f"{IDENTITY} {IDENTITY}"]:
