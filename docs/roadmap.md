@@ -50,8 +50,9 @@ One day after 1.1, Phases A and B are in place and Phase C has started with the 
 What the review shows:
 
 1. **The rest of the drawing is about completeness, not speed.** The last pixel routines changed
-   nothing measurable in real time (#88). A small city is at about 23 % of a core; the large city
-   lost about a third of its time per tick since 1.1 (84 %), still well above the 35 % of #22.
+   nothing measurable in real time (#88). A small city is at about 23 % of a core; the large city,
+   at 84 % in 1.1, lost about a third of its time per tick since, still well above the 35 % of
+   #22.
    Its remaining cost is in the walkers, the building extras and the simulation: a hypothesis
    until it is measured (step 5 below).
 2. **2.0 is mostly the simulation, and its size is not known yet.** 4,131 functions, 76 % of the
@@ -138,9 +139,9 @@ The game's files, described completely and rewritten byte for byte.
 
 **Where it stands.** Saved games, maps, adventures (`.set`, `.pak`) and texts are read and
 written back byte for byte; the `Model` tables, building plans, event messages and images are
-read. The engine only reads files, so this is
-enough for Phase C: writing images and tables back moves to the modding branch, where it is
-needed, and the meaning of each savegame block is filled in as Phase C reaches its subsystem.
+read. The engine only reads files, so this is enough for Phase C: writing images and tables back
+moves to the modding branch, where it is needed, and the meaning of each savegame block is filled
+in as Phase C reaches its subsystem.
 
 ## Phase C — Native engine by subsystem
 
