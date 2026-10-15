@@ -125,6 +125,9 @@ def record_shared(path, out, exe, shared, again):
     temporary = (frames_reference + suffix, state_reference + suffix)
     line, failed = play(path, out, exe, ["--no-native"], True, temporary)
     if failed:
+        for name in temporary:
+            if os.path.exists(name):
+                os.remove(name)
         return line, True
     os.replace(temporary[0], frames_reference)
     os.replace(temporary[1], state_reference)
