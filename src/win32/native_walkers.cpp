@@ -10,7 +10,7 @@
 // Les deux fonctions ont un chemin rapide (Cpu::add_fast_path). Celui de FUN_0044fef0 décide dès
 // l'entrée, sans rien écrire, si l'appel est un cas traité : tous les sprites à dessiner sont des
 // cas du répartiteur natif (sprite_handled), aucune fonction du jeu non réécrite n'est appelée
-// (objets C++ des sanctuaires, texte des marchands, animaux de Poséidon) ; sinon l'original fait
+// (objets C++ des sanctuaires, texte des marchands) ; sinon l'original fait
 // tout. Les variables sont ensuite écrites dans l'ordre de l'original : rien de ce qu'il lit
 // après une écriture ne dépend de celle-ci.
 //
@@ -75,6 +75,13 @@ uint32_t image_entry(Cpu& cpu, int32_t id) {
     return i32(cpu, bank + 0xCC34) < number ? u32(cpu, bank) : u32(cpu, bank) + static_cast<uint32_t>(number) * 0x48;
 }
 
+// Premier identifiant d'image du groupe `group` d'une table de groupes (8 octets par groupe, le
+// premier identifiant en +4), ou du groupe 0 quand la table en compte moins (0x00450A3F et suivantes).
+int32_t group_image(Cpu& cpu, uint32_t groups, uint32_t count, int32_t group) {
+    const uint32_t table = u32(cpu, groups);
+    return i32(cpu, (i32(cpu, count) < group ? table : at(table, group, 8)) + 4);
+}
+
 // FUN_004d7210(personnage) : le personnage est un animal ou un bateau sur l'eau.
 bool on_water(Cpu& cpu, int32_t figure) {
     switch (u8(cpu, field(kFigureType, figure))) {
@@ -97,7 +104,7 @@ bool on_water(Cpu& cpu, int32_t figure) {
 
 // Un sprite passé au répartiteur : FUN_005acf50(identifiant, x, y, mode, &couleur, miroir).
 struct Sprite {
-    int32_t id, x, y;
+    int32_t id, x, y, mode;
     uint8_t mirror;
 };
 
@@ -109,7 +116,7 @@ struct WalkerPlan {
     int32_t found_x, found_y;
     Sprite sprites[3];
     int count;
-    int32_t mode;
+    bool tail;  // FUN_0041d3d0 et cases voisines après les sprites (0x00451137)
 };
 
 // Bits 0x40000000 des cases voisines plus hautes (0x00451159 à 0x00451641) : la case est à
@@ -171,7 +178,7 @@ bool plan_walker(Cpu& cpu, int32_t figure, int32_t x, int32_t y, uint32_t wanted
     const uint8_t type = u8(cpu, field(kFigureType, figure));
     const uint8_t kind = u8(cpu, field(kFigureKind, figure));
     const int32_t colour = i32(cpu, field(kFigureColour, figure));
-    p.mode = colour != 0;
+    const int32_t mode = colour != 0;
     const int32_t body = i32(cpu, field(kFigureImage, figure)), extra = i32(cpu, field(kFigureExtraImage, figure));
     const int32_t tile = i32(cpu, field(kFigureTile, figure));
 
@@ -276,7 +283,10 @@ bool plan_walker(Cpu& cpu, int32_t figure, int32_t x, int32_t y, uint32_t wanted
     const int32_t third_y = base_y - s16(cpu, image_entry(cpu, third) + 0x24);
     const int8_t shift_x = static_cast<int8_t>(s8(cpu, field(kFigureExtraX, figure)));
     const int8_t shift_y = static_cast<int8_t>(s8(cpu, field(kFigureExtraY, figure)));
-    auto add = [&p](int32_t id, int32_t sx, int32_t sy, uint8_t mirror = 0) { p.sprites[p.count++] = {id, sx, sy, mirror}; };
+    p.tail = true;
+    auto add = [&p, mode](int32_t id, int32_t sx, int32_t sy, uint8_t mirror = 0, bool tinted = true) {
+        p.sprites[p.count++] = {id, sx, sy, tinted ? mode : 0, mirror};
+    };
     const int32_t bx = body_x + x, by = body_y + y;
     if (extra == 0) {
         // 0x00450541 : le corps seul.
@@ -325,7 +335,41 @@ bool plan_walker(Cpu& cpu, int32_t figure, int32_t x, int32_t y, uint32_t wanted
                     add(extra, shift_x + bx, shift_y + by);
                 }
                 break;
-            case 0x0E: return false;  // animaux de Poséidon (FUN_004200f0, tables d'images)
+            case 0x0E: {
+                // 0x0045089A : fiche de 0x9C octets désignée par le personnage ; rien à dessiner
+                // (ni la suite) si son champ +0x7E est positif. Sinon le corps 6 pixels plus haut, le
+                // second sprite à droite et au-dessus, puis un troisième selon la sorte de la fiche,
+                // tous sans teinte.
+                const int32_t cart = s16(cpu, field(kFigureCart, figure));
+                if (s16(cpu, at(kCarts + 0x7E, cart, 0x9C)) >= 0) {
+                    p.tail = false;
+                    break;
+                }
+                add(body, bx, by - 6, 0, false);
+                const int32_t height = s16(cpu, image_entry(cpu, extra) + 0x16);
+                add(extra, bx + 9, by - height, 0, false);
+                const bool sea = poseidon(cpu);
+                int32_t load = 0;
+                switch (s16(cpu, at(kCarts, cart, 0x9C))) {
+                    case 0x0B:
+                        if (cart == 0x1F || cart == 0x20) break;
+                        load = sea ? group_image(cpu, kImageGroups52, kImageGroups52Count, 7) + 0xD0001
+                                   : group_image(cpu, kImageGroups4, kImageGroups4Count, 0x4B) + 0x10000;
+                        break;
+                    case 0x0C:
+                        load = sea ? group_image(cpu, kImageGroups52, kImageGroups52Count, 7) + 0xD0002
+                                   : group_image(cpu, kImageGroups4, kImageGroups4Count, 0x4E) + 0x10000;
+                        break;
+                    case 0x0D:
+                        load = sea ? group_image(cpu, kImageGroups52, kImageGroups52Count, 7) + 0xD0000
+                                   : group_image(cpu, kImageGroups4, kImageGroups4Count, 0x4D) + 0x10000;
+                        break;
+                    default: break;
+                }
+                if (load != 0)
+                    add(load, bx - (sea ? 0 : 1), by - height - s16(cpu, image_entry(cpu, load) + 0x16) + 6, 0, false);
+                break;
+            }
             case 0x22: return false;  // marchand : texte par FUN_00508f00
             case 0x36: case 0x2D: case 0x34:
                 add(extra, bx, by + 10);
@@ -340,8 +384,10 @@ bool plan_walker(Cpu& cpu, int32_t figure, int32_t x, int32_t y, uint32_t wanted
         }
     }
     for (int i = 0; i < p.count; ++i)
-        if (!sprite_handled(cpu, kSpriteBanks, p.sprites[i].id, p.sprites[i].x, p.sprites[i].y, p.mode, p.sprites[i].mirror))
+        if (!sprite_handled(cpu, kSpriteBanks, p.sprites[i].id, p.sprites[i].x, p.sprites[i].y, p.sprites[i].mode,
+                            p.sprites[i].mirror))
             return false;
+    if (!p.tail) return true;
     if (type != 0x06 && water_life(cpu, tile)) return false;  // 0x00451137
     return mark_neighbours(cpu, figure, false);
 }
@@ -361,8 +407,9 @@ std::optional<uint32_t> walker_call(Cpu& cpu) {
         put32(cpu, kFoundFigureX, static_cast<uint32_t>(p.found_x));
     }
     for (int i = 0; i < p.count; ++i)
-        draw_sprite(cpu, kSpriteBanks, p.sprites[i].id, p.sprites[i].x, p.sprites[i].y, p.mode, p.sprites[i].mirror);
-    mark_neighbours(cpu, figure, true);
+        draw_sprite(cpu, kSpriteBanks, p.sprites[i].id, p.sprites[i].x, p.sprites[i].y, p.sprites[i].mode,
+                    p.sprites[i].mirror);
+    if (p.tail) mark_neighbours(cpu, figure, true);
     return cpu.reg(Cpu::Reg::EAX);
 }
 

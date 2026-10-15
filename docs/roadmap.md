@@ -313,7 +313,7 @@ exit), and a function can get a native fast path that falls back to the original
 | `0x00435070` | draws a ground tile, a 58 × 30 diamond (`src/win32/native_draw.cpp`) |
 | `0x004377B0`, `0x00438A90` | the same, clipped on the left or on the right (a fixed half of the diamond, as the original does) |
 | `0x00457900` | the ground of one city tile, for its common cases: flat or sloped land in the normal view, animated water included |
-| `0x0044FEF0` | one walker: its place in the tile, its one to three sprites in the right order, and the higher neighbouring tiles marked to be drawn again over it (`src/win32/native_walkers.cpp`); the C++ objects of sanctuaries, Poseidon's animals and the trader's text fall back to the original |
+| `0x0044FEF0` | one walker: its place in the tile, its one to three sprites in the right order, and the higher neighbouring tiles marked to be drawn again over it (`src/win32/native_walkers.cpp`); the C++ objects of sanctuaries and the trader's text fall back to the original |
 | `0x0041D3D0` | the water life of a tile, when there is none to draw (always outside a Poseidon game) |
 | `0x00458170` | the city drawing loop: its first pass over the visible tiles (the ground), and its second pass (what stands on each tile) for 81 % of the cells of a large city, through host jumps that hand back to the original, mid-cell if needed, for any other case |
 

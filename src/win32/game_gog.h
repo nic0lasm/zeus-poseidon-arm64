@@ -240,6 +240,14 @@ constexpr uint32_t kFigureKind = 0x00DBD8F4;        // type 6 : sorte d'animal o
 constexpr uint32_t kFigureFlags = 0x00DBD8F6;       // type 6 : bit 6, sprite retourné
 constexpr uint32_t kFigureBuilding = 0x00DBD900;    // type 6 : bâtiment (16 bits)
 constexpr uint32_t kFigureExtraImage = 0x00DBD908;  // second sprite (32 bits)
+constexpr uint32_t kFigureCart = 0x00DBD7E8;        // type 0x0E : fiche de kCarts (16 bits)
+// Type 0x0E : fiches de 0x9C octets ; +0 sorte (16 bits, 11 à 13 : troisième sprite), +0x7E
+// (16 bits) positif ou nul : le personnage n'est pas dessiné.
+constexpr uint32_t kCarts = 0x00DB7B44;
+// Tables de groupes d'images (pointeur vers des groupes de 8 octets, premier identifiant en +4,
+// et nombre de groupes) des banques 4 et 0x34 (partie de Poséidon), lues pour le type 0x0E.
+constexpr uint32_t kImageGroups4 = 0x012E2CFC, kImageGroups4Count = 0x012EF930;
+constexpr uint32_t kImageGroups52 = 0x015479BC, kImageGroups52Count = 0x015545F0;
 // FUN_0044fef0 : direction du personnage dans la vue, écrite à chaque appel ; non nul, rien
 // n'est dessiné ; position du personnage cherché.
 constexpr uint32_t kFigureViewDirection = 0x00FA05E4, kWalkersOff = 0x00B1E8C4;

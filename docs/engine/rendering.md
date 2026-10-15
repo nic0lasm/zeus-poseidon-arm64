@@ -559,8 +559,14 @@ record of walker 0 (`0x00DBD788` + n × `0x184`); all **verified** by the listin
    type: 4, `0x24`, 9, `0x1C` draw the second sprite first unless the view direction is 3 (or out
    of 0–7), `0x43` always after, `0x45` always before; 1, 2, `0x0D`, `0x2A` place it from the
    body, before when its y offset is negative; `0x2D`, `0x34`, `0x36` draw it 10 pixels lower,
-   first; `0x39` draws body, second, third; `0x0E` (Poseidon's animals) and `0x22` (the trader's
-   text, `0x00508F00`) have their own code; every other type draws only the body.
+   first; `0x39` draws body, second, third; `0x22` writes a text (`0x00508F00`); `0x0E` with a second
+   sprite (6,482 of the 13,711 drawn calls of `working-city`) reads the record of `0x00DB7B44` (`0x9C` bytes)
+   named by its field `0x00DBD7E8`: nothing at all (not even steps 7 and 8) when its `+0x7E` is
+   ≥ 0, otherwise the body 6 pixels higher, the second sprite 9 pixels right and its height
+   higher, then by the record's kind (`+0`: 11, 12, 13) a third sprite, the first image of group
+   75, 78 or 77 of the table `0x012E2CFC` plus `0x10000` (or of group 7 of `0x015479BC` plus
+   `0xD0001`, `0xD0002`, `0xD0000` in a Poseidon game), stacked on the second; all three untinted.
+   Every other type draws only the body.
 7. **Water.** Without a second sprite, a walker on water (`0x004D7210`) calls `0x0041D3D0` on its
    tile and seven neighbours (offsets `0x005D9188`); then, for every type but 6, `0x0041D3D0` on
    its tile. `0x0041D3D0` does nothing outside a Poseidon game (`0x004200F0`) or on a tile
@@ -618,7 +624,7 @@ steps before it, and the most frequent come first within a step. Counts: origina
 | 11 | `0x00457900` | ground of a tile, remaining cases | 593,891 | 1,283 | fast path (flat, sloped, flags `0x4020`), 42,500 still emulated |
 | 12 | `0x00449B30` | sort the walkers of a tile | 1,411,706 | 3,049 | original |
 | 13 | `0x0045A5A0`, `0x0041D3D0`, `0x0041D150` | walkers and water life of a tile | 606,993 / 620,704 / 0 | 1,311 / 1,341 / 0 | `0x0041D3D0` fast path (when it draws nothing: every call outside a Poseidon game); `0x0045A5A0` waits for the sort (12) |
-| 14 | `0x0044FEF0` | one walker | 27,178 | 59 | fast path (11.3): all but the C++ objects of sanctuaries, Poseidon's animals, the trader's text and tinted walkers whose image the dispatcher refuses |
+| 14 | `0x0044FEF0` | one walker | 27,178 | 59 | fast path (11.3): all but the C++ objects of sanctuaries, the trader's text and tinted walkers whose image the dispatcher refuses |
 | 15 | `0x0044F320`, `0x0045D140`, `0x0053E5F0`, `0x0045DC10`, building-type functions of 11.2 step 5 | building extras and animations | 433,862 / 4,488 / — / 553,374 / — | 937 / 10 / — / 1,195 / — | original |
 | 16 | `0x00458170` | second and third passes | 463 | 1 | first pass native, second pass native for 81 % of the cells (11.2) |
 | 17 | `0x0044AD70`, `0x00451820`, `0x004517F0`, `0x00454420` | after the passes | 463 each | 1 | original |
