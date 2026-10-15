@@ -1,4 +1,5 @@
 adresse	nom	module	statut	preuve	type
+00404cd0	build_tool_click	interface	documenté	clic de l'outil de construction, switch sur 0x00665DCC ; docs/engine/terrain.md §5	fonction
 0040df00	image_id_from_group	rendu	nommé	renvoie table[groupe-1].premiere_image + collection*0x4000 ; 648 appelants	fonction
 0040e5d0	map_elevation_at	terrain	nommé	renvoie *(u8*)(this + case + 2)	fonction
 00413dc0	copy_rectangle	rendu	natif	copie d'un rectangle opaque ; remplacée par native.cpp	fonction
@@ -13,10 +14,14 @@ adresse	nom	module	statut	preuve	type
 00422c60	fullscreen_background_c	interface	documenté	fond plein écran centré (menus)	fonction
 00428700	image_draw_isometric_top	rendu	nommé	enveloppe de 0x0064394C	fonction
 0042f380	fullscreen_background_d	interface	documenté	fond plein écran centré (menus)	fonction
+00433d50	model_building_value	bâtiments	documenté	valeur k de la ligne t du modèle (0x00782F70) ; docs/engine/terrain.md §7.1	fonction
 00435070	ground_diamond_draw	rendu	nommé	sol en losange (empreinte vérifiée par native_draw.cpp)	fonction
+004488c0	random_next	terrain	documenté	deux registres de 31 bits, 31 pas par tirage ; docs/engine/terrain.md §5	fonction
 00449e50	map_view_set_size	interface	documenté	reçoit colonnes et rangées de la vue de la carte	fonction
+00451c70	build_cursor_preview	interface	documenté	aperçu du curseur de construction ; docs/engine/terrain.md §5	fonction
 00457900	ground_tile_draw	rendu	nommé	sol d'une case ; natif partiel : chemin rapide dans native_draw.cpp	fonction
 00458170	city_draw	rendu	nommé	dessin de la ville, deux passes ; natif partiel : boucle du sol dans native_draw.cpp	fonction
+0045ed20	map_elevation_project	terrain	documenté	altitude projetée selon l'orientation, règles des falaises ; docs/engine/terrain.md §4	fonction
 004743ea	city_draw_tile_footprint	rendu	nommé	dessine le socle d'une case ; anime l'eau (SPR_BEACH_COAST, SPR_WATER_ANIMS)	fonction
 0047499f	city_draw_tiles	rendu	nommé	boucle de dessin : y - altitude*0x1e, passes socles puis parties hautes	fonction
 00476240	image_draw_footprint_sized	rendu	nommé	décale de +30(n-1), -15(n-1) selon la taille puis appelle image_draw	fonction
@@ -30,6 +35,34 @@ adresse	nom	module	statut	preuve	type
 0047cce4	map_tiles_update_elevation_images	terrain	nommé	attribue les images de falaise ; SPR_SPACE aux cases dominées sans falaise	fonction
 0047fdb0	map_elevation_project_tile	terrain	nommé	reporte l'altitude e d'une case sur la case située e rangs derrière	fonction
 0047ff50	map_projected_elevation_at	terrain	nommé	renvoie *(u8*)(this + case + 0xcb12)	fonction
+00483840	simulation_cycle_step	scénario	documenté	une étape du cycle de 51 (0x0091EC14) ; docs/engine/terrain.md §6	fonction
+004842a0	buildings_update_desirability	terrain	documenté	attrait maximal sur l'emprise, +10 selon +0xD0 ; docs/engine/terrain.md §7.4	fonction
+00493700	desirability_add_rect_border	terrain	documenté	ajoute une valeur sur le bord d'un rectangle ; docs/engine/terrain.md §7.1	fonction
+004937b0	desirability_spread_rect	terrain	documenté	attrait autour d'un rectangle ; docs/engine/terrain.md §7.1	fonction
+00493830	desirability_from_buildings	terrain	documenté	efface la grille puis répand l'attrait de chaque bâtiment ; docs/engine/terrain.md §7.2	fonction
+00493c80	desirability_from_terrain	terrain	documenté	jardins, gravats, avenues et boulevards ; docs/engine/terrain.md §7.3	fonction
+00496010	map_in_play_area	terrain	documenté	case dans le losange jouable (0x00DA2F90…A4) ; docs/engine/terrain.md §2	fonction
+00496080	map_near_play_edge	terrain	documenté	dans le losange, à moins de m cases du bord ; docs/engine/terrain.md §2	fonction
+00496b50	map_area_has_marker	terrain	documenté	rectangle contenant un point réservé de la carte ; docs/engine/terrain.md §9	fonction
+0049af50	walls_drag	terrain	documenté	tracé de murs en glissant ; docs/engine/terrain.md §9	fonction
+0049cae0	terrain_count_neighbours	terrain	documenté	nombre des 8 voisines portant un masque ; docs/engine/terrain.md §5	fonction
+0049f120	regrowth_neighbours_below	terrain	documenté	voisines dont la repousse est sous un seuil ; docs/engine/terrain.md §5	fonction
+0049f950	wall_set_tile	terrain	documenté	pose ou retire le mur d'une case (0x4000) ; docs/engine/terrain.md §4	fonction
+0049ff10	road_set_tile	terrain	documenté	pose ou retire la route d'une case (0x40) ; docs/engine/terrain.md §5	fonction
+004a0dc0	map_area_buildable	terrain	documenté	rectangle libre pour bâtir, masque 0x3DFFD66F ; docs/engine/terrain.md §9	fonction
+004a2180	terrain_blocks_match_2x2	terrain	documenté	motifs de voisinage par direction ; docs/engine/terrain.md §5	fonction
+004a2510	terrain_neighbours_match	terrain	documenté	les 8 voisines vérifient (drapeaux & masque) == valeur ; docs/engine/terrain.md §5	fonction
+004a2590	terrain_blocks_match_3x3	terrain	documenté	motifs de voisinage par direction ; docs/engine/terrain.md §5	fonction
+004a2ac0	terrain_block_match	terrain	documenté	bloc de cases vérifiant (drapeaux & masque) == valeur ; docs/engine/terrain.md §5	fonction
+004a4840	trees_ring_full	terrain	documenté	anneau r fait seulement d'arbres ; docs/engine/terrain.md §8.2	fonction
+004a4bf0	desirability_spread	terrain	documenté	attrait anneau par anneau autour d'une emprise carrée ; docs/engine/terrain.md §7.1	fonction
+004a4c60	desirability_add_ring	terrain	documenté	ajoute une valeur sur un anneau, bornée à ±100 ; docs/engine/terrain.md §7.1	fonction
+004a4e70	ring_tile_off_map	terrain	documenté	case k d'un anneau hors de la carte ; docs/engine/terrain.md §7.1	fonction
+004a7d30	terrain_regrow	terrain	documenté	repousse des arbres, roseaux et prés ; docs/engine/terrain.md §8.1	fonction
+004a81f0	terrain_resource_image	terrain	documenté	image d'une case d'arbre, de roseaux ou de pré ; docs/engine/terrain.md §8.2	fonction
+004a8c90	terrain_ring_distance	terrain	documenté	distance en anneaux à une case sans le masque ; docs/engine/terrain.md §8.4	fonction
+004a8e10	trees_update_depth	terrain	documenté	profondeur de forêt (0x00C29158) sur un rectangle ; docs/engine/terrain.md §8.4	fonction
+004aa190	meadows_update_rect	terrain	documenté	valeur et image des prés d'un rectangle ; docs/engine/terrain.md §3	fonction
 004c7710	map_grids_clear	terrain	nommé	18 memset successifs sur les grilles de 228x228	fonction
 004cc730	profile_timer_start	scénario	documenté	minuterie de profilage du jeu (GetTickCount)	fonction
 004cc760	profile_timer_stop	scénario	documenté	minuterie de profilage du jeu (GetTickCount)	fonction
@@ -38,21 +71,26 @@ adresse	nom	module	statut	preuve	type
 004d9cc1	terrain_context_fill	terrain	nommé	remplit les 8 voisins avec (terrain & masque) != 0	fonction
 004e3616	terrain_context_lookup	terrain	nommé	cherche le motif de voisinage dans une table de 20 octets par entrée	fonction
 004f59b0	text_draw_panel	texte	documenté	texte de panneau ; soustrait une constante en 004f5a33	fonction
+004f8770	figure_graze	marcheurs	documenté	un animal broute le pré de sa case ; docs/engine/terrain.md §8.5	fonction
 00504fa0	backdrop_jpeg_load	rendu	documenté	fonds JPEG ; surfaces de tailles égales	fonction
 00505770	event_messages_load	texte	nommé	lit « Zeus eventmsg.txt » (boucle de recherche de clé hôte)	fonction
 00508b50	text_draw_line	texte	documenté	texte d'une ligne ; exceptions polonaises en 00508c7f	fonction
 0050b410	clear_frame	rendu	natif	efface le tampon d'affichage ; remplacée par native.cpp	fonction
 0050bcc0	screen_set_mode	rendu	documenté	taille d'écran d'après le numéro de mode ; 68 lecteurs de la largeur et hauteur	fonction
 0050c1b0	frame_present	rendu	documenté	présentation de l'image (plein écran : copie vers la surface primaire)	fonction
+00511e30	city_init_from_map	scénario	documenté	mise en place d'une ville depuis sa carte ; docs/engine/terrain.md §5	fonction
 00513580	game_turn	scénario	documenté	tour de la boucle principale ; interroge simulation_due	fonction
 00513a30	simulation_tick	scénario	documenté	un tour : hasard, ville, marcheurs (zeus-run --ticks)	fonction
 005168a0	simulation_due	scénario	documenté	dit si un tour de simulation est dû (intervalle de vitesse + 2 ms)	fonction
 00517b10	panel_unfolded_draw	interface	documenté	dessin du panneau déplié	fonction
 0051cba0	view_panel_folded	interface	documenté	taille de la vue de la carte, panneau replié (50×17 en 1024)	fonction
 0051cc00	view_panel_unfolded	interface	documenté	taille de la vue de la carte, panneau déplié (50×14 en 1024)	fonction
+0051f450	map_tiles_update_images	terrain	documenté	images du sol d'un rectangle, chaîne de choix ; docs/engine/terrain.md §5	fonction
+0051fba0	map_tile_plain_ground	terrain	documenté	sol nu, grandes pièces si 0x004A0DC0 ; docs/engine/terrain.md §5	fonction
 00525280	panel_overlay_draw	interface	documenté	dernier dessin du panneau	fonction
 0055f3d0	view_mode0_always_true	interface	nommé	méthode +0x18 du mode de vue 0, renvoie vrai	fonction
 005715a0	info_window_open	interface	documenté	fenêtre d'information : en bas si l'ordonnée du clic ≤ 396	fonction
+00588b20	route_find_listed_tile	terrain	documenté	parcours en largeur sur la grille de trajets ; docs/engine/terrain.md §8.3	fonction
 0058e280	control_panel_position	interface	documenté	abscisse du panneau de contrôle : 478, 598 ou 838	fonction
 0058e3e0	bottom_strip_fill	interface	documenté	liseré de 9 pixels en bas de l'écran	fonction
 00597e60	world_map_screen	interface	documenté	écran de la carte du monde	fonction

@@ -109,7 +109,7 @@ mesure cités), hypothèse (cohérent avec les comptages, à confirmer dans le c
 | 23 | `0x00C9B4E8` | 1 × 51984 | oui | `grid_desirability` | grille i8 bornée à −100…100 : `0x004A4C60` ajoute autour d'un bâtiment une valeur par anneau, rayons 1 à 6 (tables `0x005F079E`…) ; attrait des cases | hypothèse | = |
 | 24 | `0x00C8E9D8` | 1 × 51984 | oui | `grid_c8e9d8` | grille u8 ; rang 9 des `.map` | inconnu | = |
 | 25 | `0x00C753B8` | 2 × 51984 | oui | `grid_c753b8` | grille u16 | inconnu | = |
-| 26 | `0x00B90C98` | 1 × 51984 | oui | `grid_b90c98` | grille u8 (aucune écriture directe dans le code) | inconnu | = |
+| 26 | `0x00B90C98` | 1 × 51984 | oui | `grid_b90c98` | grille u8 : copie du rang 18 faite par `0x0049AF50` (tracé de murs) avec celle des drapeaux de terrain (`0x00B9D7A8`, non sauvegardée) ; aucune autre écriture | vérifié (copie) ; usage hypothèse | = |
 | 27 | `0x00B84188` | 1 × 51984 | oui | `grid_b84188` | grille u8 (aucune écriture directe dans le code) | inconnu | = |
 | 28 | `0x00DBD788` | 388 × 2000 | oui | `figures` | personnages (marcheurs, animaux…), numérotés à partir de 1 ; l'élément 0 sert de brouillon aux calculs de trajet ; créés par `0x004D9FD0` ; la liste des numéros libres (`0x00DBB84C`) n'est pas sauvegardée, `0x004D9F40` la reconstruit au chargement ; champs plus bas | vérifié | = |
 | 29 | `0x00EF4FE8` | 2 × 1000 | oui | `table_ef4fe8` | 1 000 × u16 | inconnu | = |
@@ -120,7 +120,7 @@ mesure cités), hypothèse (cohérent avec les comptages, à confirmer dans le c
 | 34 | `0x00FE6A14` | 32 × 2 | non | `names` | 2 × 32 octets : nom du profil, nom de la ville | hypothèse | = |
 | 35 | `0x0092E658` | 280 × 4000 | oui | `buildings` | bâtiments, numérotés à partir de 1 (l'élément 0 ne sert pas) ; créés par `0x00493E70`, effacés par `0x00493E50` ; champs plus bas | vérifié | = |
 | 36 | `0x00FA05E8` | 4 × 1 | non | `value_fa05e8` | entier | inconnu | = |
-| 37 | `0x0091EC14` | 4 × 1 | non | `value_91ec14` | entier | inconnu | = |
+| 37 | `0x0091EC14` | 4 × 1 | non | `cycle_step` | étape 0 à 50 du cycle de `0x00483840`, appelé à chaque tour ; `0x00483C10` à la fin du cycle (`docs/engine/terrain.md`, section 6) | vérifié | = |
 | 38 | `0x0091EC0C` | 4 × 1 | non | `month_tick` | tour dans le mois, 0 à 15 (`0x00483C10` passe au mois suivant à 16) | vérifié | = |
 | 39 | `0x0091EC10` | 4 × 1 | non | `tick` | compteur de tours, incrémenté à chaque appel de `0x00483C10` | vérifié | = |
 | 40 | `0x0091EBF4` | 4 × 1 | non | `buildings_high` | plus grand numéro de bâtiment jamais occupé (`0x004889F0`) | vérifié | = |
@@ -182,11 +182,11 @@ mesure cités), hypothèse (cohérent avec les comptages, à confirmer dans le c
 | 96 | `0x00FA05C0` | 8 × 4 | non | `table_fa05c0` | 4 × 8 octets | inconnu | = |
 | 97 | `0x00DA23A8` | 4 × 1 | non | `value_da23a8` | entier | inconnu | = |
 | 98 | `0x00DA23A4` | 4 × 1 | non | `value_da23a4` | entier | inconnu | = |
-| 99 | `0x00C35C68` | 1 × 51984 | non | `grid_c35c68` | grille u8 ; rang 15 des `.map` | inconnu | = |
+| 99 | `0x00C35C68` | 1 × 51984 | non | `grid_meadow` | grille u8 ; rang 15 des `.map` ; valeur des cases de pré (terrain `0x800`) calculée par `0x004AA190`, 0 ailleurs | vérifié (calcul) ; sens hypothèse | = |
 | 100 | `0x00EF57D8` | 4 × 4 | non | `table_ef57d8` | 4 entiers, jamais référencés par le code | inconnu | = |
 | 101 | `0x009034F8` | 324 × 232 | oui | `table_9034f8` | 232 × 324 octets ; le pointeur à +4 de chaque élément est libéré et remis à 0 avant l'écriture | hypothèse | = |
 | 102 | `0x00C1C648` | 1 × 51984 | non | `grid_regrowth` | grille u8, 255 sur presque toute la carte ; `0x004A7D30` remonte de 15 ou 16 (tirage) la valeur des cases de terrain `0x800` et `0x40000` jusqu'à 255 : repousse d'une ressource du terrain | hypothèse | = |
-| 103 | `0x00B1E8D8` | 32 × 1 | non | `value_b1e8d8` | 32 octets | inconnu | = |
+| 103 | `0x00B1E8D8` | 32 × 1 | non | `value_b1e8d8` | 32 octets ; +0x18 à +0x1D : indicateurs de la repousse (arbres, roseaux, prés présents ; arbre atteint par une scierie), remis à zéro par `0x004A7D30` | vérifié (+0x18 à +0x1D) ; reste inconnu | = |
 | 104 | `0x00699570` | 36 × 1 | oui | `value_699570` | 36 octets | inconnu | = |
 | 105 | `0x00B1E8F8` | 4 × 51984 | oui | `grid_b1e8f8` | grille u32 | inconnu | = |
 | 106 | `0x006A9CBC` | 1 × 26 | non | `table_6a9cbc` | 26 octets | inconnu | = |

@@ -25,7 +25,7 @@ adresse	taille	nom	module	statut	preuve	type
 004040d0	499	FUN_004040d0	inconnu	inconnu	aucun indice	fonction
 00404330	2221	FUN_00404330	inconnu	inconnu	aucun indice	fonction
 00404c70	84	FUN_00404c70	inconnu	inconnu	aucun indice	fonction
-00404cd0	2145	FUN_00404cd0	inconnu	inconnu	aucun indice	fonction
+00404cd0	2145	build_tool_click	interface	documenté	clic de l'outil de construction, switch sur 0x00665DCC ; docs/engine/terrain.md §5	fonction
 00405650	166	FUN_00405650	inconnu	inconnu	aucun indice	fonction
 00405700	225	FUN_00405700	inconnu	inconnu	aucun indice	fonction
 004057f0	405	FUN_004057f0	inconnu	inconnu	aucun indice	fonction
@@ -642,7 +642,7 @@ adresse	taille	nom	module	statut	preuve	type
 00433ab0	167	FUN_00433ab0	inconnu	inconnu	aucun indice	fonction
 00433b60	470	FUN_00433b60	inconnu	inconnu	aucun indice	fonction
 00433d40	6	FUN_00433d40	inconnu	inconnu	aucun indice	fonction
-00433d50	47	FUN_00433d50	inconnu	inconnu	aucun indice	fonction
+00433d50	47	model_building_value	bâtiments	documenté	valeur k de la ligne t du modèle (0x00782F70) ; docs/engine/terrain.md §7.1	fonction
 00433d80	149	FUN_00433d80	inconnu	inconnu	aucun indice	fonction
 00433e20	1057	FUN_00433e20	rendu	inconnu	chaîne (affichage et images)	fonction
 00434250	153	FUN_00434250	rendu	inconnu	chaîne (affichage et images)	fonction
@@ -716,7 +716,7 @@ adresse	taille	nom	module	statut	preuve	type
 00448450	57	FUN_00448450	inconnu	inconnu	aucun indice	fonction
 00448490	986	FUN_00448490	inconnu	inconnu	aucun indice	fonction
 00448880	54	FUN_00448880	inconnu	inconnu	aucun indice	fonction
-004488c0	196	FUN_004488c0	inconnu	inconnu	aucun indice	fonction
+004488c0	196	random_next	terrain	documenté	deux registres de 31 bits, 31 pas par tirage ; docs/engine/terrain.md §5	fonction
 00448990	4424	FUN_00448990	inconnu	inconnu	aucun indice	fonction
 00449b30	730	FUN_00449b30	inconnu	inconnu	aucun indice	fonction
 00449e50	224	map_view_set_size	interface	documenté	reçoit colonnes et rangées de la vue de la carte	fonction
@@ -761,7 +761,7 @@ adresse	taille	nom	module	statut	preuve	type
 004517f0	36	FUN_004517f0	inconnu	inconnu	aucun indice	fonction
 00451820	519	FUN_00451820	inconnu	inconnu	aucun indice	fonction
 00451c00	110	FUN_00451c00	inconnu	inconnu	aucun indice	fonction
-00451c70	3794	FUN_00451c70	inconnu	inconnu	aucun indice	fonction
+00451c70	3794	build_cursor_preview	interface	documenté	aperçu du curseur de construction ; docs/engine/terrain.md §5	fonction
 00452b80	698	FUN_00452b80	inconnu	inconnu	aucun indice	fonction
 00452e40	431	FUN_00452e40	inconnu	inconnu	aucun indice	fonction
 00452ff0	294	FUN_00452ff0	inconnu	inconnu	aucun indice	fonction
@@ -828,7 +828,7 @@ adresse	taille	nom	module	statut	preuve	type
 0045e700	307	FUN_0045e700	inconnu	inconnu	aucun indice	fonction
 0045e840	693	FUN_0045e840	inconnu	inconnu	aucun indice	fonction
 0045eb00	513	FUN_0045eb00	terrain	inconnu	chaîne (altitudes)	fonction
-0045ed20	540	FUN_0045ed20	inconnu	inconnu	aucun indice	fonction
+0045ed20	540	map_elevation_project	terrain	documenté	altitude projetée selon l'orientation, règles des falaises ; docs/engine/terrain.md §4	fonction
 0045ef40	1849	FUN_0045ef40	inconnu	inconnu	aucun indice	fonction
 0045f7e0	29	FUN_0045f7e0	inconnu	inconnu	aucun indice	fonction
 0045f800	75	FUN_0045f800	inconnu	inconnu	aucun indice	fonction
@@ -1161,12 +1161,12 @@ adresse	taille	nom	module	statut	preuve	type
 00483720	109	FUN_00483720	inconnu	inconnu	aucun indice	fonction
 00483790	79	FUN_00483790	inconnu	inconnu	aucun indice	fonction
 004837e0	91	FUN_004837e0	inconnu	inconnu	aucun indice	fonction
-00483840	533	FUN_00483840	inconnu	inconnu	aucun indice	fonction
+00483840	533	simulation_cycle_step	scénario	documenté	une étape du cycle de 51 (0x0091EC14) ; docs/engine/terrain.md §6	fonction
 00483b20	236	FUN_00483b20	inconnu	inconnu	aucun indice	fonction
 00483c10	1046	FUN_00483c10	sauvegarde	inconnu	chaîne (fichiers .sav/.pak)	fonction
 00484030	485	FUN_00484030	inconnu	inconnu	aucun indice	fonction
 00484250	66	FUN_00484250	inconnu	inconnu	aucun indice	fonction
-004842a0	183	FUN_004842a0	inconnu	inconnu	aucun indice	fonction
+004842a0	183	buildings_update_desirability	terrain	documenté	attrait maximal sur l'emprise, +10 selon +0xD0 ; docs/engine/terrain.md §7.4	fonction
 00484360	103	FUN_00484360	inconnu	inconnu	aucun indice	fonction
 004843d0	556	FUN_004843d0	inconnu	inconnu	aucun indice	fonction
 00484660	1418	FUN_00484660	inconnu	inconnu	aucun indice	fonction
@@ -1274,10 +1274,10 @@ adresse	taille	nom	module	statut	preuve	type
 00493510	388	FUN_00493510	inconnu	inconnu	aucun indice	fonction
 004936a0	23	FUN_004936a0	inconnu	inconnu	aucun indice	fonction
 004936c0	53	FUN_004936c0	inconnu	inconnu	aucun indice	fonction
-00493700	165	FUN_00493700	inconnu	inconnu	aucun indice	fonction
-004937b0	126	FUN_004937b0	inconnu	inconnu	aucun indice	fonction
-00493830	1000	FUN_00493830	inconnu	inconnu	aucun indice	fonction
-00493c80	458	FUN_00493c80	inconnu	inconnu	aucun indice	fonction
+00493700	165	desirability_add_rect_border	terrain	documenté	ajoute une valeur sur le bord d'un rectangle ; docs/engine/terrain.md §7.1	fonction
+004937b0	126	desirability_spread_rect	terrain	documenté	attrait autour d'un rectangle ; docs/engine/terrain.md §7.1	fonction
+00493830	1000	desirability_from_buildings	terrain	documenté	efface la grille puis répand l'attrait de chaque bâtiment ; docs/engine/terrain.md §7.2	fonction
+00493c80	458	desirability_from_terrain	terrain	documenté	jardins, gravats, avenues et boulevards ; docs/engine/terrain.md §7.3	fonction
 00493e50	27	FUN_00493e50	inconnu	inconnu	aucun indice	fonction
 00493e70	1490	FUN_00493e70	inconnu	inconnu	aucun indice	fonction
 00494620	97	FUN_00494620	inconnu	inconnu	aucun indice	fonction
@@ -1303,15 +1303,15 @@ adresse	taille	nom	module	statut	preuve	type
 00495dd0	178	FUN_00495dd0	inconnu	inconnu	aucun indice	fonction
 00495e90	273	FUN_00495e90	inconnu	inconnu	aucun indice	fonction
 00495fb0	81	FUN_00495fb0	inconnu	inconnu	aucun indice	fonction
-00496010	107	FUN_00496010	inconnu	inconnu	aucun indice	fonction
-00496080	152	FUN_00496080	inconnu	inconnu	aucun indice	fonction
+00496010	107	map_in_play_area	terrain	documenté	case dans le losange jouable (0x00DA2F90…A4) ; docs/engine/terrain.md §2	fonction
+00496080	152	map_near_play_edge	terrain	documenté	dans le losange, à moins de m cases du bord ; docs/engine/terrain.md §2	fonction
 00496120	433	FUN_00496120	inconnu	inconnu	aucun indice	fonction
 004962e0	67	FUN_004962e0	inconnu	inconnu	aucun indice	fonction
 00496330	284	FUN_00496330	inconnu	inconnu	aucun indice	fonction
 00496450	63	FUN_00496450	inconnu	inconnu	aucun indice	fonction
 00496490	25	FUN_00496490	inconnu	inconnu	aucun indice	fonction
 004964b0	1330	FUN_004964b0	inconnu	inconnu	aucun indice	fonction
-00496b50	175	FUN_00496b50	inconnu	inconnu	aucun indice	fonction
+00496b50	175	map_area_has_marker	terrain	documenté	rectangle contenant un point réservé de la carte ; docs/engine/terrain.md §9	fonction
 00496c00	97	FUN_00496c00	inconnu	inconnu	aucun indice	fonction
 00496ca0	6734	FUN_00496ca0	inconnu	inconnu	aucun indice	fonction
 00498910	5330	FUN_00498910	inconnu	inconnu	aucun indice	fonction
@@ -1320,7 +1320,7 @@ adresse	taille	nom	module	statut	preuve	type
 0049a430	43	FUN_0049a430	inconnu	inconnu	aucun indice	fonction
 0049a460	2125	FUN_0049a460	inconnu	inconnu	aucun indice	fonction
 0049acb0	669	FUN_0049acb0	inconnu	inconnu	aucun indice	fonction
-0049af50	689	FUN_0049af50	inconnu	inconnu	aucun indice	fonction
+0049af50	689	walls_drag	terrain	documenté	tracé de murs en glissant ; docs/engine/terrain.md §9	fonction
 0049b210	697	FUN_0049b210	inconnu	inconnu	aucun indice	fonction
 0049b4d0	410	FUN_0049b4d0	inconnu	inconnu	aucun indice	fonction
 0049b670	686	FUN_0049b670	inconnu	inconnu	aucun indice	fonction
@@ -1333,7 +1333,7 @@ adresse	taille	nom	module	statut	preuve	type
 0049c890	202	FUN_0049c890	inconnu	inconnu	aucun indice	fonction
 0049c960	209	FUN_0049c960	inconnu	inconnu	aucun indice	fonction
 0049ca40	151	FUN_0049ca40	inconnu	inconnu	aucun indice	fonction
-0049cae0	95	FUN_0049cae0	inconnu	inconnu	aucun indice	fonction
+0049cae0	95	terrain_count_neighbours	terrain	documenté	nombre des 8 voisines portant un masque ; docs/engine/terrain.md §5	fonction
 0049cb40	206	FUN_0049cb40	inconnu	inconnu	aucun indice	fonction
 0049cc10	136	FUN_0049cc10	inconnu	inconnu	aucun indice	fonction
 0049cca0	99	FUN_0049cca0	inconnu	inconnu	aucun indice	fonction
@@ -1366,16 +1366,16 @@ adresse	taille	nom	module	statut	preuve	type
 0049e730	366	FUN_0049e730	inconnu	inconnu	aucun indice	fonction
 0049e8a0	583	FUN_0049e8a0	inconnu	inconnu	aucun indice	fonction
 0049eaf0	1509	FUN_0049eaf0	inconnu	inconnu	aucun indice	fonction
-0049f120	142	FUN_0049f120	inconnu	inconnu	aucun indice	fonction
+0049f120	142	regrowth_neighbours_below	terrain	documenté	voisines dont la repousse est sous un seuil ; docs/engine/terrain.md §5	fonction
 0049f1b0	942	FUN_0049f1b0	inconnu	inconnu	aucun indice	fonction
 0049f560	253	FUN_0049f560	inconnu	inconnu	aucun indice	fonction
 0049f6f0	219	FUN_0049f6f0	inconnu	inconnu	aucun indice	fonction
 0049f7d0	180	FUN_0049f7d0	inconnu	inconnu	aucun indice	fonction
 0049f8a0	122	FUN_0049f8a0	inconnu	inconnu	aucun indice	fonction
-0049f950	584	FUN_0049f950	inconnu	inconnu	aucun indice	fonction
+0049f950	584	wall_set_tile	terrain	documenté	pose ou retire le mur d'une case (0x4000) ; docs/engine/terrain.md §4	fonction
 0049fba0	461	FUN_0049fba0	inconnu	inconnu	aucun indice	fonction
 0049fd70	405	FUN_0049fd70	inconnu	inconnu	aucun indice	fonction
-0049ff10	348	FUN_0049ff10	inconnu	inconnu	aucun indice	fonction
+0049ff10	348	road_set_tile	terrain	documenté	pose ou retire la route d'une case (0x40) ; docs/engine/terrain.md §5	fonction
 004a0070	28	FUN_004a0070	inconnu	inconnu	aucun indice	fonction
 004a0090	246	FUN_004a0090	inconnu	inconnu	aucun indice	fonction
 004a0190	697	FUN_004a0190	inconnu	inconnu	aucun indice	fonction
@@ -1386,7 +1386,7 @@ adresse	taille	nom	module	statut	preuve	type
 004a07c0	551	FUN_004a07c0	inconnu	inconnu	aucun indice	fonction
 004a09f0	760	FUN_004a09f0	inconnu	inconnu	aucun indice	fonction
 004a0cf0	204	FUN_004a0cf0	inconnu	inconnu	aucun indice	fonction
-004a0dc0	526	FUN_004a0dc0	inconnu	inconnu	aucun indice	fonction
+004a0dc0	526	map_area_buildable	terrain	documenté	rectangle libre pour bâtir, masque 0x3DFFD66F ; docs/engine/terrain.md §9	fonction
 004a0fd0	226	FUN_004a0fd0	inconnu	inconnu	aucun indice	fonction
 004a10c0	648	FUN_004a10c0	inconnu	inconnu	aucun indice	fonction
 004a1350	348	FUN_004a1350	inconnu	inconnu	aucun indice	fonction
@@ -1400,10 +1400,10 @@ adresse	taille	nom	module	statut	preuve	type
 004a1d30	697	FUN_004a1d30	inconnu	inconnu	aucun indice	fonction
 004a1ff0	177	FUN_004a1ff0	inconnu	inconnu	aucun indice	fonction
 004a20b0	194	FUN_004a20b0	inconnu	inconnu	aucun indice	fonction
-004a2180	901	FUN_004a2180	inconnu	inconnu	aucun indice	fonction
-004a2510	128	FUN_004a2510	inconnu	inconnu	aucun indice	fonction
-004a2590	1313	FUN_004a2590	inconnu	inconnu	aucun indice	fonction
-004a2ac0	993	FUN_004a2ac0	inconnu	inconnu	aucun indice	fonction
+004a2180	901	terrain_blocks_match_2x2	terrain	documenté	motifs de voisinage par direction ; docs/engine/terrain.md §5	fonction
+004a2510	128	terrain_neighbours_match	terrain	documenté	les 8 voisines vérifient (drapeaux & masque) == valeur ; docs/engine/terrain.md §5	fonction
+004a2590	1313	terrain_blocks_match_3x3	terrain	documenté	motifs de voisinage par direction ; docs/engine/terrain.md §5	fonction
+004a2ac0	993	terrain_block_match	terrain	documenté	bloc de cases vérifiant (drapeaux & masque) == valeur ; docs/engine/terrain.md §5	fonction
 004a2eb0	266	FUN_004a2eb0	inconnu	inconnu	aucun indice	fonction
 004a2fc0	273	FUN_004a2fc0	inconnu	inconnu	aucun indice	fonction
 004a30e0	31	FUN_004a30e0	inconnu	inconnu	aucun indice	fonction
@@ -1435,14 +1435,14 @@ adresse	taille	nom	module	statut	preuve	type
 004a4560	543	FUN_004a4560	inconnu	inconnu	aucun indice	fonction
 004a4780	72	FUN_004a4780	inconnu	inconnu	aucun indice	fonction
 004a47d0	98	FUN_004a47d0	inconnu	inconnu	aucun indice	fonction
-004a4840	180	FUN_004a4840	inconnu	inconnu	aucun indice	fonction
+004a4840	180	trees_ring_full	terrain	documenté	anneau r fait seulement d'arbres ; docs/engine/terrain.md §8.2	fonction
 004a4900	330	FUN_004a4900	inconnu	inconnu	aucun indice	fonction
 004a4a50	29	FUN_004a4a50	inconnu	inconnu	aucun indice	fonction
 004a4a70	182	FUN_004a4a70	inconnu	inconnu	aucun indice	fonction
 004a4b30	182	FUN_004a4b30	inconnu	inconnu	aucun indice	fonction
-004a4bf0	104	FUN_004a4bf0	inconnu	inconnu	aucun indice	fonction
-004a4c60	498	FUN_004a4c60	inconnu	inconnu	aucun indice	fonction
-004a4e70	1138	FUN_004a4e70	inconnu	inconnu	aucun indice	fonction
+004a4bf0	104	desirability_spread	terrain	documenté	attrait anneau par anneau autour d'une emprise carrée ; docs/engine/terrain.md §7.1	fonction
+004a4c60	498	desirability_add_ring	terrain	documenté	ajoute une valeur sur un anneau, bornée à ±100 ; docs/engine/terrain.md §7.1	fonction
+004a4e70	1138	ring_tile_off_map	terrain	documenté	case k d'un anneau hors de la carte ; docs/engine/terrain.md §7.1	fonction
 004a52f0	1414	FUN_004a52f0	inconnu	inconnu	aucun indice	fonction
 004a5880	204	FUN_004a5880	inconnu	inconnu	aucun indice	fonction
 004a5950	200	FUN_004a5950	inconnu	inconnu	aucun indice	fonction
@@ -1474,15 +1474,15 @@ adresse	taille	nom	module	statut	preuve	type
 004a7560	173	FUN_004a7560	inconnu	inconnu	aucun indice	fonction
 004a7a50	416	FUN_004a7a50	inconnu	inconnu	aucun indice	fonction
 004a7bf0	215	FUN_004a7bf0	inconnu	inconnu	aucun indice	fonction
-004a7d30	1215	FUN_004a7d30	inconnu	inconnu	aucun indice	fonction
-004a81f0	954	FUN_004a81f0	inconnu	inconnu	aucun indice	fonction
+004a7d30	1215	terrain_regrow	terrain	documenté	repousse des arbres, roseaux et prés ; docs/engine/terrain.md §8.1	fonction
+004a81f0	954	terrain_resource_image	terrain	documenté	image d'une case d'arbre, de roseaux ou de pré ; docs/engine/terrain.md §8.2	fonction
 004a85b0	61	FUN_004a85b0	inconnu	inconnu	aucun indice	fonction
 004a85f0	91	FUN_004a85f0	inconnu	inconnu	aucun indice	fonction
 004a8650	142	FUN_004a8650	inconnu	inconnu	aucun indice	fonction
 004a86e0	1447	FUN_004a86e0	inconnu	inconnu	aucun indice	fonction
-004a8c90	289	FUN_004a8c90	inconnu	inconnu	aucun indice	fonction
+004a8c90	289	terrain_ring_distance	terrain	documenté	distance en anneaux à une case sans le masque ; docs/engine/terrain.md §8.4	fonction
 004a8dd0	49	FUN_004a8dd0	inconnu	inconnu	aucun indice	fonction
-004a8e10	279	FUN_004a8e10	inconnu	inconnu	aucun indice	fonction
+004a8e10	279	trees_update_depth	terrain	documenté	profondeur de forêt (0x00C29158) sur un rectangle ; docs/engine/terrain.md §8.4	fonction
 004a8f30	86	FUN_004a8f30	inconnu	inconnu	aucun indice	fonction
 004a8f90	94	FUN_004a8f90	inconnu	inconnu	aucun indice	fonction
 004a8ff0	886	FUN_004a8ff0	inconnu	inconnu	aucun indice	fonction
@@ -1502,7 +1502,7 @@ adresse	taille	nom	module	statut	preuve	type
 004a9c90	691	FUN_004a9c90	inconnu	inconnu	aucun indice	fonction
 004a9f50	294	FUN_004a9f50	inconnu	inconnu	aucun indice	fonction
 004aa150	51	FUN_004aa150	inconnu	inconnu	aucun indice	fonction
-004aa190	402	FUN_004aa190	inconnu	inconnu	aucun indice	fonction
+004aa190	402	meadows_update_rect	terrain	documenté	valeur et image des prés d'un rectangle ; docs/engine/terrain.md §3	fonction
 004aa330	27	FUN_004aa330	inconnu	inconnu	aucun indice	fonction
 004aa350	198	FUN_004aa350	inconnu	inconnu	aucun indice	fonction
 004aa4f0	174	FUN_004aa4f0	inconnu	inconnu	aucun indice	fonction
@@ -2088,7 +2088,7 @@ adresse	taille	nom	module	statut	preuve	type
 004f8300	99	FUN_004f8300	inconnu	inconnu	aucun indice	fonction
 004f8370	112	FUN_004f8370	inconnu	inconnu	aucun indice	fonction
 004f83e0	912	FUN_004f83e0	inconnu	inconnu	aucun indice	fonction
-004f8770	1050	FUN_004f8770	inconnu	inconnu	aucun indice	fonction
+004f8770	1050	figure_graze	marcheurs	documenté	un animal broute le pré de sa case ; docs/engine/terrain.md §8.5	fonction
 004f8b90	484	FUN_004f8b90	inconnu	inconnu	aucun indice	fonction
 004f8e30	1122	FUN_004f8e30	inconnu	inconnu	aucun indice	fonction
 004f92a0	217	FUN_004f92a0	inconnu	inconnu	aucun indice	fonction
@@ -2414,7 +2414,7 @@ adresse	taille	nom	module	statut	preuve	type
 00511c90	327	FUN_00511c90	sauvegarde	inconnu	chaîne (fichiers .sav/.pak)	fonction
 00511de0	36	FUN_00511de0	inconnu	inconnu	aucun indice	fonction
 00511e10	21	FUN_00511e10	inconnu	inconnu	aucun indice	fonction
-00511e30	1217	FUN_00511e30	inconnu	inconnu	aucun indice	fonction
+00511e30	1217	city_init_from_map	scénario	documenté	mise en place d'une ville depuis sa carte ; docs/engine/terrain.md §5	fonction
 00512300	201	FUN_00512300	inconnu	inconnu	aucun indice	fonction
 005123d0	313	FUN_005123d0	inconnu	inconnu	aucun indice	fonction
 00512510	55	FUN_00512510	inconnu	inconnu	aucun indice	fonction
@@ -2571,9 +2571,9 @@ adresse	taille	nom	module	statut	preuve	type
 0051f100	143	FUN_0051f100	inconnu	inconnu	aucun indice	fonction
 0051f1e0	42	FUN_0051f1e0	inconnu	inconnu	aucun indice	fonction
 0051f210	567	FUN_0051f210	inconnu	inconnu	aucun indice	fonction
-0051f450	1028	FUN_0051f450	inconnu	inconnu	aucun indice	fonction
+0051f450	1028	map_tiles_update_images	terrain	documenté	images du sol d'un rectangle, chaîne de choix ; docs/engine/terrain.md §5	fonction
 0051f860	828	FUN_0051f860	inconnu	inconnu	aucun indice	fonction
-0051fba0	793	FUN_0051fba0	inconnu	inconnu	aucun indice	fonction
+0051fba0	793	map_tile_plain_ground	terrain	documenté	sol nu, grandes pièces si 0x004A0DC0 ; docs/engine/terrain.md §5	fonction
 0051fec0	414	FUN_0051fec0	inconnu	inconnu	aucun indice	fonction
 005200b0	940	FUN_005200b0	inconnu	inconnu	aucun indice	fonction
 00520580	672	FUN_00520580	inconnu	inconnu	aucun indice	fonction
@@ -3906,7 +3906,7 @@ adresse	taille	nom	module	statut	preuve	type
 005883e0	503	FUN_005883e0	inconnu	inconnu	aucun indice	fonction
 005885e0	823	FUN_005885e0	inconnu	inconnu	aucun indice	fonction
 00588920	503	FUN_00588920	inconnu	inconnu	aucun indice	fonction
-00588b20	521	FUN_00588b20	inconnu	inconnu	aucun indice	fonction
+00588b20	521	route_find_listed_tile	terrain	documenté	parcours en largeur sur la grille de trajets ; docs/engine/terrain.md §8.3	fonction
 00588d30	664	FUN_00588d30	inconnu	inconnu	aucun indice	fonction
 00588fd0	664	FUN_00588fd0	inconnu	inconnu	aucun indice	fonction
 00589270	633	FUN_00589270	inconnu	inconnu	aucun indice	fonction

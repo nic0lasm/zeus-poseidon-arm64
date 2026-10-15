@@ -21,7 +21,7 @@ the game.
   whole of it. Three more are replaced only in their common cases (a fast path or a rewritten
   loop, the original code still running for the rest): they stay *named* and say so in their
   evidence column.
-- **Functions understood: 75 of 4,872** (1.5 %): named, documented or native.
+- **Functions understood: 113 of 4,872** (2.3 %): named, documented or native.
 - **Computation done natively: 54 %.** Scenario `working-city` (the last tutorial, a large city)
   for its full 300 s, deterministic clock, run with `--no-native` so that the whole game is
   emulated and profiled. The profile times every block of x86 code the game executes (corrected
@@ -58,20 +58,20 @@ python3 tools/coverage.py --profile build/essais/profil.tsv
 | Module | Fonctions | Inconnu | Nommé | Documenté | Natif |
 |---|---:|---:|---:|---:|---:|
 | rendu | 68 | 41 | 19 | 3 | 5 |
-| interface | 35 | 15 | 1 | 19 | 0 |
+| interface | 37 | 15 | 1 | 21 | 0 |
 | texte | 9 | 6 | 1 | 2 | 0 |
-| terrain | 13 | 2 | 11 | 0 | 0 |
-| marcheurs | 4 | 3 | 0 | 1 | 0 |
-| bâtiments | 4 | 4 | 0 | 0 | 0 |
+| terrain | 45 | 2 | 11 | 32 | 0 |
+| marcheurs | 5 | 3 | 0 | 2 | 0 |
+| bâtiments | 5 | 4 | 0 | 1 | 0 |
 | économie | 3 | 3 | 0 | 0 | 0 |
 | dieux et héros | 19 | 19 | 0 | 0 | 0 |
 | armée | 0 | 0 | 0 | 0 | 0 |
-| scénario | 37 | 32 | 0 | 5 | 0 |
+| scénario | 39 | 32 | 0 | 7 | 0 |
 | sauvegarde | 25 | 25 | 0 | 0 | 0 |
 | son | 127 | 122 | 0 | 5 | 0 |
 | bibliothèque C | 281 | 279 | 1 | 0 | 1 |
-| inconnu | 4247 | 4246 | 1 | 0 | 0 |
-| **Total** | **4872** | **4797** | **34** | **35** | **6** |
+| inconnu | 4209 | 4208 | 1 | 0 | 0 |
+| **Total** | **4872** | **4759** | **34** | **73** | **6** |
 
 The *module* column says where a function sits in the game, not who wrote it. A function is
 placed from the strongest evidence available; the evidence is in the `preuve` column of
