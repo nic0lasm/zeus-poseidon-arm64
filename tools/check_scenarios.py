@@ -3,6 +3,7 @@
 
 Usage : python3 tools/check_scenarios.py [record] [--exe ZEUS.EXE] [--no-native] [--jobs N]
                                          [--only NOM,…] [--verify CIBLE [--every N]]
+                                         [--references DOSSIER]
 
   record   enregistre les références dans build/scenarios/ au lieu de comparer, avec le code
            d'origine seul (zeus-run --no-native) : c'est l'original émulé qui sert de juge
@@ -12,6 +13,8 @@ Usage : python3 tools/check_scenarios.py [record] [--exe ZEUS.EXE] [--no-native]
   --only   seulement ces scénarios (noms de fichiers sans .txt, séparés par des virgules)
   --verify vérifie aussi, pendant chaque scénario, les appels d'une fonction du jeu (zeus-run
            --verify ADRESSE ou DÉBUT:FIN) ; --every N n'en vérifie qu'un sur N
+  --references  garde les références dans DOSSIER, partagé entre machines, au lieu de
+           build/scenarios ; celles qui manquent sont d'abord enregistrées (voir plus bas)
 
 Chaque scénario est joué avec une horloge fictive (zeus-run --deterministic) : deux exécutions
 donnent les mêmes images, dont l'empreinte est écrite dans un journal, et passent par les mêmes
@@ -20,10 +23,24 @@ voir docs/equivalence.md). Un journal différent de la référence signale un ch
 comportement du jeu ; pour l'état, le premier tour différent et ses zones sont indiqués. Les
 scénarios joués en parallèle ne partagent rien (chacun a son dossier d'écriture neuf) ; les
 résultats sont affichés dans l'ordre alphabétique.
+
+Références partagées (--references) : une référence ne dépend que de ce que l'original émulé
+exécute, pas des fonctions réécrites. Elle est rangée dans DOSSIER/<clé>/, où la clé résume
+l'exécutable du jeu, le code de l'hôte hors fonctions natives (src/win32/native*, et
+src/win32/game_gog.h, qui n'en contient que les adresses), les versions d'Unicorn et de FFmpeg
+et le système ; le nom de chaque fichier porte l'empreinte du script du scénario. Une branche qui
+ne touche qu'aux fonctions natives retrouve donc les références de main, et une machine neuve
+celles d'une autre machine identique. Celles qui manquent sont enregistrées avant la comparaison
+(--no-native, puis renommées d'un coup : deux machines peuvent le faire en même temps).
+« record » les réenregistre. DOSSIER/<clé>/cle.txt détaille la clé. Une référence périmée par un
+changement de l'hôte que la clé ignore ne peut que signaler une différence, jamais en cacher une.
 """
 import concurrent.futures
 import glob
+import hashlib
 import os
+import platform
+import re
 import subprocess
 import sys
 
@@ -50,6 +67,30 @@ def read_lines(path):
         return f.read().splitlines()
 
 
+def file_hash(path):
+    with open(path, "rb") as f:
+        return hashlib.sha256(f.read()).hexdigest()
+
+
+def host_key(exe):
+    """Clé des références partagées et son détail : ce dont dépend une exécution --no-native."""
+    lines = [f"jeu {file_hash(exe)}", f"système {platform.system()} {platform.machine()}"]
+    with open(os.path.join(ROOT, "build", "CMakeCache.txt"), encoding="utf-8") as f:
+        lines += sorted(" ".join(m.groups()) for m in
+                        re.finditer(r"^((?:UNICORN|FFMPEG_lib\w+)_VERSION|ZEUS_FFMPEG):\w+=(.*)$", f.read(), re.M))
+    sources = [os.path.join(ROOT, "CMakeLists.txt")]
+    for folder in ("formats", "game", "platform", "tools/zeus_run", "win32"):
+        sources += glob.glob(os.path.join(ROOT, "src", folder, "*.*"))
+    host = hashlib.sha256()
+    for path in sorted(sources):
+        name = os.path.relpath(path, ROOT).replace(os.sep, "/")
+        if name.startswith("src/win32/native") or name == "src/win32/game_gog.h":
+            continue
+        host.update(name.encode() + b"\0" + bytes.fromhex(file_hash(path)))
+    lines.append(f"hôte {host.hexdigest()}")
+    return hashlib.sha256("\n".join(lines).encode()).hexdigest()[:16], lines
+
+
 def state_difference(reference, log):
     """Premier tour où l'état diffère et noms des zones en cause, ou None si identiques."""
     expected, actual = read_lines(reference), read_lines(log)
@@ -65,12 +106,36 @@ def state_difference(reference, log):
     return f"état : {len(actual)} tours au lieu de {len(expected)}"
 
 
-def play(path, out, exe, extra, record):
+def reference_paths(path, out, shared):
+    """Journaux de référence (images, état) d'un scénario."""
+    name = os.path.splitext(os.path.basename(path))[0]
+    if shared:
+        stem = os.path.join(shared, f"{name}-{file_hash(path)[:12]}")
+        return stem + ".images.txt", stem + ".etat.txt"
+    return os.path.join(out, name + ".reference.txt"), os.path.join(out, name + ".state.reference.txt")
+
+
+def record_shared(path, out, exe, shared, again):
+    """Enregistre la référence partagée d'un scénario si elle manque (toujours si `again`) ;
+    renvoie (ligne, échec), ou None si elle existait."""
+    frames_reference, state_reference = reference_paths(path, out, shared)
+    if not again and os.path.exists(frames_reference) and os.path.exists(state_reference):
+        return None
+    suffix = f".{platform.node()}-{os.getpid()}.tmp"
+    temporary = (frames_reference + suffix, state_reference + suffix)
+    line, failed = play(path, out, exe, ["--no-native"], True, temporary)
+    if failed:
+        return line, True
+    os.replace(temporary[0], frames_reference)
+    os.replace(temporary[1], state_reference)
+    return line, False
+
+
+def play(path, out, exe, extra, record, references):
     """Joue un scénario ; renvoie (ligne de résultat, échec)."""
     name = os.path.splitext(os.path.basename(path))[0]
     script, seconds, options = read_scenario(path)
-    frames_reference = os.path.join(out, name + ".reference.txt")
-    state_reference = os.path.join(out, name + ".state.reference.txt")
+    frames_reference, state_reference = references
     frames_log = frames_reference if record else os.path.join(out, name + ".txt")
     state_log = state_reference if record else os.path.join(out, name + ".state.txt")
     run = 0
@@ -117,14 +182,31 @@ def main(argv):
     jobs = int(argv[argv.index("--jobs") + 1]) if "--jobs" in argv else max(1, (os.cpu_count() or 2) - 1)
     out = os.path.join(ROOT, "build", "scenarios")
     os.makedirs(out, exist_ok=True)
+    shared = None
+    if "--references" in argv:
+        key, lines = host_key(exe)
+        shared = os.path.join(os.path.abspath(argv[argv.index("--references") + 1]), key)
+        os.makedirs(shared, exist_ok=True)
+        with open(os.path.join(shared, "cle.txt"), "w", encoding="utf-8") as f:
+            f.write("\n".join(lines) + "\n")
+        print(f"références : {shared}", flush=True)
     paths = sorted(glob.glob(os.path.join(ROOT, "tests", "scenarios", "*.txt")))
     if "--only" in argv:
         only = argv[argv.index("--only") + 1].split(",")
         paths = [p for p in paths if os.path.splitext(os.path.basename(p))[0] in only]
     # Les dossiers d'écriture se choisissent avant le lancement : deux scénarios ont des noms
     # distincts, donc des dossiers distincts.
+    def task(p):
+        if shared:
+            recorded = record_shared(p, out, exe, shared, record)
+            if record or (recorded and recorded[1]):
+                return recorded
+            if recorded:
+                print(recorded[0], flush=True)
+        return play(p, out, exe, extra, record, reference_paths(p, out, shared))
+
     with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as pool:
-        futures = [pool.submit(play, p, out, exe, extra, record) for p in paths]
+        futures = [pool.submit(task, p) for p in paths]
         failures = 0
         for future in futures:  # ordre alphabétique, au fur et à mesure
             line, failed = future.result()

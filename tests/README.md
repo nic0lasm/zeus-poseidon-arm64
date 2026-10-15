@@ -50,3 +50,26 @@ also fails if the game stops on a missing function.
 Scenarios were written for the English GOG edition at 800×600. Lines starting with `#` are
 comments; `# durée : N` gives the length of the run in virtual seconds and `# options : …` extra
 options for `zeus-run`.
+
+### On a fresh Linux machine, in one command
+
+```bash
+python3 tools/bench_setup.py --apt --game /path/to/game/app -- --references /path/to/shared/references
+```
+
+`tools/bench_setup.py` installs the build packages (`--apt`), links `original/gog/app` to the game
+folder, builds the project, then runs `check_scenarios.py` with what follows `--`. Ubuntu 24.04
+ships Unicorn 2.0.1, which cannot use non-executable pages: every memory write then takes the
+emulator's slow path and a scenario runs about four times slower. When `pkg-config` finds no
+Unicorn 2.1 or later, the script builds Unicorn 2.1.4 from its source (x86 only, about twenty
+seconds) in `build/deps/unicorn` and builds the project against it.
+
+`--references DIR` keeps the references in a folder shared between machines instead of
+`build/scenarios/`, and records those that are missing before comparing. They are filed under
+`DIR/<key>/`: the key sums up what a run of the pure original depends on (the game executable,
+the host code except the rewritten functions in `src/win32/native*` and their addresses in
+`src/win32/game_gog.h`, the Unicorn and FFmpeg versions, the system), described in
+`DIR/<key>/cle.txt`. A branch that only changes native functions finds the references of `main`;
+a change to the rest of the host records new ones once. `record --references DIR` records them
+again. The references are derived from the game: keep them out of the repository and out of
+anything published.
