@@ -617,8 +617,8 @@ steps before it, and the most frequent come first within a step. Counts: origina
 | 10 | `0x0043FF10`, `0x00440170`, `0x004406B0`, `0x00440FE0`, `0x00441E50` | bases of 2–6 tiles | 23,888 / 2,410 / 3,627 / 1,389 / 0 | 52 / 5 / 8 / 3 / 0 | original |
 | 11 | `0x00457900` | ground of a tile, remaining cases | 593,891 | 1,283 | fast path (flat, sloped, flags `0x4020`), 42,500 still emulated |
 | 12 | `0x00449B30` | sort the walkers of a tile | 1,411,706 | 3,049 | original |
-| 13 | `0x0045A5A0`, `0x0041D3D0`, `0x0041D150` | walkers and water life of a tile | 606,993 / 620,704 / 0 | 1,311 / 1,341 / 0 | original |
-| 14 | `0x0044FEF0` | one walker | 27,178 | 59 | original |
+| 13 | `0x0045A5A0`, `0x0041D3D0`, `0x0041D150` | walkers and water life of a tile | 606,993 / 620,704 / 0 | 1,311 / 1,341 / 0 | `0x0041D3D0` fast path (when it draws nothing: every call outside a Poseidon game); `0x0045A5A0` waits for the sort (12) |
+| 14 | `0x0044FEF0` | one walker | 27,178 | 59 | fast path (11.3): all but the C++ objects of sanctuaries, Poseidon's animals, the trader's text and tinted walkers whose image the dispatcher refuses |
 | 15 | `0x0044F320`, `0x0045D140`, `0x0053E5F0`, `0x0045DC10`, building-type functions of 11.2 step 5 | building extras and animations | 433,862 / 4,488 / — / 553,374 / — | 937 / 10 / — / 1,195 / — | original |
 | 16 | `0x00458170` | second and third passes | 463 | 1 | first pass native, second pass native for 81 % of the cells (11.2) |
 | 17 | `0x0044AD70`, `0x00451820`, `0x004517F0`, `0x00454420` | after the passes | 463 each | 1 | original |
@@ -630,7 +630,8 @@ Already native: `0x00413DC0` (5,319,977 calls), `0x004161B0` (2,384,169), `0x004
 `0x004165D0` (5,563 and 5,703), `0x00415490`, `0x004158E0`, `0x00415680`, `0x00415F50`
 (95,842), `0x00416010` (467), `0x00413E30` (4,317), `0x0050B410` (1,459), `0x00435070` (163,764),
 `0x004377B0` and `0x00438A90` (8,682 and 8,691), the clip functions (8,562,614 each) inside the dispatcher and the
-building tops, `0x005ADF00` except with an overlay, and the first pass of `0x00458170`.
+building tops, `0x005ADF00` except with an overlay, the first pass of `0x00458170`, `0x0044FEF0` for its
+common walkers and `0x0041D3D0` when it draws nothing.
 
 Where the list stands: steps 1 to 4 are native; 5 to 7 are never called in the nine scenarios,
 so no call-by-call proof is possible yet and they wait for a scenario that draws glyph masks,
@@ -638,8 +639,15 @@ overlays (a building marked red) and the rare cases; the second pass (16) is nat
 common cells. Next, in this order: the bases of 2 to 6 tiles (10, rewritten and identical on
 the large city, not yet published), the walker sort `0x00449B30` (12: its comparator never
 returns 0 for two distinct walkers, so any correct sort gives the original order), then the
-walkers (13, 14) and the extras of sanctuaries and monuments (15, `0x0053E5F0`, the largest
-remaining fallback of the second pass).
+walker loops that call it (`0x0045A5A0` and the two loops inlined in the second pass, which
+could then run natively with `0x0044FEF0`) and the extras of sanctuaries and monuments (15,
+`0x0053E5F0`, the largest remaining fallback of the second pass).
+
+Weight of what is left (`zeus-run --profile`, `working-city`, natively, 2026-10-15): the
+walkers (`0x0044FEF0` 0.3 %, `0x0045A5A0` 0.2 %, `0x0041D3D0` 0.1 % before this rewrite) and
+their sort (0.3 %) weigh little; the text routines (`0x004F57A0` 10.3 %, `0x004F5300` 7.9 %,
+`0x00507F20` 3.4 %, `0x004F59B0` 2.8 %, `0x00508B50` 2.3 %) and the building objects
+(`0x0053CD80` 3.0 %, `0x0053CC30` 2.1 %) weigh far more.
 
 Outside this page but heavy in the same profile: the text routines (`0x004F57A0`, 2.2 million
 calls; `0x00507F20`, 10.0 million; `0x00508B50`, 1.0 million; `0x004F59B0`, 1.1 million;
