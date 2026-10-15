@@ -96,6 +96,23 @@ constexpr uint64_t kObjectHelpersHash = 0x568E7297F13D31AEull;
 constexpr uint32_t kAlwaysFalse = 0x00565750;  // méthode +0x0C du mode de vue 0 : « XOR AL,AL ; RET 8 »
 constexpr uint32_t kViewModeZeroSetup = 0x0055E9B0;  // FUN_0055e9b0 : table de méthodes du mode 0
 
+// --- Code : personnages de la ville (native_walkers.cpp) -------------------------------------
+
+constexpr uint32_t kWalker = 0x0044FEF0;      // FUN_0044fef0(personnage, x, y, cherché, plans) : un personnage
+constexpr uint32_t kWalkerEnd = 0x00451785;   // fin de FUN_0044fef0 et de ses tables de sauts
+constexpr uint64_t kWalkerHash = 0xE9FD6BDE57627C7Dull;
+constexpr uint32_t kOnWater = 0x004D7210, kOnWaterEnd = 0x004D7340;  // FUN_004d7210 et ses tables
+constexpr uint64_t kOnWaterHash = 0x0D40E7A695A91190ull;
+constexpr uint32_t kWaterLife = 0x0041D3D0;   // FUN_0041d3d0(case, x, y, …) : animal ou bateau sur l'eau
+// (thiscall) ; empreinte de ses premiers tests dans kWalkerHelpers
+// Petites fonctions réécrites dans FUN_0044fef0, empreinte commune : FUN_004200f0, début de
+// FUN_0041d3d0, FUN_005344a0, FUN_00411860, FUN_00411870.
+constexpr uint32_t kWalkerHelpers[][2] = {
+    {0x004200F0, 0x00420113}, {0x0041D3D0, 0x0041D413}, {0x005344A0, 0x005344BC}, {0x00411860, 0x0041186E},
+    {0x00411870, 0x00411894}};
+constexpr uint64_t kWalkerHelpersHash = 0xA21938BB203C4AA2ull;
+constexpr uint32_t kViewFalse = 0x005656F0;   // méthode +0x14 du mode de vue 0 : « XOR AL,AL ; RET 4 »
+
 // --- Code : cadencement (user32.cpp) ----------------------------------------------------------
 
 constexpr uint32_t kSimulationDue = 0x005168A0;  // FUN_005168a0 : un tour de simulation est-il dû ?
@@ -201,6 +218,42 @@ constexpr uint32_t kTileLife = 0x00CB4B08;      // par case : animal ou bateau s
 constexpr uint32_t kTileFigure = 0x00D0D878;    // par case : premier personnage (16 bits signés)
 // Personnages : fiches de 0x184 octets ; +0 suivant sur la case (16 bits), +2 type, +0x5D masqué.
 constexpr uint32_t kFigures = 0x00DBD790;
+// Champs d'une fiche de personnage lus par FUN_0044fef0, à leur adresse pour la fiche 0.
+constexpr uint32_t kFigureImage = 0x00DBD78C;       // image du corps (32 bits)
+constexpr uint32_t kFigureType = 0x00DBD792;        // type (8 bits)
+constexpr uint32_t kFigureState = 0x00DBD793;       // état (8 bits, FUN_004d7210)
+constexpr uint32_t kFigureMoving = 0x00DBD794;      // non nul : position fine (+0x42, +0x44)
+constexpr uint32_t kFigureDirection = 0x00DBD799;   // direction, puis direction de repli (+0x0A)
+constexpr uint32_t kFigureAltitude = 0x00DBD7A4;    // retranchée à y en position fine
+constexpr uint32_t kFigureLayer = 0x00DBD7A5;       // plan : 0 bit 1 des plans dessinés, sinon bit 2
+constexpr uint32_t kFigureTile = 0x00DBD7A8;        // case (32 bits)
+constexpr uint32_t kFigureStep = 0x00DBD7C1;        // pas dans la case (8 bits signés)
+constexpr uint32_t kFigureDocked = 0x00DBD7C9;      // bateaux : à quai
+constexpr uint32_t kFigureFineX = 0x00DBD7D2, kFigureFineY = 0x00DBD7D4;  // position fine (16 bits)
+constexpr uint32_t kFigureLink = 0x00DBD7E2;        // personnage ou bâtiment lié (16 bits)
+constexpr uint32_t kFigureExtraX = 0x00DBD7F4, kFigureExtraY = 0x00DBD7F5;  // décalage du second sprite
+constexpr uint32_t kFigureLift = 0x00DBD800;        // retranchée à y
+constexpr uint32_t kFigureDock = 0x00DBD8A4;        // bateaux : case du quai (32 bits)
+constexpr uint32_t kFigureThirdImage = 0x00DBD8D8;  // troisième sprite (32 bits)
+constexpr uint32_t kFigureColour = 0x00DBD8F0;      // non nul : sprites teints de cette couleur
+constexpr uint32_t kFigureKind = 0x00DBD8F4;        // type 6 : sorte d'animal ou de bateau
+constexpr uint32_t kFigureFlags = 0x00DBD8F6;       // type 6 : bit 6, sprite retourné
+constexpr uint32_t kFigureBuilding = 0x00DBD900;    // type 6 : bâtiment (16 bits)
+constexpr uint32_t kFigureExtraImage = 0x00DBD908;  // second sprite (32 bits)
+// FUN_0044fef0 : direction du personnage dans la vue, écrite à chaque appel ; non nul, rien
+// n'est dessiné ; position du personnage cherché.
+constexpr uint32_t kFigureViewDirection = 0x00FA05E4, kWalkersOff = 0x00B1E8C4;
+constexpr uint32_t kFoundFigureY = 0x007D3B38, kFoundFigureX = 0x007D3B3C;
+// Décalages par direction et pas (16 par direction), puis par position fine (16 x 16) pour les
+// orientations 0 et 4 et pour 2 et 6 ; octets signés.
+constexpr uint32_t kStepX = 0x005F0658, kStepY = 0x005F06D8;
+constexpr uint32_t kFineX = 0x005F0258, kFineY = 0x005F0358, kFineXTurned = 0x005F0458, kFineYTurned = 0x005F0558;
+constexpr uint32_t kTileDepth = 0x00C1C648;    // par case : profondeur de l'eau sous un gué (hypothèse)
+constexpr uint32_t kTurnOffsets = 0x005D855C;  // FUN_00411870 : décalage de case par orientation / 2
+constexpr uint32_t kWaterNeighbours = 0x005D9188;  // FUN_0044fef0 : sept décalages de case
+// FUN_0044fef0 : voisines (rangée, colonne) d'une case de rangée paire ou impaire.
+constexpr uint32_t kNeighboursEven = 0x005F8B88, kNeighboursOdd = 0x005F8BD0;
+constexpr uint32_t kViewFirstRow = 0x007D3BCC;  // parité des rangées de la vue
 constexpr uint32_t kBuildings = 0x0092E668;  // fiches de 0x118 octets ; +0 type (16 bits), +0xBF en rouge
 constexpr uint32_t kDrawnImage = 0x00F13A20;   // image de la case en cours de dessin
 constexpr uint32_t kViewMode = 0x00FA05F0;     // mode de vue (0 : la ville)

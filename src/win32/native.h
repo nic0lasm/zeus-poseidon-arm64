@@ -16,6 +16,10 @@ class Process;
 std::optional<uint32_t> draw_sprite(Cpu& cpu, uint32_t self, int32_t id, int32_t x, int32_t y, int32_t mode,
                                     uint8_t mirror);
 
+// Vrai quand draw_sprite traiterait ce sprite (rien n'est écrit) : un appelant qui dessine
+// plusieurs sprites le vérifie pour tous avant le premier.
+bool sprite_handled(Cpu& cpu, uint32_t self, int32_t id, int32_t x, int32_t y, int32_t mode, uint8_t mirror);
+
 // FUN_005adf00(this, identifiant, x, y) : partie haute d'un bâtiment (native.cpp), même contrat.
 std::optional<uint32_t> draw_building_top(Cpu& cpu, uint32_t self, int32_t id, int32_t x, int32_t y);
 
@@ -30,5 +34,7 @@ bool ground_halves_known();
 
 // Boucle de dessin de la ville (native_draw.cpp) ; renvoie le nombre de remplacements installés.
 int install_native_drawing(Process& process);
+// Personnages de la ville (native_walkers.cpp) ; renvoie le nombre de remplacements installés.
+int install_native_walkers(Process& process);
 
 }  // namespace zeus::win32

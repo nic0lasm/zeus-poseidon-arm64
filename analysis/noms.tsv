@@ -7,6 +7,8 @@ adresse	nom	module	statut	preuve	type
 0040f630	building_fields_test	bâtiments	nommé	67 octets, quatre champs des bâtiments ; appelée par un bâtiment et un personnage ; simulation.md §5	fonction
 0040fcf0	font_group_entry	texte	documenté	entrée de groupe de la banque 0 (+4 : première image) ; 101 appelants ; interface.md §5.2	fonction
 0040fd10	image_id_from_packed_group	rendu	documenté	identifiant packé collection*512+groupe+1 vers première image ; 107 appelants ; interface.md §5.2	fonction
+00411860	view_mirror_parity	rendu	nommé	(orientation de la vue / 2) & 1 ; sprite retourné des animaux de sorte 0x0E ; rendering.md §11.3	fonction
+00411870	tile_turn_offset	rendu	nommé	ajoute à une case le décalage 0x005D855C de l'orientation, sauf sortes 0x12 et 0x0D ; rendering.md §11.3	fonction
 00413dc0	copy_rectangle	rendu	natif	copie d'un rectangle opaque ; remplacée par native.cpp	fonction
 00413e30	draw_runs_blended	rendu	natif	image par suites, mélangée ; remplacée par native.cpp	fonction
 004142b0	image_draw	rendu	nommé	enveloppe de 0x0064274C ; 162 appelants	fonction
@@ -21,8 +23,10 @@ adresse	nom	module	statut	preuve	type
 004170b0	runs_skip_rows	rendu	documenté	saute les lignes masquées d'une image par suites (octet bas d'EAX seul) ; rendering.md §8	fonction
 00418a00	convert_555_to_bgra	rendu	nommé	R, V, B = composante << 3, alpha 0xff	fonction
 00418b00	tile_step_to_anchor	terrain	nommé	hors route, avance d'une case vers la case d'ancrage selon les bits 0x07 et 0x38 de la grille 0x00D404B8 (±1, ±228) ; simulation.md §5	fonction
+0041d3d0	water_life_draw	rendu	nommé	animal ou bateau sur l'eau d'une case (hypothèse) ; natif partiel : chemin rapide dans native_walkers.cpp (rien à dessiner) ; rendering.md §11.3	fonction
 0041dfc0	blit_alpha_runs	rendu	nommé	mélange (a*src + (31-a)*dst) >> 5 par composante de 5 bits	fonction
 00420020	fullscreen_background_a	interface	documenté	fond plein écran centré (menus)	fonction
+004200f0	poseidon_game	scénario	nommé	vrai si 0x006AA4E0 et 0x00902BB0 valent 1 (partie de Poséidon : hypothèse) ; rendering.md §11.3	fonction
 00422270	fullscreen_background_b	interface	documenté	fond plein écran centré (menus)	fonction
 00422c60	fullscreen_background_c	interface	documenté	fond plein écran centré (menus)	fonction
 00423180	image_entry	rendu	documenté	entrée d'une image dans une banque (thiscall) ; rendering.md §11.2	fonction
@@ -47,6 +51,7 @@ adresse	nom	module	statut	preuve	type
 00449b30	tile_walkers_sort	rendu	nommé	trie la liste des personnages d'une case (écrit l'état) ; rendering.md §11.2	fonction
 00449e50	map_view_set_size	interface	documenté	reçoit colonnes et rangées de la vue de la carte	fonction
 0044f320	building_extra_draw	rendu	documenté	dessin d'appoint d'un bâtiment selon son type (21 types) ; rendering.md §11.2	fonction
+0044fef0	walker_draw	rendu	documenté	natif partiel : chemin rapide dans native_walkers.cpp ; un personnage (plan, position, sprites, cases à redessiner) ; rendering.md §11.3	fonction
 00451c70	build_cursor_preview	interface	documenté	aperçu du curseur de construction ; docs/engine/terrain.md §5	fonction
 004542b0	map_number_draw	interface	documenté	nombre posé sur la carte, ombre puis couleur ; 463 appels (un par image de ville)	fonction
 00457900	ground_tile_draw	rendu	nommé	sol d'une case ; natif partiel : chemin rapide dans native_draw.cpp (plat, en pente, drapeaux 0x4020)	fonction
@@ -146,6 +151,7 @@ adresse	nom	module	statut	preuve	type
 004d2c60	route_tile_check	marcheurs	nommé	lit la grille de trajets 0x0105FE40, le terrain et la grille des bâtiments autour d'une case ; hypothèse ; simulation.md §5	fonction
 004d3d28	map_tiles_set_cracks	terrain	nommé	pose le bit de terrain 2 et choisit l'image dans SPR_CRACKS (table 0x006D1220)	fonction
 004d6c90	figure_wander	marcheurs	nommé	personnages (8 champs cités) et tirages : appelée par les bâtiments et les personnages ; hypothèse ; simulation.md §5	fonction
+004d7210	figure_on_water	marcheurs	nommé	vrai pour les types 0x14, 0x19, 0x23, 0x2C, 0x39, 0x3F, 0x40, et sous condition 6, 0x43 à 0x45 (sur l'eau : hypothèse) ; rendering.md §11.3	fonction
 004d9cc1	terrain_context_fill	terrain	nommé	remplit les 8 voisins avec (terrain & masque) != 0	fonction
 004d9fd0	figure_create	marcheurs	nommé	crée un personnage (premier numéro libre, figures_created recopié à +0x86) ; formats/sav.md rangs 28 et 63	fonction
 004dc860	figure_tile_list	marcheurs	nommé	parcourt les personnages d'une case, chaînés par +0x08 depuis la grille 0x00D0D878 ; formats/sav.md rang 19	fonction

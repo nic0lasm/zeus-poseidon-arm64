@@ -525,13 +525,61 @@ at the start of a cell (mostly bases of 2 to 6 tiles and `0x00546530`), 52,802 t
 counters (sanctuaries and monuments, `0x0053E5F0`), 8,123 after the object (animations) and
 20,645 at the walkers.
 
-### 11.3 Third pass
+### 11.3 One walker, `0x0044FEF0`
+
+`0x0044FEF0(walker, x, y, wanted, layers)` (cdecl). Record fields are given relative to the
+record of walker 0 (`0x00DBD788` + n × `0x184`); all **verified** by the listing and by
+`zeus-run --verify 0x0044FEF0` (section 13).
+
+1. **Layer.** Nothing happens unless `layers` has bit 1 (byte `0x00DBD7A5` of the record is 0)
+   or bit 2 (it is not). In `working-city`, 13,711 of the 27,178 calls go on (`--count 0x0044FF29`).
+2. **Offset in the tile** (`0x0044FF29`–`0x00450069`). Start at (2, 10). For types 1, `0x0B`–`0x0D`,
+   `0x28`–`0x2A`, `0x37` and `0x3B`, y gains −5 or 7 when bit 6 of the terrain of the tile at
+   `0x00DBD8A4` matches byte `0x00DBD7C9`, otherwise an entry of a 16-value table indexed by the
+   step `0x00DBD7C1` (reversed when the bit is set); *hypothesis*: boats and their crews at a
+   quay. Types `0x3A`
+   and 6 (kinds `0x12`, `0x0D`) ask the C++ object of their building (`0x00534A70`). A tile with
+   terrain bit `0x20000` lowers the sprite by 8 (byte `0x00C1C648` = 0) or 4 (= 100).
+3. **Direction in the view**, written to `0x00FA05E4`: direction `0x00DBD799` (or `0x00DBD79A`
+   when ≥ 8, or 0) minus the view orientation, modulo 8. If `0x00B1E8C4` = 1 the function stops
+   here.
+4. **Position.** With byte `0x00DBD794` = 0 the walker is placed by its view direction and step
+   (tables `0x005F0658` for x, `0x005F06D8` for y, 16 steps per direction) minus byte
+   `0x00DBD800`; otherwise by its fine position (`0x00DBD7D2`, `0x00DBD7D4`, each modulo 15) in
+   one of two 16 × 16 tables per axis (`0x005F0258`/`0x005F0358` for orientations 0 and 4, signs
+   reversed in 4; `0x005F0458`/`0x005F0558` for 2 and 6), minus byte `0x00DBD7A4`. Type `0x2D`
+   linked to a `0x2E` and type 6 have further corrections (`0x004501A1`, `0x0045021E`). Each
+   sprite is then placed by the anchor (+`0x22`, +`0x24`) of its image entry.
+5. **Wanted walker.** `wanted` = 0 draws; 9999 asks the view object (`0x0044FEA0`); any other value
+   draws only that walker and stores its position in `0x007D3B38` (y) and `0x007D3B3C` (x).
+6. **Sprites**, through the dispatcher, with mode 1 (tint) when the colour `0x00DBD8F0` is not 0.
+   Body `0x00DBD78C`; second sprite `0x00DBD908` at the offset (`0x00DBD7F4`, `0x00DBD7F5`);
+   third `0x00DBD8D8`. Without a second sprite: the body (type 6 mirrored by bit 6 of
+   `0x00DBD8F6`, or kind `0x0E` by the orientation); type `0x39` adds the third. With one, by
+   type: 4, `0x24`, 9, `0x1C` draw the second sprite first unless the view direction is 3 (or out
+   of 0–7), `0x43` always after, `0x45` always before; 1, 2, `0x0D`, `0x2A` place it from the
+   body, before when its y offset is negative; `0x2D`, `0x34`, `0x36` draw it 10 pixels lower,
+   first; `0x39` draws body, second, third; `0x0E` (Poseidon's animals) and `0x22` (the trader's
+   text, `0x00508F00`) have their own code; every other type draws only the body.
+7. **Water.** Without a second sprite, a walker on water (`0x004D7210`) calls `0x0041D3D0` on its
+   tile and seven neighbours (offsets `0x005D9188`); then, for every type but 6, `0x0041D3D0` on
+   its tile. `0x0041D3D0` does nothing outside a Poseidon game (`0x004200F0`) or on a tile
+   without water life (terrain `0x44`, byte `0x00CB4B08`).
+8. **Tiles to draw again.** For 4 neighbours (9 for types 1, 4, `0x0D`, `0x1C`, `0x2A`,
+   `0x43`–`0x45`; tables `0x005F8B88` and `0x005F8BD0` by row parity) higher than the walker's
+   tile, bit `0x40000000` of the terrain is set, unless the neighbour holds a building of type 2,
+   9, `0x7B`, `0x86`, or its ground image is one the loop skips (`0x0160C260`); sanctuaries and
+   monuments ask their C++ object (`0x00546530`). Lower or level neighbours among the first four
+   lose the bit, for the nine-neighbour types. The third pass draws these tiles again over the
+   walker (*hypothesis* on the purpose).
+
+### 11.4 Third pass
 
 For anchor tiles with flag `0x08` and a building, in modes other than `0x10`, the view object
 (methods `+0x0C`, `+0x20`, `+0x00`) draws once more over everything. **verified** (control
 flow); what it draws is a **hypothesis** (the mode overlays above buildings).
 
-### 11.4 After the passes
+### 11.5 After the passes
 
 `0x0044AD70` (tiles again: construction preview or selection, *hypothesis*), `0x00451820`,
 `0x004517F0`, `0x00454420` (`0x0091EA6C` per tile: *hypothesis*, labels and flying effects), once

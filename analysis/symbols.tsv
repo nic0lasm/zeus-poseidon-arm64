@@ -152,8 +152,8 @@ adresse	taille	nom	module	statut	preuve	type
 004104b0	23	FUN_004104b0	économie	inconnu	hypothèse : tour de simulation, atteinte seulement depuis 00486190 (économie)	fonction
 004104d0	293	FUN_004104d0	inconnu	inconnu	aucun indice	fonction
 00410600	104	FUN_00410600	économie	inconnu	hypothèse : tour de simulation, atteinte seulement depuis 00486190 (économie)	fonction
-00411860	14	FUN_00411860	inconnu	inconnu	aucun indice	fonction
-00411870	36	FUN_00411870	inconnu	inconnu	aucun indice	fonction
+00411860	14	view_mirror_parity	rendu	nommé	(orientation de la vue / 2) & 1 ; sprite retourné des animaux de sorte 0x0E ; rendering.md §11.3	fonction
+00411870	36	tile_turn_offset	rendu	nommé	ajoute à une case le décalage 0x005D855C de l'orientation, sauf sortes 0x12 et 0x0D ; rendering.md §11.3	fonction
 004118a0	51	FUN_004118a0	inconnu	inconnu	aucun indice	fonction
 004118e0	57	FUN_004118e0	inconnu	inconnu	aucun indice	fonction
 00411920	696	FUN_00411920	inconnu	inconnu	aucun indice	fonction
@@ -276,7 +276,7 @@ adresse	taille	nom	module	statut	preuve	type
 0041c8e0	1925	FUN_0041c8e0	inconnu	inconnu	aucun indice	fonction
 0041d150	399	FUN_0041d150	rendu	inconnu	hypothèse : appelants/appelés (poids 5 sur 5 en rendu)	fonction
 0041d330	100	FUN_0041d330	inconnu	inconnu	aucun indice	fonction
-0041d3d0	847	FUN_0041d3d0	rendu	inconnu	hypothèse : appelants/appelés (poids 5 sur 5 en rendu)	fonction
+0041d3d0	847	water_life_draw	rendu	nommé	animal ou bateau sur l'eau d'une case (hypothèse) ; natif partiel : chemin rapide dans native_walkers.cpp (rien à dessiner) ; rendering.md §11.3	fonction
 0041d720	391	FUN_0041d720	inconnu	inconnu	aucun indice	fonction
 0041d8b0	93	FUN_0041d8b0	inconnu	inconnu	aucun indice	fonction
 0041d910	264	FUN_0041d910	inconnu	inconnu	aucun indice	fonction
@@ -317,7 +317,7 @@ adresse	taille	nom	module	statut	preuve	type
 0041ffa0	63	FUN_0041ffa0	inconnu	inconnu	aucun indice	fonction
 0041ffe0	63	FUN_0041ffe0	inconnu	inconnu	aucun indice	fonction
 00420020	196	fullscreen_background_a	interface	documenté	fond plein écran centré (menus)	fonction
-004200f0	35	FUN_004200f0	inconnu	inconnu	aucun indice	fonction
+004200f0	35	poseidon_game	scénario	nommé	vrai si 0x006AA4E0 et 0x00902BB0 valent 1 (partie de Poséidon : hypothèse) ; rendering.md §11.3	fonction
 00420120	258	FUN_00420120	texte	inconnu	chaîne (fichiers de texte)	fonction
 00420240	214	FUN_00420240	inconnu	inconnu	aucun indice	fonction
 00420320	41	FUN_00420320	inconnu	inconnu	aucun indice	fonction
@@ -756,7 +756,7 @@ adresse	taille	nom	module	statut	preuve	type
 0044f1a0	378	FUN_0044f1a0	rendu	inconnu	hypothèse : appelants/appelés (poids 4 sur 4 en rendu)	fonction
 0044f320	2588	building_extra_draw	rendu	documenté	dessin d'appoint d'un bâtiment selon son type (21 types) ; rendering.md §11.2	fonction
 0044fea0	70	FUN_0044fea0	inconnu	inconnu	aucun indice	fonction
-0044fef0	5977	FUN_0044fef0	rendu	inconnu	hypothèse : appelants/appelés (poids 4 sur 5 en rendu)	fonction
+0044fef0	5977	walker_draw	rendu	documenté	natif partiel : chemin rapide dans native_walkers.cpp ; un personnage (plan, position, sprites, cases à redessiner) ; rendering.md §11.3	fonction
 00451790	91	FUN_00451790	inconnu	inconnu	aucun indice	fonction
 004517f0	36	FUN_004517f0	inconnu	inconnu	aucun indice	fonction
 00451820	519	FUN_00451820	inconnu	inconnu	aucun indice	fonction
@@ -1701,7 +1701,7 @@ adresse	taille	nom	module	statut	preuve	type
 004d69b0	730	FUN_004d69b0	marcheurs	inconnu	hypothèse : tour de simulation, atteinte seulement depuis 004cc8c0 (marcheurs)	fonction
 004d6c90	1137	figure_wander	marcheurs	nommé	personnages (8 champs cités) et tirages : appelée par les bâtiments et les personnages ; hypothèse ; simulation.md §5	fonction
 004d7110	254	FUN_004d7110	marcheurs	inconnu	hypothèse : tour de simulation, atteinte seulement depuis 004cc8c0 (marcheurs)	fonction
-004d7210	161	FUN_004d7210	rendu	inconnu	hypothèse : appelants/appelés (poids 4 sur 4 en rendu)	fonction
+004d7210	161	figure_on_water	marcheurs	nommé	vrai pour les types 0x14, 0x19, 0x23, 0x2C, 0x39, 0x3F, 0x40, et sous condition 6, 0x43 à 0x45 (sur l'eau : hypothèse) ; rendering.md §11.3	fonction
 004d7340	576	FUN_004d7340	inconnu	inconnu	aucun indice	fonction
 004d7580	1415	FUN_004d7580	inconnu	inconnu	aucun indice	fonction
 004d7bd0	236	FUN_004d7bd0	marcheurs	inconnu	hypothèse : tour de simulation, atteinte seulement depuis 004cc8c0 (marcheurs)	fonction

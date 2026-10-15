@@ -488,8 +488,9 @@ void put16(Cpu& cpu, uint32_t address, int16_t value) { std::memcpy(cpu.host(add
 void put32(Cpu& cpu, uint32_t address, int32_t value) { std::memcpy(cpu.host(address), &value, 4); }
 int16_t s16(Cpu& cpu, uint32_t address) { return static_cast<int16_t>(u16(cpu, address)); }
 
+// `check_only` : s'arrête avant la première écriture, pour savoir si le cas est traité.
 std::optional<uint32_t> dispatch(Cpu& cpu, uint32_t self, int32_t id, int32_t x, int32_t y, int32_t mode,
-                                 uint8_t mirror_arg) {
+                                 uint8_t mirror_arg, bool check_only = false) {
     // Identifiant : banque * 16384 + numéro, en divisions entières signées comme l'original.
     const int32_t bank = id / 16384, number = id % 16384;
     if (number < 1 && bank == 0) return std::nullopt;
@@ -567,6 +568,7 @@ std::optional<uint32_t> dispatch(Cpu& cpu, uint32_t self, int32_t id, int32_t x,
         if (uncompressed) source += static_cast<uint32_t>((width16 * skipped + skip_left) * 2);
     }
 
+    if (check_only) return 0u;
     put32(cpu, kSpriteX, x);
     put32(cpu, kSpriteY, y);
     put32(cpu, kSpriteId, id);
@@ -751,6 +753,10 @@ std::optional<uint32_t> draw_sprite(Cpu& cpu, uint32_t self, int32_t id, int32_t
     return sprite::dispatch(cpu, self, id, x, y, mode, mirror);
 }
 
+bool sprite_handled(Cpu& cpu, uint32_t self, int32_t id, int32_t x, int32_t y, int32_t mode, uint8_t mirror) {
+    return sprite::dispatch(cpu, self, id, x, y, mode, mirror, true).has_value();
+}
+
 std::optional<uint32_t> draw_building_top(Cpu& cpu, uint32_t self, int32_t id, int32_t x, int32_t y) {
     return sprite::building_top(cpu, self, id, x, y);
 }
@@ -778,6 +784,7 @@ void install_native_functions(Process& p) {
         ++installed;
     }
     installed += install_native_drawing(p);
+    installed += install_native_walkers(p);
     if (p.trace) std::fprintf(stderr, "[hôte] %d fonctions du jeu remplacées par des fonctions natives\n", installed);
 }
 

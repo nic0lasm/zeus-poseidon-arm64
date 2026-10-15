@@ -207,6 +207,10 @@ constexpr Known kKnown[] = {
     {kGroundTile, 0, kEax | kEcx | kEdx, 16},
     // native.cpp, search_key : EAX, ECX et les indicateurs sont réécrits avant d'être relus.
     {kKeySearch, kKeySearchEnd, kEax | kEcx, 0},
+    // void FUN_0044fef0(personnage, x, y, cherché, plans) : l'original se sert des cinq cases
+    // d'arguments comme de variables (0x0044FF4D, 0x004504C9, 0x00450528, 0x00451247…).
+    {kWalker, 0, kEax | kEcx | kEdx, 20},
+    {kWaterLife, 0, kEcx | kEdx | kEax, 0},  // void FUN_0041d3d0 (thiscall, dépile ses arguments)
 };
 
 struct Range {
