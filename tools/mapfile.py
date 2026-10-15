@@ -6,6 +6,8 @@ Usage :
     mapfile.py check DOSSIER             lit tous les .map/.sav/.pak/.set trouvés sous DOSSIER
     mapfile.py dump  FICHIER DEST        écrit chaque bloc décompressé (DEST vide, dans le projet)
     mapfile.py grids FICHIER DEST        exporte en PNG les blocs qui ont la taille d'une grille
+    mapfile.py rewrite CHEMIN...         relit chaque .map (fichiers ou dossiers), le réécrit et
+                                         compare à l'original, octet par octet
 """
 import os
 import struct
@@ -107,7 +109,7 @@ def explode(data, expected=None):
 
 class Chunk:
     __slots__ = ("index", "compressed", "address", "element_size", "count", "extra", "offset",
-                 "stored_size", "data")
+                 "stored_size", "stored", "data")
 
     @property
     def size(self):
@@ -145,6 +147,7 @@ class MapFile:
         pos = start
         for c in self.chunks:
             c.offset = pos
+            c.stored = ("raw", "implode")[c.compressed] if c.compressed in (0, 1) else None
             if c.compressed == 0:
                 c.data = d[pos:pos + c.size]
                 c.stored_size = c.size
@@ -153,6 +156,11 @@ class MapFile:
                 if length == 0x80000000:  # bloc marqué compressible mais stocké tel quel
                     c.data = d[pos + 4:pos + 4 + c.size]
                     c.stored_size = 4 + c.size
+                    c.stored = "raw80"
+                elif length == 0:  # le jeu remplit alors le bloc de zéros
+                    c.data = bytes(c.size)
+                    c.stored_size = 4
+                    c.stored = "empty"
                 else:
                     if pos + 4 + length > len(d):
                         raise FormatError(f"bloc {c.index} : longueur {length} hors fichier")
@@ -165,6 +173,25 @@ class MapFile:
             pos += c.stored_size
         self.end = pos
         self.file_size = len(d)
+
+    def to_bytes(self, packer=None):
+        """Réécrit le conteneur, de son début au dernier bloc. La compression est celle de
+        savefile.py ; une seule structure de travail sert pour tout le conteneur, comme dans le jeu
+        (`packer` permet de la partager avec ce qui précède dans le même fichier)."""
+        import savefile  # importe ce module : import tardif pour éviter le cycle
+        packer = packer or savefile.Implode()
+        out = bytearray()
+        for c in self.chunks:
+            if c.stored == "raw":
+                out += c.data
+            elif c.stored == "raw80":
+                out += struct.pack("<I", 0x80000000) + c.data
+            elif c.stored == "empty":
+                out += struct.pack("<I", 0)
+            else:
+                stream = packer.compress(c.data)
+                out += struct.pack("<I", len(stream)) + stream
+        return bytes(out)
 
     def by_address(self, address):
         for c in self.chunks:
@@ -283,6 +310,43 @@ def cmd_grids(path, dest):
     print(f"{count} grilles de {side}x{side} écrites dans {dest}")
 
 
+def _rewrite_one(path):
+    with open(path, "rb") as fh:
+        original = fh.read()
+    try:
+        mf = MapFile(path)
+    except (FormatError, struct.error) as e:
+        return path, f"{type(e).__name__} : {e}"
+    rewritten = mf.to_bytes() + original[mf.end:]
+    if rewritten == original:
+        return path, None
+    n = next((i for i in range(min(len(original), len(rewritten))) if original[i] != rewritten[i]),
+             min(len(original), len(rewritten)))
+    return path, f"premier écart à l'octet {n}"
+
+
+def cmd_rewrite(paths):
+    import multiprocessing
+    import time
+    files = []
+    for p in paths:
+        if os.path.isdir(p):
+            for folder, _, names in os.walk(p):
+                files += [os.path.join(folder, n) for n in names if n.lower().endswith(".map")]
+        else:
+            files.append(p)
+    files.sort()
+    start = time.time()
+    with multiprocessing.Pool() as pool:
+        results = pool.map(_rewrite_one, files)
+    failed = [r for r in results if r[1]]
+    for path, problem in failed:
+        print(f"  ÉCHEC {path} : {problem}")
+    print(f"{len(files)} cartes : {len(files) - len(failed)} réécrites à l'octet près, "
+          f"{len(failed)} en échec ({time.time() - start:.0f} s)")
+    sys.exit(1 if failed else 0)
+
+
 def main(argv):
     if len(argv) == 3 and argv[1] == "info":
         cmd_info(argv[2])
@@ -292,6 +356,8 @@ def main(argv):
         cmd_dump(argv[2], argv[3])
     elif len(argv) == 4 and argv[1] == "grids":
         cmd_grids(argv[2], argv[3])
+    elif len(argv) >= 3 and argv[1] == "rewrite":
+        cmd_rewrite(argv[2:])
     else:
         sys.exit(__doc__)
 

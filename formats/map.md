@@ -1,7 +1,11 @@
 # `.map` et `.sav` — cartes et sauvegardes
 
 Lecteurs : `tools/mapfile.py` (cartes et sauvegardes), `src/formats/mapfile.cpp` (cartes).
-Tout est little-endian.
+Tout est little-endian. Les sauvegardes ont leur propre fiche ([`sav.md`](sav.md)).
+
+`python3 tools/mapfile.py rewrite original` relit les 57 cartes des installations (20 distinctes,
+versions 247, 318, 319 et 321) et les réécrit à l'octet près, compression comprise (vérifié le
+2026-10-15).
 
 État au 2026-10-13, sur `original/install` : **16 `.map` et 16 `.sav` lus en entier**, jusqu'au
 dernier octet. Empreinte des blocs décompressés identique entre Python et C++ sur les 16 cartes.
@@ -18,7 +22,7 @@ table, elle-même enregistrée comme un bloc, décrit chaque bloc en 20 octets :
 | 4 | u32 | adresse de la variable dans l'exécutable qui a écrit le fichier | vérifié |
 | 8 | u32 | taille d'un élément | vérifié |
 | 12 | u32 | nombre d'éléments | vérifié |
-| 16 | u32 | ? (non nul pour 2 blocs, ressemble à une adresse) | inconnu |
+| 16 | u32 | adresse d'une liste de convertisseurs de version, dans l'exécutable qui a écrit le fichier ; lue seulement dans la table statique de l'exécutable qui lit (`0x0050CB80`) | vérifié |
 
 Ordre des blocs au début du fichier :
 
@@ -30,8 +34,26 @@ Ordre des blocs au début du fichier :
 | bloc 3 | bloc 2 | la table : 300 entrées de 20 octets |
 
 Un bloc brut occupe `taille × nombre` octets. Un bloc compressé commence par un `u32` : la
-longueur du flux qui suit, ou `0x80000000` si le bloc est finalement stocké brut. Le flux est du
-**PKWARE DCL « implode »** en mode binaire (en-tête `00 06`), décodé par `explode()`.
+longueur du flux qui suit, ou `0x80000000` si le bloc est finalement stocké brut (0 : bloc rempli
+de zéros à la lecture). Le flux est du **PKWARE DCL « implode »** en mode binaire (en-tête
+`00 06`), décodé par `explode()` ; la compression et le détail qui permet de retrouver les
+octets du jeu sont décrits dans [`sav.md`](sav.md#compression).
+
+## Routines (exécutable GOG)
+
+| Adresse | Rôle | Statut |
+|---|---|---|
+| `0x005118C0` | écriture d'une carte depuis l'éditeur : version 321, 33 blocs de la table `0x0063CDC0`, mêmes écritures brutes ou compressées que les sauvegardes | vérifié |
+| `0x0050DF50` | lecture : bloc 0 (`MAPS`) comparé à la chaîne `0x0063CDB4`, puis blocs 1 à 32 par `0x0050CB80` avec la table `0x0063CDC0`, ou `0x0063D058` / `0x0063D2F0` selon l'octet `0x00F2A6D9` (`&` ou `(`) | vérifié |
+| `0x00512510` | au démarrage, remplit les emplacements réservés des quatre tables (`0x0050D130`) | vérifié |
+
+Dans l'exécutable GOG, les blocs 0 à 17 de la table `0x0063CDC0` sont : `MAPS` (`0x0063CDAC`),
+version, nombre de blocs, table, puis `0x00D4CFC8` (u32), `0x00D404B8`, `0x00CCE128` (u32),
+`0x00D00D68`, `0x00CA7FF8`, `0x00C8E9D8`, quatre entiers (`0x00F137E4`, `0x00F137E0`,
+`0x00DA2F64`, `0x00DA2F68`), `0x00902928` (2 032 octets), `0x00C35C68`, `0x009173F0`
+(18 628 octets) et `0x008FEBE8` (200 × 72). Ce sont les variables des rangs 15, 17, 20, 22, 24,
+42 à 45, 9, 99, 13–14 et 10 des sauvegardes, plus la grille d'images `0x00D4CFC8`, absente des
+sauvegardes. Les entrées 18 à 32 sont nulles dans l'exécutable sur disque et remplies à l'exécution (endroit non localisé).
 
 Les adresses changent selon la version de l'exécutable qui a enregistré le fichier (8 jeux
 d'adresses pour 16 cartes), mais **l'ordre et la forme des blocs sont identiques dans toutes
