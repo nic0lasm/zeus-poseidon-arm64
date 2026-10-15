@@ -197,8 +197,6 @@ def main(argv):
     if "--only" in argv:
         only = argv[argv.index("--only") + 1].split(",")
         paths = [p for p in paths if os.path.splitext(os.path.basename(p))[0] in only]
-    # Les dossiers d'écriture se choisissent avant le lancement : deux scénarios ont des noms
-    # distincts, donc des dossiers distincts.
     def task(p):
         if shared:
             recorded = record_shared(p, out, exe, shared, record)
@@ -208,6 +206,8 @@ def main(argv):
                 print(recorded[0], flush=True)
         return play(p, out, exe, extra, record, reference_paths(p, out, shared))
 
+    # Les dossiers d'écriture se choisissent avant le lancement : deux scénarios ont des noms
+    # distincts, donc des dossiers distincts.
     with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as pool:
         futures = [pool.submit(task, p) for p in paths]
         failures = 0
