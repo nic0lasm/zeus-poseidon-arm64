@@ -1,0 +1,23 @@
+name: bench
+
+# Préparation du banc sur une machine Linux neuve (tools/bench_setup.py) : paquets, Unicorn 2.1
+# construit depuis ses sources, construction et autotest. Sans les fichiers du jeu, les
+# scénarios eux-mêmes ne sont pas joués ici.
+on:
+  push:
+    branches: [main]
+    paths: [tools/bench_setup.py, CMakeLists.txt, .github/workflows/bench.yml]
+  pull_request:
+    paths: [tools/bench_setup.py, CMakeLists.txt, .github/workflows/bench.yml]
+
+jobs:
+  linux-fresh-machine:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - name: Bench setup
+        run: python3 tools/bench_setup.py --apt
+      - name: Unicorn version
+        run: grep -q '^UNICORN_VERSION:INTERNAL=2\.1\.' build/CMakeCache.txt
+      - name: Emulator benchmark
+        run: ./build/zeus-run --bench
