@@ -198,10 +198,12 @@ Clipping state `cx` (`0x00F13991`): 0 whole, 1 clipped on the left, 2 on the rig
 the source pointer is advanced first by `(width × skipped rows + skipped columns) × 2` bytes.
 Type 30 ignores the mirror. **verified** (`0x005ACF50`, every branch read in the decompilation).
 
-The native fast path (`sprite::dispatch`) handles: compressed, not mirrored, `mode ≠ 1`, no
-alpha, no overlay → `0x004161B0`, or `0x004163B0` / `0x004165D0` when clipped on the left / right
-(since the building-top rewrite); uncompressed opaque whole images →
-`0x00413DC0`; 58-pixel diamonds not clipped sideways → `0x00435070`. With it, 7,938,575 of the
+The native fast path (`sprite::dispatch`) handles, with no overlay: compressed type 0, `mode ≠ 1`,
+no alpha → `0x004161B0`, `0x004163B0`, `0x004165D0`, or mirrored `0x00415490`, `0x004158E0`,
+`0x00415680`; uncompressed type 0 not mirrored → `0x00415F50` or `0x00416010`; other types
+(not 12, 20, nor 2, 10, 13 clipped sideways), not mirrored → `0x00413DC0`, `0x00415F50` or
+`0x00416010`, the source advanced as above; 58-pixel diamonds → `0x00435070`, `0x004377B0` or
+`0x00438A90`. Measured before the last three extensions: With it, 7,938,575 of the
 8,215,286 calls stay in native code from entry to exit except 276,711 that fall back; the clip
 functions still run 493,617 times in emulated code (fallbacks and `0x005ADF00`). **verified**
 (two runs above).
@@ -261,8 +263,10 @@ instruction by instruction, where marked *structure*.
   *verified, native.*
 - **Keyed copy** `0x00415F50` (whole width), `0x00416010` (clipped): `0xF81F` in the source is
   not written. The loops of `0x00416010` run at least once even for a count ≤ 0. *verified,
-  native for `0x00416010`.* Mirrored versions `0x00415E30`/`0x00415EC0` write each row from right
-  to left. *verified*
+  native for `0x00416010`.* `0x00415F50` has no source stride (whole rows) and copies
+  max(width, 1) pixels per row when the width is not a multiple of 4, max(width, 4) when it is
+  (four pixels unrolled, then one by one), at least one row. *verified (listing), native.*
+  Mirrored versions `0x00415E30`/`0x00415EC0` write each row from right to left. *verified*
 - **Run-length images** `0x004161B0(src, shadow)`: first skip the hidden rows (`0x004170B0`,
   counting the image width per row: `0xFF n` = n transparent pixels, `c` = c pixels follow;
   only the low byte of `EAX` is reloaded for each segment and `EAX` is cleared only at the start
@@ -278,8 +282,13 @@ instruction by instruction, where marked *structure*.
   right, `0x004165D0`: only the first `[0x00F139A4]` pixels of a row are written, but every run
   is read to its end and the row stops at the first run that reaches the width; a data run of
   0 pixels only advances one byte. Both write their argument slots (the last run byte, a row
-  counter), which their callers never read back. *verified (listing), native.* Mirrored
-  versions `0x00415490`, `0x004158E0`, `0x00415680`. *structure*
+  counter), which their callers never read back. *verified (listing), native.* Mirrored,
+  each row written from right to left from the right edge of the image: `0x00415490` (whole
+  width) stops a row like `0x004161B0`, and starts the next one from where the pointer ended,
+  `+ [0x00F1399C] + 2 × width + 2`, which is the next row only if the row consumed exactly the
+  width; `0x004158E0` (clipped on the left) writes the first `width − [0x00F139A0] / 2` pixels
+  it meets, `0x00415680` (on the right) skips the first `width − [0x00F139A4]`; both read every
+  run to its end. *verified (listing), native.*
 - **Blended images** `0x00413E30(src, alpha)`: a second run stream with one byte (0–31) per
   pixel, parallel to the first (`0x00417040` skips hidden rows in both). Per 5-bit component:
   `(a × src + (31 − a) × dst) >> 5`; `a = 0` leaves the pixel. *verified, native* (555 only).
@@ -288,7 +297,14 @@ instruction by instruction, where marked *structure*.
 - **Ground diamond** `0x00435070(src, cy)`: 15 rows widening by 4 pixels (2, 6, …, 58),
   centred, then 15 rows narrowing; stored back to back (450 words). Clipped at the top (state
   3) only the lower half is drawn; at the bottom (4) only the upper half. *verified, native
-  (`draw_ground`).* Sideways clipped versions `0x004377B0`, `0x00438A90` (2.2 kB each).
+  (`draw_ground`).* Sideways clipped versions `0x004377B0`, `0x00438A90` (2.2 kB each, 210
+  copies written one by one): they do not clip to the pixel but draw a fixed half, columns 30–57
+  written from the target x (as if exactly 30 pixels were hidden) on the left, columns 0–27 in
+  place on the right; with an overlay they call `0x00438050` / `0x00439340`. Two copies of the
+  left one break the rule: on row 15 columns 38–39 receive pixels 36–37 (`+0x3CC` read twice,
+  `0x00437C48`), on row 25 column 37 receives pixel 35 (the high half of `EAX` left over after
+  `MOV AX`, `0x00437FFE`). *verified (listing, each copy checked by a script against the rule),
+  native.*
 - **Isometric bases** of n × n tiles (`0x0043FF10` for n = 2 … `0x00441E50` for n = 6): the base
   is drawn as separate 58×30 diamonds, each clipped and drawn by the three diamond routines,
   1,800 bytes (`0x708`) apart in the data, plus the value at `0x00F29F74` (role not established).
@@ -542,9 +558,9 @@ steps before it, and the most frequent come first within a step. Counts: origina
 | # | Function | Role | Calls (run) | Per city frame | Now |
 |---|---|---|---|---|---|
 | 1 | `0x004163B0`, `0x004165D0` | run-length image clipped left / right | 5,563 / 5,703 | 12 / 12 | **native** |
-| 2 | `0x00415F50` | keyed copy, whole width | 95,842 | — (menus too) | original |
-| 3 | `0x004377B0`, `0x00438A90` | ground diamond clipped left / right | 8,682 / 8,691 | 19 / 19 | original |
-| 4 | `0x00415490`, `0x004158E0`, `0x00415680` | mirrored run-length images | 1,020 / 57 / 2 | 2 / 0.1 / 0 | original |
+| 2 | `0x00415F50` | keyed copy, whole width | 95,842 | — (menus too) | **native** |
+| 3 | `0x004377B0`, `0x00438A90` | ground diamond clipped left / right | 8,682 / 8,691 | 19 / 19 | **native** (overlay: original) |
+| 4 | `0x00415490`, `0x004158E0`, `0x00415680` | mirrored run-length images | 1,020 / 57 / 2 | 2 / 0.1 / 0 | **native** |
 | 5 | `0x00416C30`, `0x00416F00`, `0x00416FA0` | glyph masks | 934 / 0 / 0 | — | original |
 | 6 | overlay `0x00416070`, `0x00416140`, `0x00416820`, `0x00416AF0`, `0x00416B90`, `0x00415B80`, `0x00415C40`, `0x00415D30` | `dst &= colour` | 0 | 0 | original |
 | 7 | alpha variants `0x00414CE0`, `0x00414540`, `0x00414190`, `0x004150B0`, `0x00414910`; tint `0x005B86A0`, `0x005B8910`, `0x005B8B60`; squares `0x00417290`, `0x004171E0`, `0x00417140`, `0x00417100`; mirrored keyed `0x00415E30`, `0x00415EC0` | rare cases | 0 | 0 | original |
@@ -563,8 +579,9 @@ steps before it, and the most frequent come first within a step. Counts: origina
 | 20 | `0x0050A860`, `0x0050A000`, `0x00509F90`, `0x005AE770`, `0x005AE730` | external images and backdrops | 0 | 0 | original |
 
 Already native: `0x00413DC0` (5,319,977 calls), `0x004161B0` (2,384,169), `0x004163B0` and
-`0x004165D0` (5,563 and 5,703), `0x00416010` (467), `0x00413E30` (4,317), `0x0050B410` (1,459),
-`0x00435070` (163,764), the clip functions (8,562,614 each) inside the dispatcher and the
+`0x004165D0` (5,563 and 5,703), `0x00415490`, `0x004158E0`, `0x00415680`, `0x00415F50`
+(95,842), `0x00416010` (467), `0x00413E30` (4,317), `0x0050B410` (1,459), `0x00435070` (163,764),
+`0x004377B0` and `0x00438A90` (8,682 and 8,691), the clip functions (8,562,614 each) inside the dispatcher and the
 building tops, `0x005ADF00` except with an overlay, and the first pass of `0x00458170`.
 
 Outside this page but heavy in the same profile: the text routines (`0x004F57A0`, 2.2 million

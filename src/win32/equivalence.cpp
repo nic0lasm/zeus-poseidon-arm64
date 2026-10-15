@@ -191,6 +191,12 @@ constexpr Known kKnown[] = {
     {kDrawRuns, 0, kEax | kEcx | kEdx, 8},            // void FUN_004161b0(image, ombre)
     {kDrawRunsLeft, 0, kEax | kEcx | kEdx, 8},        // void FUN_004163b0(image, ombre)
     {kDrawRunsRight, 0, kEax | kEcx | kEdx, 8},       // void FUN_004165d0(image, ombre)
+    {kDrawRunsMirrored, 0, kEax | kEcx | kEdx, 8},    // void FUN_00415490(image, ombre)
+    {kDrawRunsMirroredLeft, 0, kEax | kEcx | kEdx, 8},   // void FUN_004158e0(image, ombre)
+    {kDrawRunsMirroredRight, 0, kEax | kEcx | kEdx, 8},  // void FUN_00415680(image, ombre)
+    {kCopyRowsKeyed, 0, kEax | kEcx | kEdx, 4},       // void FUN_00415f50(source)
+    {kGroundLeft, 0, kEax | kEcx | kEdx, 8},          // void FUN_004377b0(image, rognage vertical)
+    {kGroundRight, 0, kEax | kEcx | kEdx, 8},         // void FUN_00438a90(image, rognage vertical)
     {kBuildingTop, 0, kEcx | kEdx, 0},                // thiscall, dépile ses arguments
     {kClearFrame, 0, kEax | kEcx | kEdx, 0},          // void FUN_0050b410(void)
     {kCityDraw, 0, kEax | kEcx | kEdx, 4},            // void FUN_00458170(mode)

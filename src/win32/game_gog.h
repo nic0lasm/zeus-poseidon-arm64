@@ -43,6 +43,12 @@ constexpr uint32_t kCopyRectangleKeyed = 0x00416010;  // FUN_00416010 : copie, m
 constexpr uint32_t kDrawRuns = 0x004161B0;            // FUN_004161b0 : image par suites (et ombre)
 constexpr uint32_t kDrawRunsLeft = 0x004163B0;        // FUN_004163b0 : la même, rognée à gauche
 constexpr uint32_t kDrawRunsRight = 0x004165D0;       // FUN_004165d0 : la même, rognée à droite
+constexpr uint32_t kDrawRunsMirrored = 0x00415490;      // FUN_00415490 : image par suites retournée
+constexpr uint32_t kDrawRunsMirroredLeft = 0x004158E0;  // FUN_004158e0 : la même, rognée à gauche
+constexpr uint32_t kDrawRunsMirroredRight = 0x00415680; // FUN_00415680 : la même, rognée à droite
+constexpr uint32_t kCopyRowsKeyed = 0x00415F50;         // FUN_00415f50 : copie à clé de lignes entières
+constexpr uint32_t kGroundLeft = 0x004377B0, kGroundLeftEnd = 0x00438050;    // FUN_004377b0 : losange rogné à gauche
+constexpr uint32_t kGroundRight = 0x00438A90, kGroundRightEnd = 0x00439340;  // FUN_00438a90 : losange rogné à droite
 constexpr uint32_t kClearFrame = 0x0050B410;          // FUN_0050b410 : efface le tampon d'affichage
 constexpr uint32_t kSpriteDispatch = 0x005ACF50;      // FUN_005acf50 : répartiteur de sprites
 constexpr uint32_t kBuildingTop = 0x005ADF00;         // FUN_005adf00 : partie haute d'un bâtiment
@@ -80,12 +86,13 @@ constexpr uint64_t kSlopedTopHash = 0x5D7835F06E0BE5EFull;
 // Petites fonctions réécrites dans la boucle, empreinte commune de leurs octets : FUN_0045daf0,
 // FUN_0040aa20, FUN_004200f0, FUN_00423180, FUN_005a7200 et sa table, FUN_004a9590 et sa table,
 // FUN_005344a0, FUN_0045dbb0, FUN_0045dc00, FUN_0045dc10, FUN_0045a5a0, débuts de FUN_00449b30
-// et de FUN_0041d3d0.
+// et de FUN_0041d3d0, FUN_004a9680.
 constexpr uint32_t kObjectHelpers[][2] = {
     {0x0045DAF0, 0x0045DB56}, {0x0040AA20, 0x0040AA64}, {0x004200F0, 0x00420113}, {0x00423180, 0x0042319E},
     {0x005A7200, 0x005A72D3}, {0x004A9590, 0x004A967B}, {0x005344A0, 0x005344BC}, {0x0045DBB0, 0x0045DBC6},
-    {0x0045DC00, 0x0045DC30}, {0x0045A5A0, 0x0045A63E}, {0x00449B30, 0x00449B48}, {0x0041D3D0, 0x0041D400}};
-constexpr uint64_t kObjectHelpersHash = 0x4A45E05F199A3046ull;
+    {0x0045DC00, 0x0045DC30}, {0x0045A5A0, 0x0045A63E}, {0x00449B30, 0x00449B48}, {0x0041D3D0, 0x0041D400},
+    {0x004A9680, 0x004A96A1}};
+constexpr uint64_t kObjectHelpersHash = 0x568E7297F13D31AEull;
 constexpr uint32_t kAlwaysFalse = 0x00565750;  // méthode +0x0C du mode de vue 0 : « XOR AL,AL ; RET 8 »
 constexpr uint32_t kViewModeZeroSetup = 0x0055E9B0;  // FUN_0055e9b0 : table de méthodes du mode 0
 

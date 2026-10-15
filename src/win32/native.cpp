@@ -87,8 +87,8 @@ uint32_t copy_rectangle(Cpu& cpu) {
 
 // FUN_00416010(source) : même copie, mais le magenta 0xF81F de la source est transparent.
 // Les boucles d'origine s'exécutent au moins une fois, même pour un compte nul ou négatif.
-uint32_t copy_rectangle_keyed(Cpu& cpu) {
-    const uint8_t* source = cpu.host(cpu.arg(0));
+void copy_rectangle_keyed_from(Cpu& cpu, uint32_t source_address) {
+    const uint8_t* source = cpu.host(source_address);
     uint8_t* out = target(cpu);
     const uint32_t source_skip = u32(cpu, kSourceSkip), target_skip = u32(cpu, kTargetSkip);
     const int32_t rows = std::max(i32(cpu, kRows), 1);
@@ -99,6 +99,10 @@ uint32_t copy_rectangle_keyed(Cpu& cpu) {
         source += source_skip;
         out += target_skip;
     }
+}
+
+uint32_t copy_rectangle_keyed(Cpu& cpu) {
+    copy_rectangle_keyed_from(cpu, cpu.arg(0));
     return 0u;
 }
 
@@ -253,6 +257,136 @@ void draw_runs_right_from(Cpu& cpu, uint32_t image, bool shadow) {
     }
 }
 
+// Images par suites retournées : chaque ligne est écrite de droite à gauche, à partir du bord
+// droit de l'image. Les écritures se font en adresses de 32 bits, comme l'original.
+void put_run_pixel_at(Cpu& cpu, uint32_t out, const uint8_t* source, bool shadow) {
+    put_run_pixel(cpu.host(out), source, shadow);
+}
+
+// FUN_00415490(image, ombre) : retournée, non rognée en largeur. La ligne suivante part de la
+// position atteinte : pointeur final + kTargetSkip + 2 x largeur + 2 (0x00415661), ce qui ne
+// revient au début de la ligne que si la ligne a consommé exactement la largeur de l'image.
+void draw_runs_mirrored_from(Cpu& cpu, uint32_t image, bool shadow) {
+    const uint8_t* p = cpu.host(skip_rows(cpu, image));
+    if (shadow) require_555(cpu);
+    const int32_t row_width = image_width(cpu) * 2;
+    uint32_t out = u32(cpu, kFrameBuffer) + u32(cpu, kRowBytes) * u32(cpu, kTargetY) + u32(cpu, kTargetX) * 2;
+    for (int32_t rows = i32(cpu, kRows); rows > 0; --rows) {
+        out += static_cast<uint32_t>(row_width - 2);
+        for (int32_t left = image_width(cpu); left > 0;) {
+            uint8_t count = *p++;
+            if (count == 0xFF) {
+                const int32_t n = *p++;
+                out -= static_cast<uint32_t>(n * 2);
+                left -= n;
+                continue;
+            }
+            for (; count != 0; --count, out -= 2, p += 2, --left) {
+                if (left == 0) break;  // fin de la ligne (0x00415646)
+                put_run_pixel_at(cpu, out, p, shadow);
+            }
+            if (left == 0) break;
+        }
+        out += u32(cpu, kTargetSkip) + static_cast<uint32_t>(row_width) + 2;
+    }
+}
+
+// FUN_004158e0(image, ombre) : retournée, rognée à gauche. Les kSourceSkip / 2 dernières colonnes
+// de l'image (les plus à gauche une fois retournées) ne sont pas écrites ; chaque segment est lu
+// jusqu'au bout. Les lignes se suivent de kRowBytes en kRowBytes.
+void draw_runs_mirrored_left_from(Cpu& cpu, uint32_t image, bool shadow) {
+    const uint8_t* p = cpu.host(skip_rows(cpu, image));
+    if (shadow) require_555(cpu);
+    const int32_t row_width = image_width(cpu) * 2;
+    uint32_t base = u32(cpu, kFrameBuffer) + u32(cpu, kRowBytes) * u32(cpu, kTargetY) + u32(cpu, kTargetX) * 2;
+    for (int32_t rows = i32(cpu, kRows); rows > 0; --rows, base += u32(cpu, kRowBytes)) {
+        int32_t left = image_width(cpu);
+        const int32_t skip = i32(cpu, kSourceSkip);
+        int32_t visible = left - (skip >> 1);
+        uint32_t out = base + static_cast<uint32_t>(row_width - skip) - 2;
+        while (left > 0) {
+            const uint8_t count = *p;
+            if (count == 0xFF) {
+                const int32_t n = p[1];
+                p += 2;
+                visible -= n;
+                left -= n;
+                out -= static_cast<uint32_t>(n * 2);
+                continue;
+            }
+            ++p;
+            left -= count;
+            for (uint8_t i = count; i != 0; --i, p += 2, out -= 2, --visible)
+                if (visible > 0) put_run_pixel_at(cpu, out, p, shadow);
+        }
+    }
+}
+
+// FUN_00415680(image, ombre) : retournée, rognée à droite. Les largeur - kColumns premières
+// colonnes de l'image (à droite une fois retournées) ne sont pas écrites ; chaque segment est lu
+// jusqu'au bout. Ligne suivante : pointeur final + kRowBytes + 2 (0x004158C7).
+void draw_runs_mirrored_right_from(Cpu& cpu, uint32_t image, bool shadow) {
+    const uint8_t* p = cpu.host(skip_rows(cpu, image));
+    if (shadow) require_555(cpu);
+    const int32_t row_width = image_width(cpu) * 2;
+    uint32_t out = u32(cpu, kFrameBuffer) + u32(cpu, kRowBytes) * u32(cpu, kTargetY) + u32(cpu, kTargetX) * 2;
+    for (int32_t rows = i32(cpu, kRows); rows > 0; --rows) {
+        int32_t left = image_width(cpu);
+        int32_t hidden = left - i32(cpu, kColumns);
+        out += static_cast<uint32_t>(row_width - 2);
+        while (left > 0) {
+            const uint8_t count = *p++;
+            if (count == 0xFF) {
+                const int32_t n = *p++;
+                left -= n;
+                hidden -= n;
+                out -= static_cast<uint32_t>(n * 2);
+                continue;
+            }
+            left -= count;
+            for (uint8_t i = count; i != 0; --i, p += 2, out -= 2, --hidden)
+                if (hidden <= 0) put_run_pixel_at(cpu, out, p, shadow);
+        }
+        out += u32(cpu, kRowBytes) + 2;
+    }
+}
+
+uint32_t draw_runs_mirrored(Cpu& cpu) {
+    draw_runs_mirrored_from(cpu, cpu.arg(0), (cpu.arg(1) & 0xFF) != 0);
+    return 0u;
+}
+
+uint32_t draw_runs_mirrored_left(Cpu& cpu) {
+    draw_runs_mirrored_left_from(cpu, cpu.arg(0), (cpu.arg(1) & 0xFF) != 0);
+    return 0u;
+}
+
+uint32_t draw_runs_mirrored_right(Cpu& cpu) {
+    draw_runs_mirrored_right_from(cpu, cpu.arg(0), (cpu.arg(1) & 0xFF) != 0);
+    return 0u;
+}
+
+// FUN_00415f50(source) : copie à clé (0xF81F transparent) de lignes entières, sans pas de source.
+// Chaque ligne copie max(largeur, 1) pixels si la largeur n'est pas multiple de 4, sinon
+// max(largeur, 4) (quatre pixels déroulés, puis un par un) ; au moins une ligne.
+void copy_rows_keyed_from(Cpu& cpu, uint32_t source) {
+    const uint8_t* in = cpu.host(source);
+    uint32_t out = u32(cpu, kFrameBuffer) + u32(cpu, kTargetX) * 2 + u32(cpu, kTargetY) * u32(cpu, kRowBytes);
+    const int32_t rows = std::max(i32(cpu, kRows), 1);
+    for (int32_t row = 0; row < rows; ++row) {
+        const int32_t width = image_width(cpu);
+        const int32_t count = (width & 3) ? std::max(width, 1) : std::max(width, 4);
+        for (int32_t x = 0; x < count; ++x, in += 2, out += 2)
+            if (pixel(in) != 0xF81F) put_pixel(cpu.host(out), pixel(in));
+        out += u32(cpu, kTargetSkip);
+    }
+}
+
+uint32_t copy_rows_keyed(Cpu& cpu) {
+    copy_rows_keyed_from(cpu, cpu.arg(0));
+    return 0u;
+}
+
 uint32_t draw_runs_left(Cpu& cpu) {
     draw_runs_left_from(cpu, cpu.arg(0), (cpu.arg(1) & 0xFF) != 0);
     return 0u;
@@ -404,29 +538,39 @@ std::optional<uint32_t> dispatch(Cpu& cpu, uint32_t self, int32_t id, int32_t x,
     uint8_t clip_y = v.state;
     if (clip_x == 5) clip_y = 5;
 
-    // Choix de la routine (0x005AD748 et suivantes) : seuls trois cas sont traités ; seules les
-    // images par suites le sont aussi rognées en largeur.
-    enum class Draw { None, Runs, Opaque, Ground } draw = Draw::None;
+    // Choix de la routine (0x005AD748 et suivantes). Images non compressées : la source avance de
+    // (largeur x lignes masquées + colonnes masquées) x 2 octets, écrite dans kSpriteImage.
+    enum class Draw { None, Runs, Opaque, Ground, Keyed, KeyedRows } draw = Draw::None;
+    uint32_t source = static_cast<uint32_t>(image);
     if (clip_y != 5) {
         if (u16(cpu, kOverlay) != 0) return std::nullopt;
+        bool uncompressed = false;
         if (kind == 0x1E) {
-            if (clip_x != 0) return std::nullopt;
-            draw = Draw::Ground;  // FUN_00435070, sans retournement
-        } else if (mirror != 0) {
-            return std::nullopt;
+            if (clip_x != 0 && !ground_halves_known()) return std::nullopt;
+            draw = Draw::Ground;  // FUN_00435070, FUN_004377b0, FUN_00438a90 ; sans retournement
         } else if (kind == 0) {
-            if (mode == 1 || *cpu.host(entry + 0x33) == 0 || u32(cpu, entry + 0x40) != 0) return std::nullopt;
-            draw = Draw::Runs;
+            if (mode == 1) return std::nullopt;  // teinte, FUN_005b86a0 et variantes
+            if (*cpu.host(entry + 0x33) != 0) {
+                if (u32(cpu, entry + 0x40) != 0) return std::nullopt;  // transparence, FUN_00413e30…
+                draw = Draw::Runs;
+            } else {
+                if (mirror != 0) return std::nullopt;  // FUN_00415e30, FUN_00415ec0
+                uncompressed = true;
+                draw = clip_x == 0 ? Draw::KeyedRows : Draw::Keyed;  // FUN_00415f50, FUN_00416010
+            }
         } else {
-            if (kind == 0x0C || kind == 0x14 || clip_x != 0 || clip_y != 0) return std::nullopt;
-            draw = Draw::Opaque;
+            if (mirror != 0 || kind == 0x0C || kind == 0x14) return std::nullopt;
+            if ((kind == 0x0D || kind == 0x0A || kind == 0x02) && clip_x != 0) return std::nullopt;  // carrés fixes
+            uncompressed = true;
+            draw = clip_x != 0 ? Draw::Keyed : clip_y == 0 ? Draw::Opaque : Draw::KeyedRows;
         }
+        if (uncompressed) source += static_cast<uint32_t>((width16 * skipped + skip_left) * 2);
     }
 
     put32(cpu, kSpriteX, x);
     put32(cpu, kSpriteY, y);
     put32(cpu, kSpriteId, id);
-    put32(cpu, kSpriteImage, image);
+    put32(cpu, kSpriteImage, static_cast<int32_t>(source));
     put16(cpu, kImageWidth, width16);
     put16(cpu, kImageHeight, height);
     put8(cpu, kSpriteKind, kind);
@@ -444,14 +588,26 @@ std::optional<uint32_t> dispatch(Cpu& cpu, uint32_t self, int32_t id, int32_t x,
     put32(cpu, kRows, drawn);
     switch (draw) {
         case Draw::None: return 0u;  // invisible : l'original renvoie alors 0
-        case Draw::Runs:  // FUN_004161b0, FUN_004163b0 ou FUN_004165d0 selon le rognage en largeur
-            if (clip_x == 1) draw_runs_left_from(cpu, static_cast<uint32_t>(image), shadow);
-            else if (clip_x == 2) draw_runs_right_from(cpu, static_cast<uint32_t>(image), shadow);
-            else draw_runs_from(cpu, static_cast<uint32_t>(image), shadow);
+        case Draw::Runs:  // FUN_004161b0, FUN_004163b0, FUN_004165d0 ; retournée : FUN_00415490 et variantes
+            if (mirror != 0) {
+                if (clip_x == 1) draw_runs_mirrored_left_from(cpu, source, shadow);
+                else if (clip_x == 2) draw_runs_mirrored_right_from(cpu, source, shadow);
+                else draw_runs_mirrored_from(cpu, source, shadow);
+            } else if (clip_x == 1) {
+                draw_runs_left_from(cpu, source, shadow);
+            } else if (clip_x == 2) {
+                draw_runs_right_from(cpu, source, shadow);
+            } else {
+                draw_runs_from(cpu, source, shadow);
+            }
             break;
-        // Ni rognée ni retournée : le décalage que l'original ajoute à l'image est nul.
-        case Draw::Opaque: copy_rectangle_from(cpu, static_cast<uint32_t>(image)); break;
-        case Draw::Ground: draw_ground(cpu, static_cast<uint32_t>(image), clip_y); break;
+        case Draw::Opaque: copy_rectangle_from(cpu, source); break;
+        case Draw::Keyed: copy_rectangle_keyed_from(cpu, source); break;
+        case Draw::KeyedRows: copy_rows_keyed_from(cpu, source); break;
+        case Draw::Ground:
+            if (clip_x == 0) draw_ground(cpu, source, clip_y);
+            else draw_ground_half(cpu, source, clip_y, clip_x == 1);
+            break;
     }
     return static_cast<uint32_t>(visible);
 }
@@ -580,6 +736,10 @@ constexpr Replacement kReplacements[] = {
     {kDrawRuns, {0x8B, 0x44, 0x24, 0x04, 0x83}, 0, draw_runs},
     {kDrawRunsLeft, {0x8B, 0x44, 0x24, 0x04, 0x53}, 0, draw_runs_left},
     {kDrawRunsRight, {0x8B, 0x44, 0x24, 0x04, 0x53}, 0, draw_runs_right},
+    {kDrawRunsMirrored, {0x51, 0x8B, 0x44, 0x24, 0x08}, 0, draw_runs_mirrored},
+    {kDrawRunsMirroredLeft, {0x51, 0x8B, 0x44, 0x24, 0x08}, 0, draw_runs_mirrored_left},
+    {kDrawRunsMirroredRight, {0x8B, 0x44, 0x24, 0x04, 0x53}, 0, draw_runs_mirrored_right},
+    {kCopyRowsKeyed, {0x55, 0x8B, 0xEC, 0x56, 0x57}, 0, copy_rows_keyed},
     {kDrawRunsBlended, {0xA1, 0x24, 0xAB, 0xF2, 0x00}, 0, draw_runs_blended},
     {kStrcmpi, {0x55, 0x8B, 0xEC, 0x57, 0x56}, 0, strcmpi},
 };

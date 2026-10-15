@@ -198,15 +198,15 @@ adresse	taille	nom	module	statut	preuve	type
 00414910	975	FUN_00414910	inconnu	inconnu	aucun indice	fonction
 00414ce0	973	FUN_00414ce0	inconnu	inconnu	aucun indice	fonction
 004150b0	977	FUN_004150b0	inconnu	inconnu	aucun indice	fonction
-00415490	489	FUN_00415490	inconnu	inconnu	aucun indice	fonction
-00415680	607	FUN_00415680	inconnu	inconnu	aucun indice	fonction
-004158e0	657	FUN_004158e0	inconnu	inconnu	aucun indice	fonction
+00415490	489	draw_runs_mirrored	rendu	natif	image par suites retournée ; remplacée par native.cpp ; rendering.md §8	fonction
+00415680	607	draw_runs_mirrored_right	rendu	natif	image par suites retournée, rognée à droite ; remplacée par native.cpp ; rendering.md §8	fonction
+004158e0	657	draw_runs_mirrored_left	rendu	natif	image par suites retournée, rognée à gauche ; remplacée par native.cpp ; rendering.md §8	fonction
 00415b80	192	FUN_00415b80	inconnu	inconnu	aucun indice	fonction
 00415c40	228	FUN_00415c40	inconnu	inconnu	aucun indice	fonction
 00415d30	249	FUN_00415d30	inconnu	inconnu	aucun indice	fonction
 00415e30	129	FUN_00415e30	inconnu	inconnu	aucun indice	fonction
 00415ec0	133	FUN_00415ec0	inconnu	inconnu	aucun indice	fonction
-00415f50	184	FUN_00415f50	inconnu	inconnu	aucun indice	fonction
+00415f50	184	copy_rows_keyed	rendu	natif	copie à clé de lignes entières ; remplacée par native.cpp ; rendering.md §8	fonction
 00416010	94	copy_rectangle_keyed	rendu	natif	copie, magenta transparent ; remplacée par native.cpp	fonction
 00416070	195	FUN_00416070	inconnu	inconnu	aucun indice	fonction
 00416140	106	FUN_00416140	inconnu	inconnu	aucun indice	fonction
@@ -653,9 +653,9 @@ adresse	taille	nom	module	statut	preuve	type
 00434ea0	451	FUN_00434ea0	rendu	inconnu	chaîne (affichage et images)	fonction
 00435070	4569	ground_diamond_draw	rendu	nommé	sol en losange (empreinte vérifiée par native_draw.cpp)	fonction
 00436250	5460	FUN_00436250	inconnu	inconnu	aucun indice	fonction
-004377b0	2206	FUN_004377b0	rendu	inconnu	hypothèse : appelants/appelés (poids 12 sur 12 en rendu)	fonction
+004377b0	2206	ground_diamond_left	rendu	nommé	losange rogné à gauche (moitié fixe) ; natif partiel : chemin rapide dans native_draw.cpp (sauf surimpression)	fonction
 00438050	2617	FUN_00438050	inconnu	inconnu	aucun indice	fonction
-00438a90	2219	FUN_00438a90	rendu	inconnu	hypothèse : appelants/appelés (poids 12 sur 12 en rendu)	fonction
+00438a90	2219	ground_diamond_right	rendu	nommé	losange rogné à droite (moitié fixe) ; natif partiel : chemin rapide dans native_draw.cpp (sauf surimpression)	fonction
 00439340	2630	FUN_00439340	inconnu	inconnu	aucun indice	fonction
 00439d90	5919	FUN_00439d90	inconnu	inconnu	aucun indice	fonction
 0043b4b0	2823	FUN_0043b4b0	inconnu	inconnu	aucun indice	fonction

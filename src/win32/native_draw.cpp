@@ -688,7 +688,8 @@ uint64_t fingerprint(Cpu& cpu, const uint32_t (*ranges)[2], size_t count) {
     return hash;
 }
 
-bool ground_code = false;  // FUN_00435070 vérifiée
+bool ground_code = false;    // FUN_00435070 vérifiée
+bool ground_halves = false;  // FUN_004377b0 et FUN_00438a90 vérifiées
 
 }  // namespace
 
@@ -718,11 +719,52 @@ void draw_ground(Cpu& cpu, uint32_t image, uint8_t clip_y) {
     }
 }
 
+// FUN_004377b0 (rognée à gauche) et FUN_00438a90 (à droite) : le losange n'est pas rogné au pixel
+// près, une moitié fixe est dessinée. À gauche, les colonnes 30 à 57 de l'image, écrites à partir
+// de kTargetX (comme si 30 pixels exactement étaient masqués) ; à droite, les colonnes 0 à 27 à
+// leur place. Les deux routines sont 210 copies écrites une à une ; deux s'écartent de cette
+// règle, à gauche : sur la ligne 15, les colonnes 38 et 39 reçoivent les pixels 36 et 37 (le mot
+// en +0x3CC lu deux fois, 0x00437C48) ; sur la ligne 25, la colonne 37 reçoit le pixel 35 (moitié
+// haute d'EAX restée du mot précédent après « MOV AX », 0x00437FFE). Rognage vertical comme
+// draw_ground.
+void draw_ground_half(Cpu& cpu, uint32_t image, uint8_t clip_y, bool left) {
+    const uint32_t row_bytes = u32(cpu, kRowBytes);
+    const uint32_t origin = u32(cpu, kFrameBuffer) + u32(cpu, kTargetX) * 2 + u32(cpu, kTargetY) * row_bytes;
+    uint32_t start = 0;  // octet de la ligne dans l'image
+    for (uint32_t r = 0; r < 30; ++r) {
+        const uint32_t width = r < 15 ? 4 * r + 2 : 58 - 4 * (r - 15), first = (58 - width) / 2;
+        const bool drawn = r < 15 ? clip_y != 3 : clip_y != 4;
+        const uint32_t row = clip_y == 3 ? r - 15 : r;
+        if (drawn) {
+            for (uint32_t column = first; column < first + width; ++column) {
+                if (left ? column < 30 : column >= 28) continue;
+                uint32_t from = column;
+                if (left && ((r == 15 && (column == 38 || column == 39)) || (r == 25 && column == 37))) from -= 2;
+                std::memcpy(cpu.host(origin + row * row_bytes + (left ? column - 30 : column) * 2),
+                            cpu.host(image + start + (from - first) * 2), 2);
+            }
+        }
+        start += width * 2;
+    }
+}
+
 bool ground_known() { return ground_code; }
+bool ground_halves_known() { return ground_halves; }
 
 int install_native_drawing(Process& p) {
     Cpu& cpu = p.cpu();
     ground_code = fingerprint(cpu, kDrawGround, kDrawGroundEnd) == 0x00E2CC5E0BBFF6E0ull;
+    ground_halves = fingerprint(cpu, kGroundLeft, kGroundLeftEnd) == 0xDDD1B557B7C45DF4ull &&
+                    fingerprint(cpu, kGroundRight, kGroundRightEnd) == 0x9305F17B50FA7CE8ull;
+    if (ground_halves) {
+        // « PUSH EBP ; MOV EBP,ESP ; CMP word ptr [surimpression],0 » déplacés ; EAX est rendu tel quel.
+        for (const bool left : {true, false})
+            cpu.add_fast_path(left ? kGroundLeft : kGroundRight, 0, 11, [left](Cpu& c) -> std::optional<uint32_t> {
+                if (u16(c, kOverlay) != 0) return std::nullopt;  // FUN_00438050, FUN_00439340
+                draw_ground_half(c, c.arg(0), static_cast<uint8_t>(c.arg(1)), left);
+                return c.reg(Cpu::Reg::EAX);
+            });
+    }
     // Code réécrit : la boucle du sol, FUN_00457900 et ses tables de sauts, la table de sauts du
     // type de bâtiment de la boucle, et la méthode « vrai » du mode de vue 0.
     if (fingerprint(cpu, kGroundLoop, kGroundRowEnd) != 0xF739BF1DE60A7A90ull ||

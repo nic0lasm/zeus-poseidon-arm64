@@ -7,6 +7,10 @@ adresse	nom	module	statut	preuve	type
 00413dc0	copy_rectangle	rendu	natif	copie d'un rectangle opaque ; remplacée par native.cpp	fonction
 00413e30	draw_runs_blended	rendu	natif	image par suites, mélangée ; remplacée par native.cpp	fonction
 004142b0	image_draw	rendu	nommé	enveloppe de 0x0064274C ; 162 appelants	fonction
+00415490	draw_runs_mirrored	rendu	natif	image par suites retournée ; remplacée par native.cpp ; rendering.md §8	fonction
+00415680	draw_runs_mirrored_right	rendu	natif	image par suites retournée, rognée à droite ; remplacée par native.cpp ; rendering.md §8	fonction
+004158e0	draw_runs_mirrored_left	rendu	natif	image par suites retournée, rognée à gauche ; remplacée par native.cpp ; rendering.md §8	fonction
+00415f50	copy_rows_keyed	rendu	natif	copie à clé de lignes entières ; remplacée par native.cpp ; rendering.md §8	fonction
 00416010	copy_rectangle_keyed	rendu	natif	copie, magenta transparent ; remplacée par native.cpp	fonction
 004161b0	draw_runs	rendu	natif	image par suites (et ombre) ; remplacée par native.cpp	fonction
 004163b0	draw_runs_left	rendu	natif	image par suites rognée à gauche ; remplacée par native.cpp ; rendering.md §8	fonction
@@ -27,6 +31,8 @@ adresse	nom	module	statut	preuve	type
 00432300	widget_hit_test	interface	documenté	premier rectangle de la table de 28 octets sous la souris ; 12 610 appels	fonction
 00433d50	model_building_value	bâtiments	documenté	valeur k de la ligne t du modèle (0x00782F70) ; docs/engine/terrain.md §7.1	fonction
 00435070	ground_diamond_draw	rendu	nommé	sol en losange (empreinte vérifiée par native_draw.cpp)	fonction
+004377b0	ground_diamond_left	rendu	nommé	losange rogné à gauche (moitié fixe) ; natif partiel : chemin rapide dans native_draw.cpp (sauf surimpression)	fonction
+00438a90	ground_diamond_right	rendu	nommé	losange rogné à droite (moitié fixe) ; natif partiel : chemin rapide dans native_draw.cpp (sauf surimpression)	fonction
 004488c0	random_next	terrain	documenté	deux registres de 31 bits, 31 pas par tirage ; docs/engine/terrain.md §5	fonction
 00449b30	tile_walkers_sort	rendu	nommé	trie la liste des personnages d'une case (écrit l'état) ; rendering.md §11.2	fonction
 00449e50	map_view_set_size	interface	documenté	reçoit colonnes et rangées de la vue de la carte	fonction

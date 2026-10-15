@@ -24,6 +24,9 @@ std::optional<uint32_t> draw_building_top(Cpu& cpu, uint32_t self, int32_t id, i
 // `ground_known` : vrai quand le code de FUN_00435070 est celui attendu (install_native_drawing).
 void draw_ground(Cpu& cpu, uint32_t image, uint8_t clip_y);
 bool ground_known();
+// FUN_004377b0 / FUN_00438a90 sans surimpression : losange rogné à gauche (`left`) ou à droite.
+void draw_ground_half(Cpu& cpu, uint32_t image, uint8_t clip_y, bool left);
+bool ground_halves_known();
 
 // Boucle de dessin de la ville (native_draw.cpp) ; renvoie le nombre de remplacements installés.
 int install_native_drawing(Process& process);
