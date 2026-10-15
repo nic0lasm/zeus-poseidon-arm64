@@ -584,6 +584,15 @@ Already native: `0x00413DC0` (5,319,977 calls), `0x004161B0` (2,384,169), `0x004
 `0x004377B0` and `0x00438A90` (8,682 and 8,691), the clip functions (8,562,614 each) inside the dispatcher and the
 building tops, `0x005ADF00` except with an overlay, and the first pass of `0x00458170`.
 
+Where the list stands: steps 1 to 4 are native; 5 to 7 are never called in the nine scenarios,
+so no call-by-call proof is possible yet and they wait for a scenario that draws glyph masks,
+overlays (a building marked red) and the rare cases; the second pass (16) is native for its
+common cells. Next, in this order: the bases of 2 to 6 tiles (10, rewritten and identical on
+the large city, not yet published), the walker sort `0x00449B30` (12: its comparator never
+returns 0 for two distinct walkers, so any correct sort gives the original order), then the
+walkers (13, 14) and the extras of sanctuaries and monuments (15, `0x0053E5F0`, the largest
+remaining fallback of the second pass).
+
 Outside this page but heavy in the same profile: the text routines (`0x004F57A0`, 2.2 million
 calls; `0x00507F20`, 10.0 million; `0x00508B50`, 1.0 million; `0x004F59B0`, 1.1 million;
 `0x004F5300`, which calls the dispatcher). They belong to the "interface and texts" subsystem.
