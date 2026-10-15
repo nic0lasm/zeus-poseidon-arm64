@@ -45,7 +45,7 @@ _FIELDS = [
     ("kind", 1, 0x49530, 2, "genre : 0 campagne Zeus, 1 et 4 aventure rangée dans son propre dossier, 2 didacticiel, 3 campagne Poséidon"),
     ("value_s", 4, 0x49534, 2, "entier, 0 partout"),
     ("map_offsets", 0x14, 0x49538, 2, "5 décalages dans le .pak : carte de la ville mère puis colonies"),
-    ("parent_map", 500000, 0x4954C, 2, "conteneur MAPS complété de zéros (carte de la ville mère, hypothèse)"),
+    ("map_buffer", 500000, 0x4954C, 2, "tampon de copie des cartes : contenu de la dernière carte recopiée dans le .pak (voir pak.md)"),
     ("episode_event_counts", 0x28, 0xC366C, 2, "10 entiers : nombre d'événements de chaque épisode"),
     ("colony_event_counts", 0x10, 0xC3694, 2, "4 entiers : nombre d'événements de chaque colonie"),
     ("table_x", 0x280, 0xC36A4, 2, "640 octets"),

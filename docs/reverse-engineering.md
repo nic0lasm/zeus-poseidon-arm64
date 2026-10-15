@@ -8,6 +8,7 @@ Detailed notes are written in French and live next to the code:
 | [`formats/map.md`](../formats/map.md) | maps and saved games, image identifiers, terrain engine |
 | [`formats/sav.md`](../formats/sav.md) | saved games: the 139 blocks and their addresses in memory, compression, older versions |
 | [`formats/set.md`](../formats/set.md) | adventures being edited: the 54 header fields, versions 5 to 26 |
+| [`formats/pak.md`](../formats/pak.md) | published adventures: `.set` header followed by the maps, how the editor writes them |
 | [`formats/eng.md`](../formats/eng.md) | text files: string groups, in-game help records, formatting codes |
 | [`analysis/notes/sources-et-binaires.md`](../analysis/notes/sources-et-binaires.md) | game editions, extraction chain, executables |
 | [`analysis/notes/api-imports.md`](../analysis/notes/api-imports.md) | the 202 Windows functions the game imports, and which are implemented |

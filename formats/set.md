@@ -1,7 +1,7 @@
 # `.set` — aventure en cours d'édition
 
 Un `.set` est l'état complet d'une aventure dans l'éditeur : textes et scénarios de chaque
-épisode, événements, carte de la ville mère. C'est aussi l'en-tête de chaque `.pak`
+épisode, événements, copie de carte. C'est aussi l'en-tête de chaque `.pak`
 ([`pak.md`](pak.md)). Adresses de l'exécutable GOG ; tout est little-endian.
 
 Outil : `tools/setfile.py` (`info`, `check`). État au 2026-10-15 : les 28 `.set` des
@@ -73,7 +73,7 @@ d'une variable globale), nom provisoire, contenu.
 | `0x49530` | `0x49108` | 1 | `+0x49530` | `kind` | genre : 0 campagne Zeus, 1 et 4 aventure rangée dans son propre dossier, 2 didacticiel, 3 campagne Poséidon | vérifié |
 | `0x49531` | `0x49109` | 4 | `+0x49534` | `value_s` | entier, 0 partout | inconnu |
 | `0x49535` | `0x4910d` | 20 | `+0x49538` | `map_offsets` | 5 décalages dans le .pak : carte de la ville mère puis colonies | vérifié |
-| `0x49549` | `0x49121` | 500000 | `+0x4954c` | `parent_map` | conteneur MAPS complété de zéros (carte de la ville mère, hypothèse) | vérifié (conteneur) |
+| `0x49549` | `0x49121` | 500000 | `+0x4954c` | `map_buffer` | tampon de copie des cartes : contenu de la dernière carte recopiée dans le .pak (voir pak.md) | vérifié |
 | `0xc3669` | `0xc3241` | 40 | `+0xc366c` | `episode_event_counts` | 10 entiers : nombre d'événements de chaque épisode | vérifié |
 | `0xc3691` | `0xc3269` | 16 | `+0xc3694` | `colony_event_counts` | 4 entiers : nombre d'événements de chaque colonie | vérifié |
 | `0xc36a1` | `0xc3279` | 640 | `+0xc36a4` | `table_x` | 640 octets | inconnu |
@@ -115,7 +115,9 @@ d'une variable globale), nom provisoire, contenu.
 - `episodes` et `colonies` : dans les `.pak`, `colonies` vaut le nombre de cartes de colonie
   incluses pour 52 fichiers distincts sur 56 ; `episodes`, le nombre d'épisodes ayant des événements, pour la
   plupart.
-- `parent_map` contient un conteneur MAPS complet (lu par `mapfile.py`) suivi de zéros.
+- `map_buffer` est le tampon où la publication lit chaque carte avant de la recopier dans le
+  `.pak` (`0x0042A450`) ; dans les 56 `.pak` distincts, il commence par la dernière carte
+  recopiée ; dans les `.set` aussi, il contient un conteneur MAPS.
 
 ## Fichiers testés
 
