@@ -2,6 +2,8 @@ adresse	nom	module	statut	preuve	type
 00404cd0	build_tool_click	interface	documenté	clic de l'outil de construction, switch sur 0x00665DCC ; docs/engine/terrain.md §5	fonction
 0040df00	image_id_from_group	rendu	nommé	renvoie table[groupe-1].premiere_image + collection*0x4000 ; 648 appelants	fonction
 0040e5d0	map_elevation_at	terrain	nommé	renvoie *(u8*)(this + case + 2)	fonction
+0040fcf0	font_group_entry	texte	documenté	entrée de groupe de la banque 0 (+4 : première image) ; 101 appelants ; interface.md §5.2	fonction
+0040fd10	image_id_from_packed_group	rendu	documenté	identifiant packé collection*512+groupe+1 vers première image ; 107 appelants ; interface.md §5.2	fonction
 00413dc0	copy_rectangle	rendu	natif	copie d'un rectangle opaque ; remplacée par native.cpp	fonction
 00413e30	draw_runs_blended	rendu	natif	image par suites, mélangée ; remplacée par native.cpp	fonction
 004142b0	image_draw	rendu	nommé	enveloppe de 0x0064274C ; 162 appelants	fonction
@@ -13,12 +15,18 @@ adresse	nom	module	statut	preuve	type
 00422270	fullscreen_background_b	interface	documenté	fond plein écran centré (menus)	fonction
 00422c60	fullscreen_background_c	interface	documenté	fond plein écran centré (menus)	fonction
 00428700	image_draw_isometric_top	rendu	nommé	enveloppe de 0x0064394C	fonction
+0042c700	screenshot_key_check	interface	documenté	Alt+1 et Alt+2 écrivent shot1.bmp et shot2.bmp (écran 0x01) ; 90 appels sur working-city	fonction
 0042f380	fullscreen_background_d	interface	documenté	fond plein écran centré (menus)	fonction
+00431530	image_table_draw	interface	documenté	dessine une table d'images de 28 octets (types 4 et 5 : variantes) ; 0 appel sur working-city	fonction
+004316f0	widget_table_draw	interface	documenté	dessine la table de 40 octets (état, sélection, survol, clignotement) ; 6 208 appels	fonction
+004321e0	widget_click_dispatch	interface	documenté	clic sur la table de 28 octets : relâché à gauche (+8), droit (+0xC) ; 4 518 appels	fonction
+00432300	widget_hit_test	interface	documenté	premier rectangle de la table de 28 octets sous la souris ; 12 610 appels	fonction
 00433d50	model_building_value	bâtiments	documenté	valeur k de la ligne t du modèle (0x00782F70) ; docs/engine/terrain.md §7.1	fonction
 00435070	ground_diamond_draw	rendu	nommé	sol en losange (empreinte vérifiée par native_draw.cpp)	fonction
 004488c0	random_next	terrain	documenté	deux registres de 31 bits, 31 pas par tirage ; docs/engine/terrain.md §5	fonction
 00449e50	map_view_set_size	interface	documenté	reçoit colonnes et rangées de la vue de la carte	fonction
 00451c70	build_cursor_preview	interface	documenté	aperçu du curseur de construction ; docs/engine/terrain.md §5	fonction
+004542b0	map_number_draw	interface	documenté	nombre posé sur la carte, ombre puis couleur ; 463 appels (un par image de ville)	fonction
 00457900	ground_tile_draw	rendu	nommé	sol d'une case ; natif partiel : chemin rapide dans native_draw.cpp	fonction
 00458170	city_draw	rendu	nommé	dessin de la ville, deux passes ; natif partiel : boucle du sol dans native_draw.cpp	fonction
 0045ed20	map_elevation_project	terrain	documenté	altitude projetée selon l'orientation, règles des falaises ; docs/engine/terrain.md §4	fonction
@@ -70,39 +78,102 @@ adresse	nom	module	statut	preuve	type
 004d3d28	map_tiles_set_cracks	terrain	nommé	pose le bit de terrain 2 et choisit l'image dans SPR_CRACKS (table 0x006D1220)	fonction
 004d9cc1	terrain_context_fill	terrain	nommé	remplit les 8 voisins avec (terrain & masque) != 0	fonction
 004e3616	terrain_context_lookup	terrain	nommé	cherche le motif de voisinage dans une table de 20 octets par entrée	fonction
+004f2600	message_window_open	interface	documenté	ouvre l'écran 0x05 : mémorise l'écran précédent (0x00EF8CB0) ; 3 appelants	fonction
+004f2d80	help_page_draw	interface	documenté	page d'aide / message : 5 appels de text_layout ; 5 467 octets	fonction
+004f5260	link_box_add	texte	documenté	enregistre un rectangle de lien @n (50 au plus, 20 octets chacun, 0x00EF8220)	fonction
+004f5300	text_layout	texte	documenté	mise en page d'un texte en lignes, modes 0 (dessin) et 1 (comptage), codes @P @L @G @n ; 2 280 appels	fonction
+004f57a0	word_width_panel	texte	documenté	largeur du mot suivant et octets lus (0x00F13A58) ; 2,2 M d'appels	fonction
+004f58c0	text_line_draw	texte	documenté	dessine une ligne de texte de panneau, enregistre les liens ; 34 315 appels	fonction
 004f59b0	text_draw_panel	texte	documenté	texte de panneau ; soustrait une constante en 004f5a33	fonction
+004f6e40	tooltip_draw	interface	documenté	écran 0x23 : info-bulle, mise en page en deux passes (190 puis 270 pixels)	fonction
 004f8770	figure_graze	marcheurs	documenté	un animal broute le pré de sa case ; docs/engine/terrain.md §8.5	fonction
 00504fa0	backdrop_jpeg_load	rendu	documenté	fonds JPEG ; surfaces de tailles égales	fonction
 00505770	event_messages_load	texte	nommé	lit « Zeus eventmsg.txt » (boucle de recherche de clé hôte)	fonction
+00507bf0	text_string_find	texte	documenté	chaîne (groupe, rang) du fichier de textes ; 73 appelants, 64 286 appels	fonction
+00507da0	string_width	texte	documenté	largeur d'une chaîne selon la police (espaces 10, 4 ou 6) ; 76 861 appels	fonction
+00507f20	char_width	texte	documenté	largeur d'un caractère : espace 4, sinon largeur du glyphe + 1 ; 9,98 M d'appels	fonction
+00507fc0	parse_decimal	texte	documenté	lit un nombre décimal, puissances de dix en 0x0063BF1C ; 10 762 appels	fonction
+00508060	text_pointer_store_a	texte	documenté	range text_string_find dans 0x00F13A60 ; 44 appelants	fonction
+00508080	text_pointer_store_b	texte	documenté	range text_string_find dans 0x00F13A5C ; 11 appelants	fonction
+00508140	text_field_char_filter	interface	documenté	caractère saisi (WM_CHAR) : lettres, chiffres, signes, accentuées ; 1 appel	fonction
+00508540	number_to_text	texte	documenté	écrit un entier signé dans 0x00F27530 ; 2 801 appels	fonction
+00508670	string_draw_centered	texte	documenté	chaîne centrée dans une largeur ; 63 831 appels	fonction
+00508800	string_draw	texte	documenté	rend une chaîne : _ et # spéciaux, contour ou ombre ; 83 092 appels	fonction
 00508b50	text_draw_line	texte	documenté	texte d'une ligne ; exceptions polonaises en 00508c7f	fonction
+00508d40	text_ref_draw_centered	texte	documenté	chaîne (groupe, rang) centrée ; 36 265 appels	fonction
+00508d90	text_ref_draw	texte	documenté	chaîne (groupe, rang) à une position ; 3 934 appels	fonction
+00508f00	number_text_draw	texte	documenté	nombre suivi d'un texte ; 1 401 appels	fonction
+005090a0	paragraph_draw	texte	documenté	paragraphe coupé en lignes par word_width_line ; 466 appels	fonction
+005091b0	word_width_line	texte	documenté	largeur du mot suivant d'une ligne ; 11 184 appels	fonction
 0050b410	clear_frame	rendu	natif	efface le tampon d'affichage ; remplacée par native.cpp	fonction
+0050b450	mouse_edges_clear	interface	documenté	remet à zéro 0x00F2A700, 0x00F2A706 et 0x00F2A6FA en fin de tour	fonction
+0050b470	mouse_poll	interface	documenté	position à l'échelle du tampon et fronts de bouton, une fois par tour	fonction
 0050bcc0	screen_set_mode	rendu	documenté	taille d'écran d'après le numéro de mode ; 68 lecteurs de la largeur et hauteur	fonction
 0050c1b0	frame_present	rendu	documenté	présentation de l'image (plein écran : copie vers la surface primaire)	fonction
 00511e30	city_init_from_map	scénario	documenté	mise en place d'une ville depuis sa carte ; docs/engine/terrain.md §5	fonction
+00512740	layout_screen_key	interface	documenté	clé d'écran des surcharges de mise en page ; 15 454 appels	fonction
+00512780	layout_override_init	interface	documenté	vide les surcharges et lit dialog.loc	fonction
+005128e0	layout_override_find	interface	documenté	cherche une surcharge ; toujours vide sans dialog.loc ; 10 995 appels	fonction
+00512990	layout_override_hit	interface	documenté	éditeur de mise en page jamais activé (0x00F9F970 jamais écrit) ; 7 797 appels	fonction
+00512b50	text_ref_centered_override	interface	documenté	text_ref_draw_centered avec surcharge de position ; 69 appelants	fonction
+00512bf0	text_ref_draw_override	interface	documenté	text_ref_draw avec surcharge de position ; 47 appelants	fonction
+00512ff0	frame_draw_override	interface	documenté	cadre de cases de 16 pixels avec surcharge de position ; 70 appelants	fonction
+00513130	layout_override_apply	interface	documenté	écrit les surcharges dans la table de 28 octets	fonction
+00513180	widget_hover_layout	interface	documenté	applique les surcharges au premier appel et rend le survol ; 4 457 appels	fonction
+005132a0	number_text_draw_override	interface	documenté	number_text_draw avec surcharge de position ; 27 appelants	fonction
+00513490	dialog_loc_load	interface	documenté	lit dialog.loc (absent de l'édition GOG)	fonction
 00513580	game_turn	scénario	documenté	tour de la boucle principale ; interroge simulation_due	fonction
 00513a30	simulation_tick	scénario	documenté	un tour : hasard, ville, marcheurs (zeus-run --ticks)	fonction
+00513b30	background_repaint	interface	documenté	redessine le fond de l'écran si 0x00F2A6CE est levé, puis le baisse	fonction
+00514020	screen_draw	interface	documenté	switch sur l'écran 0x00F2A6DD : fonctions de dessin de chaque écran ; 8 398 appels	fonction
+00514c10	screen_input	interface	documenté	switch sur l'écran : tables de boutons, tests de survol et de clic ; 8 398 appels	fonction
 005168a0	simulation_due	scénario	documenté	dit si un tour de simulation est dû (intervalle de vitesse + 2 ms)	fonction
+00517650	panel_click	interface	documenté	clic dans la page du panneau (0x00FA0004) : une table par page	fonction
 00517b10	panel_unfolded_draw	interface	documenté	dessin du panneau déplié	fonction
+00517bf0	panel_draw	interface	documenté	panneau de contrôle : tables 0x0063DC40 (17) et 0x0063DF80 (7) ; 466 appels	fonction
+0051ca20	build_menu_select	interface	documenté	touches 0 à 9 et - : choisit une catégorie du menu de construction	fonction
 0051cba0	view_panel_folded	interface	documenté	taille de la vue de la carte, panneau replié (50×17 en 1024)	fonction
 0051cc00	view_panel_unfolded	interface	documenté	taille de la vue de la carte, panneau déplié (50×14 en 1024)	fonction
 0051f450	map_tiles_update_images	terrain	documenté	images du sol d'un rectangle, chaîne de choix ; docs/engine/terrain.md §5	fonction
 0051fba0	map_tile_plain_ground	terrain	documenté	sol nu, grandes pièces si 0x004A0DC0 ; docs/engine/terrain.md §5	fonction
+00521d30	message_queue_poll	interface	documenté	prend le message suivant en attente et ouvre la fenêtre	fonction
+005233a0	top_buttons_layout	interface	documenté	abscisses des 6 boutons du haut : (largeur - 180) / 2	fonction
 00525280	panel_overlay_draw	interface	documenté	dernier dessin du panneau	fonction
+00525630	sidebar_draw_48	interface	documenté	panneau de l'écran 0x48 : tables 0x006402A0 et 0x0063DF80	fonction
+00525c10	sidebar_draw_20	interface	documenté	panneau de l'écran 0x20 : tables 0x00640390 et 0x0063DF80	fonction
+0052c070	objectives_screen_draw	interface	documenté	écrans 0x42 et 0x43 : 17 types d'objectifs, 2 279 mises en page sur working-city	fonction
 0055f3d0	view_mode0_always_true	interface	nommé	méthode +0x18 du mode de vue 0, renvoie vrai	fonction
 005715a0	info_window_open	interface	documenté	fenêtre d'information : en bas si l'ordonnée du clic ≤ 396	fonction
+00571ee0	info_window_class	interface	documenté	classe de la fenêtre d'information (hauteur en cases)	fonction
+005724e0	info_window_draw	interface	documenté	écran 0x09 : fenêtre d'information	fonction
+005726e0	info_window_click	interface	documenté	clics de la fenêtre d'information ; 9 tests de survol	fonction
 00588b20	route_find_listed_tile	terrain	documenté	parcours en largeur sur la grille de trajets ; docs/engine/terrain.md §8.3	fonction
 0058e280	control_panel_position	interface	documenté	abscisse du panneau de contrôle : 478, 598 ou 838	fonction
+0058e2e0	frame_redraw	interface	documenté	redessine tout le cadre : liseré du bas, fond du panneau, 0x0058EB20 ; 3 appels	fonction
 0058e3e0	bottom_strip_fill	interface	documenté	liseré de 9 pixels en bas de l'écran	fonction
+0058ea20	panel_background_pick	interface	documenté	choisit le fond du panneau selon l'écran ; 466 appels	fonction
+0058ea50	map_style_track	interface	documenté	mémorise le style de carte courant ; 463 appels	fonction
+0058f130	top_left_texts_draw	interface	documenté	textes du coin haut gauche : alerte, événement, pause, libellés anglais du développeur	fonction
 00597e60	world_map_screen	interface	documenté	écran de la carte du monde	fonction
 00599da0	world_map_draw	interface	documenté	copie une fenêtre de l'image de la carte du monde par bloc	fonction
+0059c8a0	debug_overlay_population	interface	documenté	affichage de débogage « Pop is », « docks list »... si 0x00FE6A08 == 1	fonction
+0059d040	debug_overlay_evolve	interface	documenté	affichage de débogage « Evolve info (F3) » si 0x0091EC24 == 1	fonction
 0059ebe0	top_bar_background_draw	interface	documenté	fond de la barre du haut, image de 838 pixels en (0, 0)	fonction
+0059ee90	window_frame_titled_draw	interface	documenté	cadre de cases de 16 pixels avec barre de titre ; 3 888 appels	fonction
+0059f2a0	window_frame_draw	interface	documenté	cadre de cases de 16 pixels ; 9 368 appels	fonction
+0059f6e0	window_highlight_draw	interface	documenté	surbrillance d'un rectangle en cases de 16 pixels ; 8 436 appels	fonction
+005a0980	modal_message_loop	interface	documenté	boucle de messages propre, écran 0x54, rend la réponse (6 = oui) ; 8 appelants	fonction
 005a0c00	scrollbar_update	interface	documenté	barres de défilement ; consomment la molette	fonction
 005a1330	sound_stop_channels	son	documenté	arrête les canaux au WM_KILLFOCUS	fonction
 005a2c30	sound_listener_update	son	documenté	auditeur 3D : positions aléatoires à ~60 unités	fonction
 005acf50	sprite_dispatch	rendu	nommé	répartiteur de sprites ; natif partiel : chemin rapide dans native.cpp	fonction
 005c35e0	mouse_wheel_init	interface	documenté	cherche la molette pré-Windows 98 au démarrage	fonction
 005c37c0	main_loop	interface	documenté	boucle principale ; ne joue un tour que si le drapeau « actif » est levé	fonction
+005c4a30	display_mode_change	interface	documenté	change de mode d'affichage et refait la mise en page (F6, F7)	fonction
 005c4a90	window_proc	interface	documenté	procédure de fenêtre ; souris et boutons lus une fois par image (reverse-engineering.md)	fonction
+005c5c80	map_view_goto	interface	documenté	F1 à F4 : va à la position de carte enregistrée	fonction
+005c5cc0	map_view_save	interface	documenté	Ctrl+F1 à F4 : enregistre la position de la carte	fonction
+005c5d60	debug_timers_draw	interface	documenté	minuteries et touches de débogage ; 463 appels	fonction
 005c7790	sound_manager_ctor	son	documenté	constructeur du gestionnaire de son (Miles)	fonction
 005c80b0	sound_play_sample	son	documenté	échantillon ordinaire : fichier, boucles, panoramique, volume	fonction
 005c8770	sound_play_3d	son	documenté	son 3D quand l'option est active	fonction

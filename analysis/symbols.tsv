@@ -125,8 +125,8 @@ adresse	taille	nom	module	statut	preuve	type
 0040f8b0	348	FUN_0040f8b0	inconnu	inconnu	aucun indice	fonction
 0040fa70	369	FUN_0040fa70	inconnu	inconnu	aucun indice	fonction
 0040fc40	168	FUN_0040fc40	inconnu	inconnu	aucun indice	fonction
-0040fcf0	29	FUN_0040fcf0	inconnu	inconnu	aucun indice	fonction
-0040fd10	101	FUN_0040fd10	inconnu	inconnu	aucun indice	fonction
+0040fcf0	29	font_group_entry	texte	documenté	entrée de groupe de la banque 0 (+4 : première image) ; 101 appelants ; interface.md §5.2	fonction
+0040fd10	101	image_id_from_packed_group	rendu	documenté	identifiant packé collection*512+groupe+1 vers première image ; 107 appelants ; interface.md §5.2	fonction
 0040fd80	89	FUN_0040fd80	inconnu	inconnu	aucun indice	fonction
 0040fe50	46	FUN_0040fe50	inconnu	inconnu	aucun indice	fonction
 0040ff10	85	FUN_0040ff10	inconnu	inconnu	aucun indice	fonction
@@ -482,7 +482,7 @@ adresse	taille	nom	module	statut	preuve	type
 0042c4e0	72	FUN_0042c4e0	inconnu	inconnu	aucun indice	fonction
 0042c5a0	77	FUN_0042c5a0	inconnu	inconnu	aucun indice	fonction
 0042c5f0	257	FUN_0042c5f0	inconnu	inconnu	aucun indice	fonction
-0042c700	117	FUN_0042c700	rendu	inconnu	chaîne (affichage et images)	fonction
+0042c700	117	screenshot_key_check	interface	documenté	Alt+1 et Alt+2 écrivent shot1.bmp et shot2.bmp (écran 0x01) ; 90 appels sur working-city	fonction
 0042c780	293	FUN_0042c780	inconnu	inconnu	aucun indice	fonction
 0042c8b0	131	FUN_0042c8b0	inconnu	inconnu	aucun indice	fonction
 0042c970	30	FUN_0042c970	inconnu	inconnu	aucun indice	fonction
@@ -602,8 +602,8 @@ adresse	taille	nom	module	statut	preuve	type
 00431210	337	FUN_00431210	inconnu	inconnu	aucun indice	fonction
 00431370	329	FUN_00431370	inconnu	inconnu	aucun indice	fonction
 004314c0	99	FUN_004314c0	inconnu	inconnu	aucun indice	fonction
-00431530	433	FUN_00431530	inconnu	inconnu	aucun indice	fonction
-004316f0	714	FUN_004316f0	inconnu	inconnu	aucun indice	fonction
+00431530	433	image_table_draw	interface	documenté	dessine une table d'images de 28 octets (types 4 et 5 : variantes) ; 0 appel sur working-city	fonction
+004316f0	714	widget_table_draw	interface	documenté	dessine la table de 40 octets (état, sélection, survol, clignotement) ; 6 208 appels	fonction
 004319c0	450	FUN_004319c0	inconnu	inconnu	aucun indice	fonction
 00431b90	45	FUN_00431b90	inconnu	inconnu	aucun indice	fonction
 00431bc0	64	FUN_00431bc0	inconnu	inconnu	aucun indice	fonction
@@ -616,8 +616,8 @@ adresse	taille	nom	module	statut	preuve	type
 004320e0	33	FUN_004320e0	inconnu	inconnu	aucun indice	fonction
 00432110	76	FUN_00432110	inconnu	inconnu	aucun indice	fonction
 00432160	116	FUN_00432160	inconnu	inconnu	aucun indice	fonction
-004321e0	273	FUN_004321e0	inconnu	inconnu	aucun indice	fonction
-00432300	116	FUN_00432300	inconnu	inconnu	aucun indice	fonction
+004321e0	273	widget_click_dispatch	interface	documenté	clic sur la table de 28 octets : relâché à gauche (+8), droit (+0xC) ; 4 518 appels	fonction
+00432300	116	widget_hit_test	interface	documenté	premier rectangle de la table de 28 octets sous la souris ; 12 610 appels	fonction
 00432380	112	FUN_00432380	inconnu	inconnu	aucun indice	fonction
 004323f0	86	FUN_004323f0	inconnu	inconnu	aucun indice	fonction
 00432490	528	FUN_00432490	inconnu	inconnu	aucun indice	fonction
@@ -773,7 +773,7 @@ adresse	taille	nom	module	statut	preuve	type
 004536e0	1777	FUN_004536e0	inconnu	inconnu	aucun indice	fonction
 00453de0	622	FUN_00453de0	inconnu	inconnu	aucun indice	fonction
 00454050	599	FUN_00454050	inconnu	inconnu	aucun indice	fonction
-004542b0	367	FUN_004542b0	inconnu	inconnu	aucun indice	fonction
+004542b0	367	map_number_draw	interface	documenté	nombre posé sur la carte, ombre puis couleur ; 463 appels (un par image de ville)	fonction
 00454420	290	FUN_00454420	inconnu	inconnu	aucun indice	fonction
 00454550	611	FUN_00454550	inconnu	inconnu	aucun indice	fonction
 004547c0	256	FUN_004547c0	inconnu	inconnu	aucun indice	fonction
@@ -2039,7 +2039,7 @@ adresse	taille	nom	module	statut	preuve	type
 004f21f0	33	FUN_004f21f0	inconnu	inconnu	aucun indice	fonction
 004f2220	118	FUN_004f2220	inconnu	inconnu	aucun indice	fonction
 004f22f0	194	FUN_004f22f0	inconnu	inconnu	aucun indice	fonction
-004f2600	390	FUN_004f2600	inconnu	inconnu	aucun indice	fonction
+004f2600	390	message_window_open	interface	documenté	ouvre l'écran 0x05 : mémorise l'écran précédent (0x00EF8CB0) ; 3 appelants	fonction
 004f2790	93	FUN_004f2790	inconnu	inconnu	aucun indice	fonction
 004f27f0	60	FUN_004f27f0	inconnu	inconnu	aucun indice	fonction
 004f2830	19	FUN_004f2830	inconnu	inconnu	aucun indice	fonction
@@ -2047,17 +2047,17 @@ adresse	taille	nom	module	statut	preuve	type
 004f2880	60	FUN_004f2880	inconnu	inconnu	aucun indice	fonction
 004f28c0	1090	FUN_004f28c0	inconnu	inconnu	aucun indice	fonction
 004f2d10	99	FUN_004f2d10	inconnu	inconnu	aucun indice	fonction
-004f2d80	5467	FUN_004f2d80	inconnu	inconnu	aucun indice	fonction
+004f2d80	5467	help_page_draw	interface	documenté	page d'aide / message : 5 appels de text_layout ; 5 467 octets	fonction
 004f4380	1796	FUN_004f4380	inconnu	inconnu	aucun indice	fonction
 004f4ac0	559	FUN_004f4ac0	inconnu	inconnu	aucun indice	fonction
 004f4cf0	1083	FUN_004f4cf0	inconnu	inconnu	aucun indice	fonction
 004f51e0	30	FUN_004f51e0	inconnu	inconnu	aucun indice	fonction
 004f5200	86	FUN_004f5200	inconnu	inconnu	aucun indice	fonction
-004f5260	100	FUN_004f5260	inconnu	inconnu	aucun indice	fonction
+004f5260	100	link_box_add	texte	documenté	enregistre un rectangle de lien @n (50 au plus, 20 octets chacun, 0x00EF8220)	fonction
 004f52d0	44	FUN_004f52d0	inconnu	inconnu	aucun indice	fonction
-004f5300	1169	FUN_004f5300	inconnu	inconnu	aucun indice	fonction
-004f57a0	274	FUN_004f57a0	inconnu	inconnu	aucun indice	fonction
-004f58c0	229	FUN_004f58c0	inconnu	inconnu	aucun indice	fonction
+004f5300	1169	text_layout	texte	documenté	mise en page d'un texte en lignes, modes 0 (dessin) et 1 (comptage), codes @P @L @G @n ; 2 280 appels	fonction
+004f57a0	274	word_width_panel	texte	documenté	largeur du mot suivant et octets lus (0x00F13A58) ; 2,2 M d'appels	fonction
+004f58c0	229	text_line_draw	texte	documenté	dessine une ligne de texte de panneau, enregistre les liens ; 34 315 appels	fonction
 004f59b0	439	text_draw_panel	texte	documenté	texte de panneau ; soustrait une constante en 004f5a33	fonction
 004f5b70	52	FUN_004f5b70	inconnu	inconnu	aucun indice	fonction
 004f5bb0	552	FUN_004f5bb0	inconnu	inconnu	aucun indice	fonction
@@ -2069,7 +2069,7 @@ adresse	taille	nom	module	statut	preuve	type
 004f6b40	21	FUN_004f6b40	inconnu	inconnu	aucun indice	fonction
 004f6b60	60	FUN_004f6b60	inconnu	inconnu	aucun indice	fonction
 004f6ba0	661	FUN_004f6ba0	inconnu	inconnu	aucun indice	fonction
-004f6e40	461	FUN_004f6e40	inconnu	inconnu	aucun indice	fonction
+004f6e40	461	tooltip_draw	interface	documenté	écran 0x23 : info-bulle, mise en page en deux passes (190 puis 270 pixels)	fonction
 004f7030	113	FUN_004f7030	inconnu	inconnu	aucun indice	fonction
 004f70b0	205	FUN_004f70b0	inconnu	inconnu	aucun indice	fonction
 004f7180	781	FUN_004f7180	inconnu	inconnu	aucun indice	fonction
@@ -2230,7 +2230,7 @@ adresse	taille	nom	module	statut	preuve	type
 00507560	367	FUN_00507560	inconnu	inconnu	aucun indice	fonction
 00507980	522	FUN_00507980	inconnu	inconnu	aucun indice	fonction
 00507b90	27	FUN_00507b90	inconnu	inconnu	aucun indice	fonction
-00507bf0	65	FUN_00507bf0	inconnu	inconnu	aucun indice	fonction
+00507bf0	65	text_string_find	texte	documenté	chaîne (groupe, rang) du fichier de textes ; 73 appelants, 64 286 appels	fonction
 00507c40	83	FUN_00507c40	inconnu	inconnu	aucun indice	fonction
 00507ca0	36	FUN_00507ca0	inconnu	inconnu	aucun indice	fonction
 00507cd0	51	FUN_00507cd0	inconnu	inconnu	aucun indice	fonction
@@ -2238,15 +2238,15 @@ adresse	taille	nom	module	statut	preuve	type
 00507d30	31	FUN_00507d30	inconnu	inconnu	aucun indice	fonction
 00507d50	37	FUN_00507d50	inconnu	inconnu	aucun indice	fonction
 00507d80	27	FUN_00507d80	inconnu	inconnu	aucun indice	fonction
-00507da0	350	FUN_00507da0	inconnu	inconnu	aucun indice	fonction
+00507da0	350	string_width	texte	documenté	largeur d'une chaîne selon la police (espaces 10, 4 ou 6) ; 76 861 appels	fonction
 00507f00	27	FUN_00507f00	inconnu	inconnu	aucun indice	fonction
-00507f20	147	FUN_00507f20	inconnu	inconnu	aucun indice	fonction
-00507fc0	106	FUN_00507fc0	inconnu	inconnu	aucun indice	fonction
+00507f20	147	char_width	texte	documenté	largeur d'un caractère : espace 4, sinon largeur du glyphe + 1 ; 9,98 M d'appels	fonction
+00507fc0	106	parse_decimal	texte	documenté	lit un nombre décimal, puissances de dix en 0x0063BF1C ; 10 762 appels	fonction
 00508030	42	FUN_00508030	inconnu	inconnu	aucun indice	fonction
-00508060	24	FUN_00508060	inconnu	inconnu	aucun indice	fonction
-00508080	24	FUN_00508080	inconnu	inconnu	aucun indice	fonction
+00508060	24	text_pointer_store_a	texte	documenté	range text_string_find dans 0x00F13A60 ; 44 appelants	fonction
+00508080	24	text_pointer_store_b	texte	documenté	range text_string_find dans 0x00F13A5C ; 11 appelants	fonction
 005080a0	157	FUN_005080a0	inconnu	inconnu	aucun indice	fonction
-00508140	345	FUN_00508140	inconnu	inconnu	aucun indice	fonction
+00508140	345	text_field_char_filter	interface	documenté	caractère saisi (WM_CHAR) : lettres, chiffres, signes, accentuées ; 1 appel	fonction
 005082a0	11	FUN_005082a0	inconnu	inconnu	aucun indice	fonction
 005082b0	31	FUN_005082b0	inconnu	inconnu	aucun indice	fonction
 005082e0	8	FUN_005082e0	inconnu	inconnu	aucun indice	fonction
@@ -2259,23 +2259,23 @@ adresse	taille	nom	module	statut	preuve	type
 00508480	64	FUN_00508480	inconnu	inconnu	aucun indice	fonction
 005084c0	28	FUN_005084c0	inconnu	inconnu	aucun indice	fonction
 005084e0	87	FUN_005084e0	inconnu	inconnu	aucun indice	fonction
-00508540	253	FUN_00508540	inconnu	inconnu	aucun indice	fonction
+00508540	253	number_to_text	texte	documenté	écrit un entier signé dans 0x00F27530 ; 2 801 appels	fonction
 00508640	35	FUN_00508640	inconnu	inconnu	aucun indice	fonction
-00508670	107	FUN_00508670	inconnu	inconnu	aucun indice	fonction
+00508670	107	string_draw_centered	texte	documenté	chaîne centrée dans une largeur ; 63 831 appels	fonction
 005086e0	279	FUN_005086e0	inconnu	inconnu	aucun indice	fonction
-00508800	835	FUN_00508800	inconnu	inconnu	aucun indice	fonction
+00508800	835	string_draw	texte	documenté	rend une chaîne : _ et # spéciaux, contour ou ombre ; 83 092 appels	fonction
 00508b50	441	text_draw_line	texte	documenté	texte d'une ligne ; exceptions polonaises en 00508c7f	fonction
 00508d10	35	FUN_00508d10	inconnu	inconnu	aucun indice	fonction
-00508d40	68	FUN_00508d40	inconnu	inconnu	aucun indice	fonction
-00508d90	62	FUN_00508d90	inconnu	inconnu	aucun indice	fonction
+00508d40	68	text_ref_draw_centered	texte	documenté	chaîne (groupe, rang) centrée ; 36 265 appels	fonction
+00508d90	62	text_ref_draw	texte	documenté	chaîne (groupe, rang) à une position ; 3 934 appels	fonction
 00508dd0	126	FUN_00508dd0	inconnu	inconnu	aucun indice	fonction
 00508e50	176	FUN_00508e50	inconnu	inconnu	aucun indice	fonction
-00508f00	131	FUN_00508f00	inconnu	inconnu	aucun indice	fonction
+00508f00	131	number_text_draw	texte	documenté	nombre suivi d'un texte ; 1 401 appels	fonction
 00508f90	136	FUN_00508f90	inconnu	inconnu	aucun indice	fonction
 00509020	56	FUN_00509020	inconnu	inconnu	aucun indice	fonction
 00509060	56	FUN_00509060	inconnu	inconnu	aucun indice	fonction
-005090a0	264	FUN_005090a0	inconnu	inconnu	aucun indice	fonction
-005091b0	113	FUN_005091b0	inconnu	inconnu	aucun indice	fonction
+005090a0	264	paragraph_draw	texte	documenté	paragraphe coupé en lignes par word_width_line ; 466 appels	fonction
+005091b0	113	word_width_line	texte	documenté	largeur du mot suivant d'une ligne ; 11 184 appels	fonction
 00509230	75	FUN_00509230	inconnu	inconnu	aucun indice	fonction
 00509280	72	FUN_00509280	inconnu	inconnu	aucun indice	fonction
 005092d0	70	FUN_005092d0	inconnu	inconnu	aucun indice	fonction
@@ -2335,8 +2335,8 @@ adresse	taille	nom	module	statut	preuve	type
 0050b250	106	FUN_0050b250	inconnu	inconnu	aucun indice	fonction
 0050b2c0	326	FUN_0050b2c0	inconnu	inconnu	aucun indice	fonction
 0050b410	53	clear_frame	rendu	natif	efface le tampon d'affichage ; remplacée par native.cpp	fonction
-0050b450	18	FUN_0050b450	inconnu	inconnu	aucun indice	fonction
-0050b470	634	FUN_0050b470	inconnu	inconnu	aucun indice	fonction
+0050b450	18	mouse_edges_clear	interface	documenté	remet à zéro 0x00F2A700, 0x00F2A706 et 0x00F2A6FA en fin de tour	fonction
+0050b470	634	mouse_poll	interface	documenté	position à l'échelle du tampon et fronts de bouton, une fois par tour	fonction
 0050b6f0	97	FUN_0050b6f0	inconnu	inconnu	aucun indice	fonction
 0050b770	57	FUN_0050b770	inconnu	inconnu	aucun indice	fonction
 0050b7b0	321	FUN_0050b7b0	inconnu	inconnu	aucun indice	fonction
@@ -2423,39 +2423,39 @@ adresse	taille	nom	module	statut	preuve	type
 00512610	89	FUN_00512610	inconnu	inconnu	aucun indice	fonction
 005126d0	30	FUN_005126d0	inconnu	inconnu	aucun indice	fonction
 005126f0	67	FUN_005126f0	inconnu	inconnu	aucun indice	fonction
-00512740	62	FUN_00512740	inconnu	inconnu	aucun indice	fonction
-00512780	49	FUN_00512780	inconnu	inconnu	aucun indice	fonction
+00512740	62	layout_screen_key	interface	documenté	clé d'écran des surcharges de mise en page ; 15 454 appels	fonction
+00512780	49	layout_override_init	interface	documenté	vide les surcharges et lit dialog.loc	fonction
 005127c0	48	FUN_005127c0	inconnu	inconnu	aucun indice	fonction
 005127f0	81	FUN_005127f0	inconnu	inconnu	aucun indice	fonction
 00512850	9	FUN_00512850	inconnu	inconnu	aucun indice	fonction
 00512860	6	FUN_00512860	inconnu	inconnu	aucun indice	fonction
 00512870	12	FUN_00512870	inconnu	inconnu	aucun indice	fonction
 00512880	96	FUN_00512880	inconnu	inconnu	aucun indice	fonction
-005128e0	91	FUN_005128e0	inconnu	inconnu	aucun indice	fonction
+005128e0	91	layout_override_find	interface	documenté	cherche une surcharge ; toujours vide sans dialog.loc ; 10 995 appels	fonction
 00512950	17	FUN_00512950	inconnu	inconnu	aucun indice	fonction
 00512970	17	FUN_00512970	inconnu	inconnu	aucun indice	fonction
-00512990	195	FUN_00512990	inconnu	inconnu	aucun indice	fonction
+00512990	195	layout_override_hit	interface	documenté	éditeur de mise en page jamais activé (0x00F9F970 jamais écrit) ; 7 797 appels	fonction
 00512a60	156	FUN_00512a60	inconnu	inconnu	aucun indice	fonction
 00512b00	79	FUN_00512b00	inconnu	inconnu	aucun indice	fonction
-00512b50	156	FUN_00512b50	inconnu	inconnu	aucun indice	fonction
-00512bf0	141	FUN_00512bf0	inconnu	inconnu	aucun indice	fonction
+00512b50	156	text_ref_centered_override	interface	documenté	text_ref_draw_centered avec surcharge de position ; 69 appelants	fonction
+00512bf0	141	text_ref_draw_override	interface	documenté	text_ref_draw avec surcharge de position ; 47 appelants	fonction
 00512c80	79	FUN_00512c80	inconnu	inconnu	aucun indice	fonction
 00512cd0	161	FUN_00512cd0	inconnu	inconnu	aucun indice	fonction
 00512d80	296	FUN_00512d80	inconnu	inconnu	aucun indice	fonction
 00512eb0	318	FUN_00512eb0	inconnu	inconnu	aucun indice	fonction
-00512ff0	318	FUN_00512ff0	inconnu	inconnu	aucun indice	fonction
-00513130	76	FUN_00513130	inconnu	inconnu	aucun indice	fonction
-00513180	288	FUN_00513180	inconnu	inconnu	aucun indice	fonction
-005132a0	146	FUN_005132a0	inconnu	inconnu	aucun indice	fonction
+00512ff0	318	frame_draw_override	interface	documenté	cadre de cases de 16 pixels avec surcharge de position ; 70 appelants	fonction
+00513130	76	layout_override_apply	interface	documenté	écrit les surcharges dans la table de 28 octets	fonction
+00513180	288	widget_hover_layout	interface	documenté	applique les surcharges au premier appel et rend le survol ; 4 457 appels	fonction
+005132a0	146	number_text_draw_override	interface	documenté	number_text_draw avec surcharge de position ; 27 appelants	fonction
 00513340	156	FUN_00513340	inconnu	inconnu	aucun indice	fonction
 005133e0	171	FUN_005133e0	inconnu	inconnu	aucun indice	fonction
-00513490	226	FUN_00513490	texte	inconnu	chaîne (fichiers de texte)	fonction
+00513490	226	dialog_loc_load	interface	documenté	lit dialog.loc (absent de l'édition GOG)	fonction
 00513580	1152	game_turn	scénario	documenté	tour de la boucle principale ; interroge simulation_due	fonction
 00513a30	255	simulation_tick	scénario	documenté	un tour : hasard, ville, marcheurs (zeus-run --ticks)	fonction
-00513b30	986	FUN_00513b30	interface	inconnu	hypothèse : appelants/appelés (poids 6 sur 8 en interface)	fonction
-00514020	1921	FUN_00514020	inconnu	inconnu	aucun indice	fonction
+00513b30	986	background_repaint	interface	documenté	redessine le fond de l'écran si 0x00F2A6CE est levé, puis le baisse	fonction
+00514020	1921	screen_draw	interface	documenté	switch sur l'écran 0x00F2A6DD : fonctions de dessin de chaque écran ; 8 398 appels	fonction
 005148f0	792	FUN_005148f0	inconnu	inconnu	aucun indice	fonction
-00514c10	6908	FUN_00514c10	inconnu	inconnu	aucun indice	fonction
+00514c10	6908	screen_input	interface	documenté	switch sur l'écran : tables de boutons, tests de survol et de clic ; 8 398 appels	fonction
 005168a0	164	simulation_due	scénario	documenté	dit si un tour de simulation est dû (intervalle de vitesse + 2 ms)	fonction
 00516950	94	FUN_00516950	inconnu	inconnu	aucun indice	fonction
 00516c60	109	FUN_00516c60	inconnu	inconnu	aucun indice	fonction
@@ -2470,13 +2470,13 @@ adresse	taille	nom	module	statut	preuve	type
 00517480	256	FUN_00517480	inconnu	inconnu	aucun indice	fonction
 00517580	150	FUN_00517580	inconnu	inconnu	aucun indice	fonction
 00517620	43	FUN_00517620	inconnu	inconnu	aucun indice	fonction
-00517650	556	FUN_00517650	inconnu	inconnu	aucun indice	fonction
+00517650	556	panel_click	interface	documenté	clic dans la page du panneau (0x00FA0004) : une table par page	fonction
 005178a0	63	FUN_005178a0	inconnu	inconnu	aucun indice	fonction
 005178e0	90	FUN_005178e0	inconnu	inconnu	aucun indice	fonction
 00517940	219	FUN_00517940	inconnu	inconnu	aucun indice	fonction
 00517a20	235	FUN_00517a20	interface	inconnu	hypothèse : appelants/appelés (poids 4 sur 4 en interface)	fonction
 00517b10	214	panel_unfolded_draw	interface	documenté	dessin du panneau déplié	fonction
-00517bf0	220	FUN_00517bf0	inconnu	inconnu	aucun indice	fonction
+00517bf0	220	panel_draw	interface	documenté	panneau de contrôle : tables 0x0063DC40 (17) et 0x0063DF80 (7) ; 466 appels	fonction
 00517cd0	257	FUN_00517cd0	inconnu	inconnu	aucun indice	fonction
 00517de0	68	FUN_00517de0	inconnu	inconnu	aucun indice	fonction
 00517e30	281	FUN_00517e30	inconnu	inconnu	aucun indice	fonction
@@ -2529,7 +2529,7 @@ adresse	taille	nom	module	statut	preuve	type
 0051c330	1199	FUN_0051c330	inconnu	inconnu	aucun indice	fonction
 0051c7e0	27	FUN_0051c7e0	inconnu	inconnu	aucun indice	fonction
 0051c800	542	FUN_0051c800	inconnu	inconnu	aucun indice	fonction
-0051ca20	138	FUN_0051ca20	inconnu	inconnu	aucun indice	fonction
+0051ca20	138	build_menu_select	interface	documenté	touches 0 à 9 et - : choisit une catégorie du menu de construction	fonction
 0051cab0	29	FUN_0051cab0	inconnu	inconnu	aucun indice	fonction
 0051cad0	127	FUN_0051cad0	inconnu	inconnu	aucun indice	fonction
 0051cba0	83	view_panel_folded	interface	documenté	taille de la vue de la carte, panneau replié (50×17 en 1024)	fonction
@@ -2589,7 +2589,7 @@ adresse	taille	nom	module	statut	preuve	type
 00521800	43	FUN_00521800	inconnu	inconnu	aucun indice	fonction
 00521970	255	FUN_00521970	inconnu	inconnu	aucun indice	fonction
 00521a70	702	FUN_00521a70	inconnu	inconnu	aucun indice	fonction
-00521d30	392	FUN_00521d30	inconnu	inconnu	aucun indice	fonction
+00521d30	392	message_queue_poll	interface	documenté	prend le message suivant en attente et ouvre la fenêtre	fonction
 00521ec0	91	FUN_00521ec0	inconnu	inconnu	aucun indice	fonction
 00521f20	78	FUN_00521f20	inconnu	inconnu	aucun indice	fonction
 00522110	147	FUN_00522110	inconnu	inconnu	aucun indice	fonction
@@ -2604,7 +2604,7 @@ adresse	taille	nom	module	statut	preuve	type
 00522bd0	178	FUN_00522bd0	inconnu	inconnu	aucun indice	fonction
 00522ec0	794	FUN_00522ec0	inconnu	inconnu	aucun indice	fonction
 005231e0	438	FUN_005231e0	inconnu	inconnu	aucun indice	fonction
-005233a0	96	FUN_005233a0	inconnu	inconnu	aucun indice	fonction
+005233a0	96	top_buttons_layout	interface	documenté	abscisses des 6 boutons du haut : (largeur - 180) / 2	fonction
 00523400	336	FUN_00523400	inconnu	inconnu	aucun indice	fonction
 00523640	95	FUN_00523640	inconnu	inconnu	aucun indice	fonction
 005236a0	97	FUN_005236a0	inconnu	inconnu	aucun indice	fonction
@@ -2646,10 +2646,10 @@ adresse	taille	nom	module	statut	preuve	type
 005251c0	157	FUN_005251c0	inconnu	inconnu	aucun indice	fonction
 00525280	683	panel_overlay_draw	interface	documenté	dernier dessin du panneau	fonction
 00525530	132	FUN_00525530	inconnu	inconnu	aucun indice	fonction
-00525630	485	FUN_00525630	inconnu	inconnu	aucun indice	fonction
+00525630	485	sidebar_draw_48	interface	documenté	panneau de l'écran 0x48 : tables 0x006402A0 et 0x0063DF80	fonction
 00525820	125	FUN_00525820	inconnu	inconnu	aucun indice	fonction
 005258d0	832	FUN_005258d0	inconnu	inconnu	aucun indice	fonction
-00525c10	635	FUN_00525c10	inconnu	inconnu	aucun indice	fonction
+00525c10	635	sidebar_draw_20	interface	documenté	panneau de l'écran 0x20 : tables 0x00640390 et 0x0063DF80	fonction
 00525e90	38	FUN_00525e90	inconnu	inconnu	aucun indice	fonction
 00525ec0	45	FUN_00525ec0	inconnu	inconnu	aucun indice	fonction
 00525ef0	122	FUN_00525ef0	inconnu	inconnu	aucun indice	fonction
@@ -2801,7 +2801,7 @@ adresse	taille	nom	module	statut	preuve	type
 0052bde0	38	FUN_0052bde0	inconnu	inconnu	aucun indice	fonction
 0052be10	562	FUN_0052be10	inconnu	inconnu	aucun indice	fonction
 0052c050	22	FUN_0052c050	inconnu	inconnu	aucun indice	fonction
-0052c070	3449	FUN_0052c070	inconnu	inconnu	aucun indice	fonction
+0052c070	3449	objectives_screen_draw	interface	documenté	écrans 0x42 et 0x43 : 17 types d'objectifs, 2 279 mises en page sur working-city	fonction
 0052cf00	24	FUN_0052cf00	inconnu	inconnu	aucun indice	fonction
 0052cf20	32	FUN_0052cf20	inconnu	inconnu	aucun indice	fonction
 0052cf40	21	FUN_0052cf40	inconnu	inconnu	aucun indice	fonction
@@ -3769,10 +3769,10 @@ adresse	taille	nom	module	statut	preuve	type
 00570b20	2468	FUN_00570b20	inconnu	inconnu	aucun indice	fonction
 005715a0	535	info_window_open	interface	documenté	fenêtre d'information : en bas si l'ordonnée du clic ≤ 396	fonction
 005717d0	1689	FUN_005717d0	inconnu	inconnu	aucun indice	fonction
-00571ee0	313	FUN_00571ee0	inconnu	inconnu	aucun indice	fonction
+00571ee0	313	info_window_class	interface	documenté	classe de la fenêtre d'information (hauteur en cases)	fonction
 005720e0	548	FUN_005720e0	son	inconnu	hypothèse : appelants/appelés (poids 35 sur 36 en son)	fonction
-005724e0	488	FUN_005724e0	inconnu	inconnu	aucun indice	fonction
-005726e0	2131	FUN_005726e0	inconnu	inconnu	aucun indice	fonction
+005724e0	488	info_window_draw	interface	documenté	écran 0x09 : fenêtre d'information	fonction
+005726e0	2131	info_window_click	interface	documenté	clics de la fenêtre d'information ; 9 tests de survol	fonction
 00572f50	141	FUN_00572f50	inconnu	inconnu	aucun indice	fonction
 00572fe0	296	FUN_00572fe0	son	inconnu	hypothèse : appelants/appelés (poids 4 sur 4 en son)	fonction
 00573110	183	FUN_00573110	inconnu	inconnu	aucun indice	fonction
@@ -3954,13 +3954,13 @@ adresse	taille	nom	module	statut	preuve	type
 0058e170	125	FUN_0058e170	inconnu	inconnu	aucun indice	fonction
 0058e260	31	FUN_0058e260	interface	inconnu	hypothèse : appelants/appelés (poids 4 sur 4 en interface)	fonction
 0058e280	89	control_panel_position	interface	documenté	abscisse du panneau de contrôle : 478, 598 ou 838	fonction
-0058e2e0	249	FUN_0058e2e0	interface	inconnu	hypothèse : appelants/appelés (poids 4 sur 4 en interface)	fonction
+0058e2e0	249	frame_redraw	interface	documenté	redessine tout le cadre : liseré du bas, fond du panneau, 0x0058EB20 ; 3 appels	fonction
 0058e3e0	1596	bottom_strip_fill	interface	documenté	liseré de 9 pixels en bas de l'écran	fonction
-0058ea20	37	FUN_0058ea20	inconnu	inconnu	aucun indice	fonction
-0058ea50	60	FUN_0058ea50	inconnu	inconnu	aucun indice	fonction
+0058ea20	37	panel_background_pick	interface	documenté	choisit le fond du panneau selon l'écran ; 466 appels	fonction
+0058ea50	60	map_style_track	interface	documenté	mémorise le style de carte courant ; 463 appels	fonction
 0058ea90	138	FUN_0058ea90	inconnu	inconnu	aucun indice	fonction
 0058eb20	1439	FUN_0058eb20	interface	inconnu	hypothèse : appelants/appelés (poids 6 sur 8 en interface)	fonction
-0058f130	1244	FUN_0058f130	économie	inconnu	chaîne (population et impôts)	fonction
+0058f130	1244	top_left_texts_draw	interface	documenté	textes du coin haut gauche : alerte, événement, pause, libellés anglais du développeur	fonction
 0058f620	35	FUN_0058f620	interface	inconnu	hypothèse : appelants/appelés (poids 3 sur 3 en interface)	fonction
 0058f650	2645	FUN_0058f650	inconnu	inconnu	aucun indice	fonction
 005900b0	68	FUN_005900b0	inconnu	inconnu	aucun indice	fonction
@@ -4033,21 +4033,21 @@ adresse	taille	nom	module	statut	preuve	type
 0059c6e0	10	FUN_0059c6e0	inconnu	inconnu	aucun indice	fonction
 0059c790	128	FUN_0059c790	inconnu	inconnu	aucun indice	fonction
 0059c810	132	FUN_0059c810	inconnu	inconnu	aucun indice	fonction
-0059c8a0	1947	FUN_0059c8a0	économie	inconnu	chaîne (population et impôts)	fonction
-0059d040	562	FUN_0059d040	bâtiments	inconnu	chaîne (bâtiments)	fonction
+0059c8a0	1947	debug_overlay_population	interface	documenté	affichage de débogage « Pop is », « docks list »... si 0x00FE6A08 == 1	fonction
+0059d040	562	debug_overlay_evolve	interface	documenté	affichage de débogage « Evolve info (F3) » si 0x0091EC24 == 1	fonction
 0059d280	4175	FUN_0059d280	bâtiments	inconnu	chaîne (bâtiments)	fonction
 0059e380	533	FUN_0059e380	inconnu	inconnu	aucun indice	fonction
 0059e5a0	1478	FUN_0059e5a0	marcheurs	inconnu	chaîne (figures)	fonction
 0059eb70	104	FUN_0059eb70	interface	inconnu	chaîne (fenêtre et réglages)	fonction
 0059ebe0	366	top_bar_background_draw	interface	documenté	fond de la barre du haut, image de 838 pixels en (0, 0)	fonction
 0059ed50	309	FUN_0059ed50	inconnu	inconnu	aucun indice	fonction
-0059ee90	596	FUN_0059ee90	inconnu	inconnu	aucun indice	fonction
+0059ee90	596	window_frame_titled_draw	interface	documenté	cadre de cases de 16 pixels avec barre de titre ; 3 888 appels	fonction
 0059f0f0	186	FUN_0059f0f0	inconnu	inconnu	aucun indice	fonction
 0059f1b0	225	FUN_0059f1b0	inconnu	inconnu	aucun indice	fonction
-0059f2a0	589	FUN_0059f2a0	inconnu	inconnu	aucun indice	fonction
+0059f2a0	589	window_frame_draw	interface	documenté	cadre de cases de 16 pixels ; 9 368 appels	fonction
 0059f4f0	262	FUN_0059f4f0	inconnu	inconnu	aucun indice	fonction
 0059f600	223	FUN_0059f600	inconnu	inconnu	aucun indice	fonction
-0059f6e0	486	FUN_0059f6e0	inconnu	inconnu	aucun indice	fonction
+0059f6e0	486	window_highlight_draw	interface	documenté	surbrillance d'un rectangle en cases de 16 pixels ; 8 436 appels	fonction
 0059f8d0	666	FUN_0059f8d0	inconnu	inconnu	aucun indice	fonction
 0059fb70	40	FUN_0059fb70	inconnu	inconnu	aucun indice	fonction
 0059fba0	327	FUN_0059fba0	inconnu	inconnu	aucun indice	fonction
@@ -4057,7 +4057,7 @@ adresse	taille	nom	module	statut	preuve	type
 0059fe80	1602	FUN_0059fe80	inconnu	inconnu	aucun indice	fonction
 005a04f0	1018	FUN_005a04f0	inconnu	inconnu	aucun indice	fonction
 005a0900	115	FUN_005a0900	inconnu	inconnu	aucun indice	fonction
-005a0980	229	FUN_005a0980	inconnu	inconnu	aucun indice	fonction
+005a0980	229	modal_message_loop	interface	documenté	boucle de messages propre, écran 0x54, rend la réponse (6 = oui) ; 8 appelants	fonction
 005a0a70	109	FUN_005a0a70	inconnu	inconnu	aucun indice	fonction
 005a0ae0	66	FUN_005a0ae0	inconnu	inconnu	aucun indice	fonction
 005a0b30	200	FUN_005a0b30	inconnu	inconnu	aucun indice	fonction
@@ -4371,12 +4371,12 @@ adresse	taille	nom	module	statut	preuve	type
 005c47b0	313	FUN_005c47b0	interface	inconnu	chaîne (fenêtre et réglages)	fonction
 005c48f0	120	FUN_005c48f0	inconnu	inconnu	aucun indice	fonction
 005c4970	183	FUN_005c4970	inconnu	inconnu	aucun indice	fonction
-005c4a30	89	FUN_005c4a30	rendu	inconnu	hypothèse : appelants/appelés (poids 5 sur 5 en rendu)	fonction
+005c4a30	89	display_mode_change	interface	documenté	change de mode d'affichage et refait la mise en page (F6, F7)	fonction
 005c4a90	0	window_proc	interface	documenté	procédure de fenêtre ; souris et boutons lus une fois par image (reverse-engineering.md)	fonction
-005c5c80	51	FUN_005c5c80	inconnu	inconnu	aucun indice	fonction
-005c5cc0	111	FUN_005c5cc0	inconnu	inconnu	aucun indice	fonction
+005c5c80	51	map_view_goto	interface	documenté	F1 à F4 : va à la position de carte enregistrée	fonction
+005c5cc0	111	map_view_save	interface	documenté	Ctrl+F1 à F4 : enregistre la position de la carte	fonction
 005c5d30	24	FUN_005c5d30	inconnu	inconnu	aucun indice	fonction
-005c5d60	449	FUN_005c5d60	inconnu	inconnu	aucun indice	fonction
+005c5d60	449	debug_timers_draw	interface	documenté	minuteries et touches de débogage ; 463 appels	fonction
 005c5f30	75	FUN_005c5f30	inconnu	inconnu	aucun indice	fonction
 005c5f80	158	FUN_005c5f80	sauvegarde	inconnu	hypothèse : appelants/appelés (poids 3 sur 4 en sauvegarde)	fonction
 005c6020	259	FUN_005c6020	bibliothèque C	inconnu	hypothèse : appelants/appelés (poids 4 sur 5 en bibliothèque C)	fonction
