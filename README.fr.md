@@ -76,7 +76,7 @@ L'original émulé reste la référence et le juge : chaque partie réécrite do
 tour, qu'elle donne exactement le même état de partie. Rien n'est traduit mécaniquement. Aucune
 date n'est promise.
 
-**Avancée du moteur :** 113 des 4 872 fonctions de l'exécutable GOG sont comprises (nommées, documentées ou natives) et 6 sont remplacées par du code natif écrit à la main ; elles représentent 54 % du temps de calcul du jeu sur le scénario `working-city` (code x86 émulé seul, travail de l'hôte exclu). [Carte du code et compteurs](docs/engine/README.md) (en anglais).
+**Avancée du moteur :** 195 des 4 872 fonctions de l'exécutable GOG sont comprises (nommées, documentées ou natives) et 8 sont remplacées entières par du code natif écrit à la main ; le code natif fait 48,7 % du temps de calcul du jeu sur le scénario `working-city`, plus 14,7 % dans des fonctions natives en partie (code x86 émulé seul, travail de l'hôte exclu). [Carte du code et compteurs](docs/engine/README.md) (en anglais).
 
 - **1.x Jouable** — le garder léger et dans toutes les éditions : premier lancement ([#55](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/55)), packs de
   langue ([#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24), **testeurs recherchés**), charge processeur ([#22](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/22)). [Jalon](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/2)

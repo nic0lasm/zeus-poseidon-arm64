@@ -19,20 +19,19 @@ the game.
 
 ## Counters
 
-- **Native functions: 6 of 4,872** (0.1 %). A function is *native* when the host replaces the
-  whole of it. Three more are replaced only in their common cases (a fast path or a rewritten
+- **Native functions: 8 of 4,872** (0.2 %; figures of 2026-10-15, after #86). A function is *native* when the host replaces the
+  whole of it. Four more are replaced only in their common cases (a fast path or a rewritten
   loop, the original code still running for the rest): they stay *named* and say so in their
   evidence column.
-- **Functions understood: 184 of 4,872** (3.8 %): named, documented or native.
-- **Computation done natively: 54 %.** Scenario `working-city` (the last tutorial, a large city)
+- **Functions understood: 195 of 4,872** (4.0 %): named, documented or native.
+- **Computation done natively: 48.7 %, plus 14.7 % partly native.** Scenario `working-city` (the last tutorial, a large city)
   for its full 300 s, deterministic clock, run with `--no-native` so that the whole game is
   emulated and profiled. The profile times every block of x86 code the game executes (corrected
-  for the cost of the measure, as in `tools/profile_report.py`). **54.1 %** of that time is spent
-  in the 6 native functions (`copy_rectangle`, `draw_runs`, `strcmpi`, `clear_frame`,
-  `draw_runs_blended`), plus **12.4 %** in functions that are only partly native; the rest is
+  for the cost of the measure, as in `tools/profile_report.py`). **48.7 %** of that time is spent
+  in the 8 native functions, plus **14.7 %** in functions that are only partly native; the rest is
   original code that is still emulated. The share of executed code bytes gives the same answer
-  (54.2 % + 12.8 %). It is a share of the *game's own code*: the time the host spends in Win32
-  calls, blits and sound (blocks outside the game's `.text`, 9.8 % of the time measured) is
+  (56.1 % + 13.0 %). It is a share of the *game's own code*: the time the host spends in Win32
+  calls, blits and sound (blocks outside the game's `.text`, 8.7 % of the time measured) is
   excluded. Caveats: the profiler itself slows the run down and its cost is estimated, a byte
   count is not an instruction count (a repeated string instruction counts once), and one
   scenario is not the whole game.
