@@ -17,6 +17,7 @@ adresse	nom	module	statut	preuve	type
 00420020	fullscreen_background_a	interface	documenté	fond plein écran centré (menus)	fonction
 00422270	fullscreen_background_b	interface	documenté	fond plein écran centré (menus)	fonction
 00422c60	fullscreen_background_c	interface	documenté	fond plein écran centré (menus)	fonction
+00423180	image_entry	rendu	documenté	entrée d'une image dans une banque (thiscall) ; rendering.md §11.2	fonction
 00428700	image_draw_isometric_top	rendu	nommé	enveloppe de 0x0064394C	fonction
 0042c700	screenshot_key_check	interface	documenté	Alt+1 et Alt+2 écrivent shot1.bmp et shot2.bmp (écran 0x01) ; 90 appels sur working-city	fonction
 0042f380	fullscreen_background_d	interface	documenté	fond plein écran centré (menus)	fonction
@@ -27,11 +28,16 @@ adresse	nom	module	statut	preuve	type
 00433d50	model_building_value	bâtiments	documenté	valeur k de la ligne t du modèle (0x00782F70) ; docs/engine/terrain.md §7.1	fonction
 00435070	ground_diamond_draw	rendu	nommé	sol en losange (empreinte vérifiée par native_draw.cpp)	fonction
 004488c0	random_next	terrain	documenté	deux registres de 31 bits, 31 pas par tirage ; docs/engine/terrain.md §5	fonction
+00449b30	tile_walkers_sort	rendu	nommé	trie la liste des personnages d'une case (écrit l'état) ; rendering.md §11.2	fonction
 00449e50	map_view_set_size	interface	documenté	reçoit colonnes et rangées de la vue de la carte	fonction
+0044f320	building_extra_draw	rendu	documenté	dessin d'appoint d'un bâtiment selon son type (21 types) ; rendering.md §11.2	fonction
 00451c70	build_cursor_preview	interface	documenté	aperçu du curseur de construction ; docs/engine/terrain.md §5	fonction
 004542b0	map_number_draw	interface	documenté	nombre posé sur la carte, ombre puis couleur ; 463 appels (un par image de ville)	fonction
-00457900	ground_tile_draw	rendu	nommé	sol d'une case ; natif partiel : chemin rapide dans native_draw.cpp	fonction
-00458170	city_draw	rendu	nommé	dessin de la ville, deux passes ; natif partiel : boucle du sol dans native_draw.cpp	fonction
+00457900	ground_tile_draw	rendu	nommé	sol d'une case ; natif partiel : chemin rapide dans native_draw.cpp (plat, en pente, drapeaux 0x4020)	fonction
+00458170	city_draw	rendu	nommé	dessin de la ville, trois passes ; natif partiel : premier et second parcours dans native_draw.cpp ; rendering.md §11	fonction
+0045a5a0	tile_walkers_draw	rendu	nommé	trie et dessine les personnages d'une case ; rendering.md §11.2	fonction
+0045a690	sloped_top_draw	rendu	documenté	partie haute d'un morceau en pente, décalée selon sa taille ; rendering.md §11.2	fonction
+0045daf0	figure_type_on_tile	rendu	documenté	un personnage visible de certains types se tient sur la case ; rendering.md §11.2	fonction
 0045ed20	map_elevation_project	terrain	documenté	altitude projetée selon l'orientation, règles des falaises ; docs/engine/terrain.md §4	fonction
 004743ea	city_draw_tile_footprint	rendu	nommé	dessine le socle d'une case ; anime l'eau (SPR_BEACH_COAST, SPR_WATER_ANIMS)	fonction
 0047499f	city_draw_tiles	rendu	nommé	boucle de dessin : y - altitude*0x1e, passes socles puis parties hautes	fonction
@@ -169,6 +175,7 @@ adresse	nom	module	statut	preuve	type
 005a0c00	scrollbar_update	interface	documenté	barres de défilement ; consomment la molette	fonction
 005a1330	sound_stop_channels	son	documenté	arrête les canaux au WM_KILLFOCUS	fonction
 005a2c30	sound_listener_update	son	documenté	auditeur 3D : positions aléatoires à ~60 unités	fonction
+005a7200	ambient_building_class	rendu	documenté	classe d'un type de bâtiment pour les compteurs d'ambiance (0 à 4) ; rendering.md §11.2	fonction
 005acf50	sprite_dispatch	rendu	nommé	répartiteur de sprites ; natif partiel : chemin rapide dans native.cpp	fonction
 005adf00	building_top_draw	rendu	nommé	partie haute d'un bâtiment ; natif partiel : chemin rapide dans native.cpp (sauf surimpression)	fonction
 005c35e0	mouse_wheel_init	interface	documenté	cherche la molette pré-Windows 98 au démarrage	fonction

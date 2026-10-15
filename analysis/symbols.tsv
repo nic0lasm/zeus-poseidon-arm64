@@ -346,7 +346,7 @@ adresse	taille	nom	module	statut	preuve	type
 00422ff0	52	FUN_00422ff0	inconnu	inconnu	aucun indice	fonction
 00423030	38	FUN_00423030	inconnu	inconnu	aucun indice	fonction
 00423060	126	FUN_00423060	inconnu	inconnu	aucun indice	fonction
-00423180	30	FUN_00423180	inconnu	inconnu	aucun indice	fonction
+00423180	30	image_entry	rendu	documenté	entrée d'une image dans une banque (thiscall) ; rendering.md §11.2	fonction
 004231e0	38	FUN_004231e0	inconnu	inconnu	aucun indice	fonction
 00423220	10	FUN_00423220	inconnu	inconnu	aucun indice	fonction
 00423230	12	FUN_00423230	inconnu	inconnu	aucun indice	fonction
@@ -718,7 +718,7 @@ adresse	taille	nom	module	statut	preuve	type
 00448880	54	FUN_00448880	inconnu	inconnu	aucun indice	fonction
 004488c0	196	random_next	terrain	documenté	deux registres de 31 bits, 31 pas par tirage ; docs/engine/terrain.md §5	fonction
 00448990	4424	FUN_00448990	inconnu	inconnu	aucun indice	fonction
-00449b30	730	FUN_00449b30	inconnu	inconnu	aucun indice	fonction
+00449b30	730	tile_walkers_sort	rendu	nommé	trie la liste des personnages d'une case (écrit l'état) ; rendering.md §11.2	fonction
 00449e50	224	map_view_set_size	interface	documenté	reçoit colonnes et rangées de la vue de la carte	fonction
 00449f30	76	FUN_00449f30	inconnu	inconnu	aucun indice	fonction
 00449f80	97	FUN_00449f80	inconnu	inconnu	aucun indice	fonction
@@ -754,7 +754,7 @@ adresse	taille	nom	module	statut	preuve	type
 0044e100	2478	FUN_0044e100	inconnu	inconnu	aucun indice	fonction
 0044eab0	636	FUN_0044eab0	inconnu	inconnu	aucun indice	fonction
 0044f1a0	378	FUN_0044f1a0	inconnu	inconnu	aucun indice	fonction
-0044f320	2588	FUN_0044f320	inconnu	inconnu	aucun indice	fonction
+0044f320	2588	building_extra_draw	rendu	documenté	dessin d'appoint d'un bâtiment selon son type (21 types) ; rendering.md §11.2	fonction
 0044fea0	70	FUN_0044fea0	inconnu	inconnu	aucun indice	fonction
 0044fef0	5977	FUN_0044fef0	inconnu	inconnu	aucun indice	fonction
 00451790	91	FUN_00451790	inconnu	inconnu	aucun indice	fonction
@@ -785,11 +785,11 @@ adresse	taille	nom	module	statut	preuve	type
 00456ce0	335	FUN_00456ce0	inconnu	inconnu	aucun indice	fonction
 00456e30	1500	FUN_00456e30	inconnu	inconnu	aucun indice	fonction
 004574c0	1077	FUN_004574c0	inconnu	inconnu	aucun indice	fonction
-00457900	1906	ground_tile_draw	rendu	nommé	sol d'une case ; natif partiel : chemin rapide dans native_draw.cpp	fonction
-00458170	8419	city_draw	rendu	nommé	dessin de la ville, deux passes ; natif partiel : boucle du sol dans native_draw.cpp	fonction
-0045a5a0	158	FUN_0045a5a0	inconnu	inconnu	aucun indice	fonction
+00457900	1906	ground_tile_draw	rendu	nommé	sol d'une case ; natif partiel : chemin rapide dans native_draw.cpp (plat, en pente, drapeaux 0x4020)	fonction
+00458170	8419	city_draw	rendu	nommé	dessin de la ville, trois passes ; natif partiel : premier et second parcours dans native_draw.cpp ; rendering.md §11	fonction
+0045a5a0	158	tile_walkers_draw	rendu	nommé	trie et dessine les personnages d'une case ; rendering.md §11.2	fonction
 0045a640	70	FUN_0045a640	inconnu	inconnu	aucun indice	fonction
-0045a690	227	FUN_0045a690	inconnu	inconnu	aucun indice	fonction
+0045a690	227	sloped_top_draw	rendu	documenté	partie haute d'un morceau en pente, décalée selon sa taille ; rendering.md §11.2	fonction
 0045a790	227	FUN_0045a790	inconnu	inconnu	aucun indice	fonction
 0045a890	79	FUN_0045a890	rendu	inconnu	hypothèse : appelants/appelés (poids 3 sur 3 en rendu)	fonction
 0045a8e0	616	FUN_0045a8e0	inconnu	inconnu	aucun indice	fonction
@@ -809,7 +809,7 @@ adresse	taille	nom	module	statut	preuve	type
 0045c710	1743	FUN_0045c710	inconnu	inconnu	aucun indice	fonction
 0045cde0	860	FUN_0045cde0	inconnu	inconnu	aucun indice	fonction
 0045d140	2250	FUN_0045d140	rendu	inconnu	hypothèse : appelants/appelés (poids 3 sur 3 en rendu)	fonction
-0045daf0	102	FUN_0045daf0	inconnu	inconnu	aucun indice	fonction
+0045daf0	102	figure_type_on_tile	rendu	documenté	un personnage visible de certains types se tient sur la case ; rendering.md §11.2	fonction
 0045dbb0	24	FUN_0045dbb0	rendu	inconnu	hypothèse : appelants/appelés (poids 4 sur 4 en rendu)	fonction
 0045dbd0	37	FUN_0045dbd0	inconnu	inconnu	aucun indice	fonction
 0045dc00	13	FUN_0045dc00	inconnu	inconnu	aucun indice	fonction
@@ -4110,7 +4110,7 @@ adresse	taille	nom	module	statut	preuve	type
 005a6fe0	338	FUN_005a6fe0	inconnu	inconnu	aucun indice	fonction
 005a7180	22	FUN_005a7180	inconnu	inconnu	aucun indice	fonction
 005a71a0	91	FUN_005a71a0	son	inconnu	hypothèse : appelants/appelés (poids 4 sur 4 en son)	fonction
-005a7200	56	FUN_005a7200	inconnu	inconnu	aucun indice	fonction
+005a7200	56	ambient_building_class	rendu	documenté	classe d'un type de bâtiment pour les compteurs d'ambiance (0 à 4) ; rendering.md §11.2	fonction
 005a72e0	164	FUN_005a72e0	scénario	inconnu	chaîne (cartes et campagnes)	fonction
 005a7390	55	FUN_005a7390	scénario	inconnu	chaîne (cartes et campagnes)	fonction
 005a73d0	3666	FUN_005a73d0	son	inconnu	chaîne (fichiers audio)	fonction

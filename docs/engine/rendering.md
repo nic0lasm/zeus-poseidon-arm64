@@ -411,7 +411,7 @@ back to the original are listed there).
 Counts: `0x00457900` 593,891 calls (1,283 per city frame), 318,084 of which still run in
 emulated code with the native functions; diamonds `0x00435070` 163,764 (354 per frame).
 
-### 11.2 Second pass: what stands on each tile (not native)
+### 11.2 Second pass: what stands on each tile
 
 Same traversal, from after `0x0045868C` to `0x00459FF0`; for each cell: **verified** (order of
 the calls and conditions as summarised), roles as stated.
@@ -469,6 +469,46 @@ the calls and conditions as summarised), roles as stated.
 
 `0x0044FEF0` (5,977 bytes, the walker sprite) is called 27,178 times (59 per city frame).
 
+Facts found while rewriting it (**verified**, listing):
+
+- The view object of mode 0 (`0x00FE68FC`, method table `0x005E4424` set by `0x0055E9B0`):
+  `+0x00` does nothing (`0x0055EE50`), `+0x08`, `+0x10`, `+0x18` return true (`0x0055F3D0`),
+  `+0x0C` and `+0x20` return false (`0x00565750`, `0x00565930`). Step 6 therefore never draws in
+  the city view.
+- Steps 4 and 5 read the type of building 0 when the tile has no building (record 0 of
+  `0x0092E668`).
+- A tile that is not an anchor draws nothing in step 5 whatever its building type, except type
+  `0x39` (`0x004574C0`); but the `switch` conditions call functions, and `0x004FAA00` (type
+  `0x7D`) writes the game state (it clears a figure number that no longer matches).
+- `0x0044F320` draws only for building types `0x25`, `0x29`, `0x2A`, `0x2E`, `0x30`–`0x33`,
+  `0x35`–`0x37`, `0x7D`, `0x84`, `0x85`, `0x87`, `0x88`, `0xD3`–`0xD6`, `0xD8` (table
+  `0x0044FD6C` / `0x0044FDC4`); for the others it reads the record and returns.
+- The walkers of row r − 2 are read from `0x007D34B4 + c × 4 + r × 0x39C` without checking that
+  r ≥ 2. In the run below the ring bit of row r − 4 is set at 193,102 cells, while the walkers
+  of that row are drawn only 2,447 times: almost always the list is empty and the original only
+  clears the bit. Likewise 91,903 tiles have a non-zero `0x0083AD6C`, which is only ORed into
+  the ring.
+- `0x00449B30`, the sort, writes the game state (the order of the list of a tile, `0x00D0D878`
+  and the `+0` links of `0x00DBD790`) as soon as a tile holds two walkers: drawing reorders the
+  walkers.
+
+**Native rewrite** (`native_draw.cpp`, `objects_row`). A host jump at `0x00458792` (a cell inside
+the grid) handles cells one after the other and hands back to the original, with the registers
+and variables it would have, at the first step it does not handle; each step decides before it
+writes anything. Resume points: the start of the cell (bytes displaced by the jump), `0x00458D7A`
+(after the ambient counters), `0x004594FA` (after the object, `EBP` = y), `0x00459CE2` (before
+`0x0044F320`: `EBX` building, `EDI` x, `EBP` y, `[ESP+0x28]` the tile bits), `0x00459D7A` (the
+walkers: `EDI` x, `EBP` y), and `0x0045A022` at the end of a row (`EDX` the ring row, `ESI` 15,
+`EDI` the row). Handled: view mode 0 with the method `+0x0C` above; ground drawn again through the
+native `0x00457900`; the counters; building tops `0x005ADF00` and sloped tops `0x0045A690` (not
+red, not turned, no `0x0053E5F0`, no towers); step 5 when nothing is drawn (no animation, types
+outside the `switch`, or tiles that are not anchors); `0x0044F320` for types it does not draw;
+step 7 when the three lists are empty. Scenario `working-city`, 300 s deterministic, 606,993
+cells: **490,265 (81 %) are handled entirely in native code**; the original resumes 35,158 times
+at the start of a cell (mostly bases of 2 to 6 tiles and `0x00546530`), 52,802 times after the
+counters (sanctuaries and monuments, `0x0053E5F0`), 8,123 after the object (animations) and
+20,645 at the walkers.
+
 ### 11.3 Third pass
 
 For anchor tiles with flag `0x08` and a building, in modes other than `0x10`, the view object
@@ -511,12 +551,12 @@ steps before it, and the most frequent come first within a step. Counts: origina
 | 8 | `0x005ACF50` | dispatcher: every remaining case, then the whole function | 8,215,286 | — (all screens) | fast path (clipped run-length images included) |
 | 9 | `0x005ADF00`, `0x005AE1B0`, `0x0045A690`, `0x0045A790` | building tops | 433,862 / 0 / 45,747 / 0 | 937 / 0 / 99 / 0 | `0x005ADF00` fast path (all but the overlay) |
 | 10 | `0x0043FF10`, `0x00440170`, `0x004406B0`, `0x00440FE0`, `0x00441E50` | bases of 2–6 tiles | 23,888 / 2,410 / 3,627 / 1,389 / 0 | 52 / 5 / 8 / 3 / 0 | original |
-| 11 | `0x00457900` | ground of a tile, remaining cases | 593,891 | 1,283 | fast path, 318,084 still emulated |
+| 11 | `0x00457900` | ground of a tile, remaining cases | 593,891 | 1,283 | fast path (flat, sloped, flags `0x4020`), 42,500 still emulated |
 | 12 | `0x00449B30` | sort the walkers of a tile | 1,411,706 | 3,049 | original |
 | 13 | `0x0045A5A0`, `0x0041D3D0`, `0x0041D150` | walkers and water life of a tile | 606,993 / 620,704 / 0 | 1,311 / 1,341 / 0 | original |
 | 14 | `0x0044FEF0` | one walker | 27,178 | 59 | original |
 | 15 | `0x0044F320`, `0x0045D140`, `0x0053E5F0`, `0x0045DC10`, building-type functions of 11.2 step 5 | building extras and animations | 433,862 / 4,488 / — / 553,374 / — | 937 / 10 / — / 1,195 / — | original |
-| 16 | `0x00458170` | second and third passes | 463 | 1 | first pass native |
+| 16 | `0x00458170` | second and third passes | 463 | 1 | first pass native, second pass native for 81 % of the cells (11.2) |
 | 17 | `0x0044AD70`, `0x00451820`, `0x004517F0`, `0x00454420` | after the passes | 463 each | 1 | original |
 | 18 | `0x0044A830`, `0x0051CAB0`, `0x00449E50` | view set-up | 463 / 463 / rare | 1 | original |
 | 19 | `0x00514020`, `0x0050C1B0` and converters `0x004138B0`, `0x00413930`, `0x004139B0`, `0x00413A30` | frame and presentation | 8,398 / 8,412 | — | original (the host replaces the surfaces) |

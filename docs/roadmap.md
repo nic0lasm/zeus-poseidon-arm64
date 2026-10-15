@@ -240,8 +240,8 @@ exit), and a function can get a native fast path that falls back to the original
 | `0x005ACF50` | the sprite dispatcher, for its common cases (run-length images not mirrored, clipped or not; opaque images and ground tiles not clipped sideways), with its clipping (`0x00509C20`, `0x00509CD0`); every other case falls back to the original |
 | `0x005ADF00` | the top of a building, the compressed part above its base, placed by the width of the base; with an overlay colour it falls back to the original |
 | `0x00435070` | draws a ground tile, a 58 × 30 diamond (`src/win32/native_draw.cpp`) |
-| `0x00457900` | the ground of one city tile, for its common case: flat land in the normal view, animated water included |
-| `0x00458170` | the city drawing loop, its first pass over the visible tiles (the ground), through a host jump at the head of the loop that hands back to the original for any other case |
+| `0x00457900` | the ground of one city tile, for its common cases: flat or sloped land in the normal view, animated water included |
+| `0x00458170` | the city drawing loop: its first pass over the visible tiles (the ground), and its second pass (what stands on each tile) for 81 % of the cells of a large city, through host jumps that hand back to the original, mid-cell if needed, for any other case |
 
 All nine scenarios (43,159 frames, 13,073 simulation ticks) give the same frames and the same game state, tick by tick, with and without them, and each of them passes the call-by-call check of [equivalence.md](equivalence.md).
 

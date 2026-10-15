@@ -62,6 +62,32 @@ constexpr uint32_t kGroundTileEnd = 0x00458114;  // fin de FUN_00457900 et de se
 constexpr uint32_t kBuildingJumps = 0x0045A254, kBuildingJumpsEnd = 0x0045A2E1;  // table de FUN_00458170
 constexpr uint32_t kAlwaysTrue = 0x0055F3D0;  // FUN_0055f3d0 : méthode +0x18 du mode de vue 0, « vrai »
 constexpr uint32_t kDrawGround = 0x00435070, kDrawGroundEnd = 0x00436249;  // FUN_00435070 : sol en losange
+// Second parcours de FUN_00458170 : ce qui se dresse sur chaque case (native_draw.cpp).
+constexpr uint32_t kObjectsCell = 0x00458792;      // case dans la grille (EDI rangée, ECX colonne)
+constexpr uint32_t kAfterAmbient = 0x00458D7A;     // après les compteurs d'ambiance
+constexpr uint32_t kAfterObject = 0x004594FA;      // après l'objet de la case d'ancrage (EBP = y)
+constexpr uint32_t kAfterAnimation = 0x00459CE2;   // avant FUN_0044f320 (EBX bâtiment, EDI x, EBP y)
+constexpr uint32_t kWalkers = 0x00459D7A;          // personnages de la case (EDI x, EBP y)
+constexpr uint32_t kObjectsRowEnd = 0x0045A022;    // fin d'une rangée (EDX, ESI, EDI)
+// Code dont la réécriture dépend : la boucle et ses tables de sauts (0x0045868C à 0x0045A472),
+// FUN_0044f320 jusqu'à sa table, FUN_0045a690 et sa table.
+constexpr uint32_t kObjectsCode = 0x0045868C, kObjectsCodeEnd = 0x0045A472;
+constexpr uint64_t kObjectsCodeHash = 0xC854D37158F359E7ull;
+constexpr uint32_t kBuildingExtras = 0x0044F320, kBuildingExtrasEnd = 0x0044FE78;
+constexpr uint64_t kBuildingExtrasHash = 0x89F17B9002B490F8ull;
+constexpr uint32_t kSlopedTop = 0x0045A690, kSlopedTopEnd = 0x0045A788;
+constexpr uint64_t kSlopedTopHash = 0x5D7835F06E0BE5EFull;
+// Petites fonctions réécrites dans la boucle, empreinte commune de leurs octets : FUN_0045daf0,
+// FUN_0040aa20, FUN_004200f0, FUN_00423180, FUN_005a7200 et sa table, FUN_004a9590 et sa table,
+// FUN_005344a0, FUN_0045dbb0, FUN_0045dc00, FUN_0045dc10, FUN_0045a5a0, débuts de FUN_00449b30
+// et de FUN_0041d3d0.
+constexpr uint32_t kObjectHelpers[][2] = {
+    {0x0045DAF0, 0x0045DB56}, {0x0040AA20, 0x0040AA64}, {0x004200F0, 0x00420113}, {0x00423180, 0x0042319E},
+    {0x005A7200, 0x005A72D3}, {0x004A9590, 0x004A967B}, {0x005344A0, 0x005344BC}, {0x0045DBB0, 0x0045DBC6},
+    {0x0045DC00, 0x0045DC30}, {0x0045A5A0, 0x0045A63E}, {0x00449B30, 0x00449B48}, {0x0041D3D0, 0x0041D400}};
+constexpr uint64_t kObjectHelpersHash = 0x4A45E05F199A3046ull;
+constexpr uint32_t kAlwaysFalse = 0x00565750;  // méthode +0x0C du mode de vue 0 : « XOR AL,AL ; RET 8 »
+constexpr uint32_t kViewModeZeroSetup = 0x0055E9B0;  // FUN_0055e9b0 : table de méthodes du mode 0
 
 // --- Code : cadencement (user32.cpp) ----------------------------------------------------------
 
@@ -145,6 +171,17 @@ constexpr uint32_t kViewRow = 0x007D3BD4, kViewColumn = 0x007D3BD8;  // case en 
 constexpr uint32_t kViewTile = 0x007D3BE0;     // numéro de cette case
 constexpr uint32_t kViewWidth = 0x007D3BBC;    // largeur de la vue en cases (moins 8)
 constexpr uint32_t kTileStep = 0x007D3BB0;     // pas horizontal d'une case, moins 2 pixels
+// FUN_00449e50 : multiples de la largeur (58) et de la hauteur (30) d'une case.
+constexpr uint32_t kHalfTileWidth = 0x007D3BB4, kTileWidth15 = 0x007D3BAC, kTileWidth2 = 0x007D3BA8;  // 29, 87, 116
+constexpr uint32_t kTileHeightStep = 0x007D3BA0, kHalfTileHeight = 0x007D3BA4;  // 30, 15
+constexpr uint32_t kTileHeight15 = 0x007D3B9C, kTileHeight2 = 0x007D3B98;        // 45, 60
+constexpr uint32_t kViewOrientation = 0x00DA2F88;  // orientation de la vue : 0, 2, 4 ou 6
+constexpr uint32_t kWalkerRing = 0x0084787C;  // FUN_00458170 : 5 rangées de 0xE7 octets, personnages reportés
+constexpr uint32_t kAmbientCounters = 0x010E41F4;  // FUN_00458170 : compteurs par nature, 0x28 octets
+// FUN_004200f0(0) : vrai quand ces deux variables valent 1 (partie de Poséidon, hypothèse).
+constexpr uint32_t kGameMode = 0x006AA4E0, kGameSubmode = 0x00902BB0;
+// FUN_0040aa20 : 6 entrées de 0x34 octets (type de bâtiment en +4), la 6e remplacée pour Poséidon.
+constexpr uint32_t kBuildingTable = 0x005E8578, kPoseidonBuildings = 0x005E86B0;
 constexpr uint32_t kTileGrid = 0x007D3BEC;     // grille : numéro de case (32 bits), 0x0FFF0000 et plus : marques
 constexpr uint32_t kTileHeight = 0x008E01FA;    // par case : hauteur du sol (8 bits signés, 30 pixels par cran)
 constexpr uint32_t kTileImage = 0x00D4CFC8;     // par case : image du sol (32 bits)
@@ -153,6 +190,7 @@ constexpr uint32_t kTileBuilding = 0x00D26E98;  // par case : bâtiment (16 bits
 constexpr uint32_t kTileBits = 0x00D404B8;      // par case : 0x40 la case est à dessiner
 constexpr uint32_t kTileSlope = 0x00D00D68;     // par case : pente (4 bits bas), 0x10 sol de remplacement
 constexpr uint32_t kTileHidden = 0x0083AD6C;    // par case : non nul, ses personnages ne comptent pas
+constexpr uint32_t kTileLife = 0x00CB4B08;      // par case : animal ou bateau sur l'eau (8 bits, hypothèse)
 constexpr uint32_t kTileFigure = 0x00D0D878;    // par case : premier personnage (16 bits signés)
 // Personnages : fiches de 0x184 octets ; +0 suivant sur la case (16 bits), +2 type, +0x5D masqué.
 constexpr uint32_t kFigures = 0x00DBD790;
