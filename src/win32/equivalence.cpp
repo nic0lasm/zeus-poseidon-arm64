@@ -189,6 +189,9 @@ constexpr Known kKnown[] = {
     {kDrawRunsBlended, 0, kEax | kEcx | kEdx, 8},     // void FUN_00413e30(image, table)
     {kCopyRectangleKeyed, 0, kEax | kEcx | kEdx, 4},  // void FUN_00416010(source)
     {kDrawRuns, 0, kEax | kEcx | kEdx, 8},            // void FUN_004161b0(image, ombre)
+    {kDrawRunsLeft, 0, kEax | kEcx | kEdx, 8},        // void FUN_004163b0(image, ombre)
+    {kDrawRunsRight, 0, kEax | kEcx | kEdx, 8},       // void FUN_004165d0(image, ombre)
+    {kBuildingTop, 0, kEcx | kEdx, 0},                // thiscall, dépile ses arguments
     {kClearFrame, 0, kEax | kEcx | kEdx, 0},          // void FUN_0050b410(void)
     {kCityDraw, 0, kEax | kEcx | kEdx, 4},            // void FUN_00458170(mode)
     {kStrcmpi, 0, kEcx | kEdx, 8},                    // int _strcmpi(a, b)

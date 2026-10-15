@@ -16,6 +16,9 @@ class Process;
 std::optional<uint32_t> draw_sprite(Cpu& cpu, uint32_t self, int32_t id, int32_t x, int32_t y, int32_t mode,
                                     uint8_t mirror);
 
+// FUN_005adf00(this, identifiant, x, y) : partie haute d'un bâtiment (native.cpp), même contrat.
+std::optional<uint32_t> draw_building_top(Cpu& cpu, uint32_t self, int32_t id, int32_t x, int32_t y);
+
 // FUN_00435070(image, rognage vertical) sans surimpression : sol en losange de 58 x 30 pixels,
 // image opaque rangée ligne par ligne, à la position kTargetX, kTargetY (native_draw.cpp).
 // `ground_known` : vrai quand le code de FUN_00435070 est celui attendu (install_native_drawing).

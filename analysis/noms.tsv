@@ -9,6 +9,9 @@ adresse	nom	module	statut	preuve	type
 004142b0	image_draw	rendu	nommé	enveloppe de 0x0064274C ; 162 appelants	fonction
 00416010	copy_rectangle_keyed	rendu	natif	copie, magenta transparent ; remplacée par native.cpp	fonction
 004161b0	draw_runs	rendu	natif	image par suites (et ombre) ; remplacée par native.cpp	fonction
+004163b0	draw_runs_left	rendu	natif	image par suites rognée à gauche ; remplacée par native.cpp ; rendering.md §8	fonction
+004165d0	draw_runs_right	rendu	natif	image par suites rognée à droite ; remplacée par native.cpp ; rendering.md §8	fonction
+004170b0	runs_skip_rows	rendu	documenté	saute les lignes masquées d'une image par suites (octet bas d'EAX seul) ; rendering.md §8	fonction
 00418a00	convert_555_to_bgra	rendu	nommé	R, V, B = composante << 3, alpha 0xff	fonction
 0041dfc0	blit_alpha_runs	rendu	nommé	mélange (a*src + (31-a)*dst) >> 5 par composante de 5 bits	fonction
 00420020	fullscreen_background_a	interface	documenté	fond plein écran centré (menus)	fonction
@@ -167,6 +170,7 @@ adresse	nom	module	statut	preuve	type
 005a1330	sound_stop_channels	son	documenté	arrête les canaux au WM_KILLFOCUS	fonction
 005a2c30	sound_listener_update	son	documenté	auditeur 3D : positions aléatoires à ~60 unités	fonction
 005acf50	sprite_dispatch	rendu	nommé	répartiteur de sprites ; natif partiel : chemin rapide dans native.cpp	fonction
+005adf00	building_top_draw	rendu	nommé	partie haute d'un bâtiment ; natif partiel : chemin rapide dans native.cpp (sauf surimpression)	fonction
 005c35e0	mouse_wheel_init	interface	documenté	cherche la molette pré-Windows 98 au démarrage	fonction
 005c37c0	main_loop	interface	documenté	boucle principale ; ne joue un tour que si le drapeau « actif » est levé	fonction
 005c4a30	display_mode_change	interface	documenté	change de mode d'affichage et refait la mise en page (F6, F7)	fonction

@@ -114,26 +114,40 @@ uint32_t clear_frame(Cpu& cpu) {
 // Images compressées par suites. Chaque ligne est une suite de segments : l'octet 0xFF suivi
 // d'un nombre de pixels transparents, ou un nombre n suivi de n pixels de 16 bits.
 //
-// FUN_004170b0 : saute les lignes masquées en haut de l'image.
-const uint8_t* skip_rows(Cpu& cpu, const uint8_t* p) {
+// FUN_004170b0 : saute les lignes masquées en haut de l'image, en adresses de 32 bits comme
+// l'original. Seul l'octet bas d'EAX est relu à chaque segment (MOV AL,[ESI]) et EAX n'est remis à
+// zéro qu'en début de ligne ; après n pixels, EAX vaut 2n + 1. Si n >= 128, le compte lu ensuite
+// sur la même ligne garde donc 0x100 de trop, et le saut de l'image aussi (0x004170CD à 0x004170E8).
+uint32_t skip_rows(Cpu& cpu, uint32_t p) {
     for (int32_t rows = i32(cpu, kSkippedRows); rows > 0; --rows) {
+        uint32_t eax = 0;
         for (int32_t left = image_width(cpu); left > 0;) {
-            if (*p == 0xFF) {
-                left -= p[1];
+            eax = (eax & 0xFFFFFF00u) | *cpu.host(p);
+            if ((eax & 0xFF) == 0xFF) {
+                eax = (eax & 0xFFFFFF00u) | *cpu.host(p + 1);
+                left -= static_cast<int32_t>(eax);
                 p += 2;
             } else {
-                left -= *p;
-                p += *p * 2 + 1;
+                left -= static_cast<int32_t>(eax);
+                eax = eax * 2 + 1;
+                p += eax;
             }
         }
     }
     return p;
 }
 
+// Pixel d'une image par suites : avec `shadow`, 0x7C00 assombrit de moitié le pixel déjà présent.
+void put_run_pixel(uint8_t* out, const uint8_t* source, bool shadow) {
+    uint16_t value = pixel(source);
+    if (shadow && value == 0x7C00) value = (pixel(out) >> 1) & 0x3DEF;
+    put_pixel(out, value);
+}
+
 // FUN_004161b0(image, ombre) : dessine une image compressée, sans rognage horizontal.
 // Avec `ombre`, un pixel 0x7C00 de l'image assombrit de moitié le pixel déjà présent.
 void draw_runs_from(Cpu& cpu, uint32_t image, bool shadow) {
-    const uint8_t* p = skip_rows(cpu, cpu.host(image));
+    const uint8_t* p = cpu.host(skip_rows(cpu, image));
     uint8_t* out = target(cpu);
     const uint32_t target_skip = u32(cpu, kTargetSkip);
     if (shadow) require_555(cpu);
@@ -176,6 +190,77 @@ void draw_runs_from(Cpu& cpu, uint32_t image, bool shadow) {
         }
         out += target_skip;
     }
+}
+
+// FUN_004163b0(image, ombre) : même dessin, l'image étant rognée à gauche. Chaque ligne est lue
+// depuis son début ; les kSourceSkip / 2 premiers pixels ne sont pas écrits. La ligne s'arrête à la
+// largeur de l'image, y compris au milieu d'un segment ; un segment transparent peut la dépasser.
+void draw_runs_left_from(Cpu& cpu, uint32_t image, bool shadow) {
+    const uint8_t* p = cpu.host(skip_rows(cpu, image));
+    if (shadow) require_555(cpu);
+    const uint32_t row_bytes = u32(cpu, kRowBytes);
+    uint32_t row = u32(cpu, kFrameBuffer) + row_bytes * u32(cpu, kTargetY) + u32(cpu, kTargetX) * 2;
+    for (int32_t rows = i32(cpu, kRows); rows > 0; --rows, row += row_bytes) {
+        const int32_t skip = i32(cpu, kSourceSkip);
+        uint8_t* out = cpu.host(row - static_cast<uint32_t>(skip));
+        int32_t hidden = skip >> 1, left = image_width(cpu);
+        while (left > 0) {
+            uint8_t count = *p;
+            if (count == 0xFF) {
+                const int32_t n = p[1];
+                p += 2;
+                hidden -= n;
+                left -= n;
+                out += n * 2;
+                continue;
+            }
+            ++p;
+            for (; count != 0; --count, out += 2, p += 2, --left, --hidden) {
+                if (left == 0) break;  // l'original passe alors à la ligne suivante (0x00416453)
+                if (hidden <= 0) put_run_pixel(out, p, shadow);
+            }
+            if (left == 0) break;
+        }
+    }
+}
+
+// FUN_004165d0(image, ombre) : rognée à droite. Seuls les kColumns premiers pixels de chaque ligne
+// sont écrits, mais chaque segment est lu jusqu'au bout : la ligne finit au premier segment qui
+// atteint la largeur de l'image. Un segment de 0 pixel ne fait qu'avancer d'un octet.
+void draw_runs_right_from(Cpu& cpu, uint32_t image, bool shadow) {
+    const uint8_t* p = cpu.host(skip_rows(cpu, image));
+    if (shadow) require_555(cpu);
+    const uint32_t row_bytes = u32(cpu, kRowBytes);
+    uint32_t row = u32(cpu, kFrameBuffer) + row_bytes * u32(cpu, kTargetY) + u32(cpu, kTargetX) * 2;
+    for (int32_t r = 0; r < i32(cpu, kRows); ++r, row += row_bytes) {
+        uint8_t* out = cpu.host(row);
+        int32_t visible = i32(cpu, kColumns), done = 0;
+        const int32_t width = image_width(cpu);
+        if (width <= 0) continue;
+        do {
+            const uint8_t count = *p++;
+            if (count == 0xFF) {
+                const int32_t n = *p++;
+                done += n;
+                visible -= n;
+                out += n * 2;
+                continue;
+            }
+            done += count;
+            for (uint8_t i = count; i != 0; --i, p += 2, out += 2, --visible)
+                if (visible > 0) put_run_pixel(out, p, shadow);
+        } while (done < width);
+    }
+}
+
+uint32_t draw_runs_left(Cpu& cpu) {
+    draw_runs_left_from(cpu, cpu.arg(0), (cpu.arg(1) & 0xFF) != 0);
+    return 0u;
+}
+
+uint32_t draw_runs_right(Cpu& cpu) {
+    draw_runs_right_from(cpu, cpu.arg(0), (cpu.arg(1) & 0xFF) != 0);
+    return 0u;
 }
 
 uint32_t draw_runs(Cpu& cpu) {
@@ -319,11 +404,13 @@ std::optional<uint32_t> dispatch(Cpu& cpu, uint32_t self, int32_t id, int32_t x,
     uint8_t clip_y = v.state;
     if (clip_x == 5) clip_y = 5;
 
-    // Choix de la routine (0x005AD748 et suivantes) : seuls trois cas sont traités.
+    // Choix de la routine (0x005AD748 et suivantes) : seuls trois cas sont traités ; seules les
+    // images par suites le sont aussi rognées en largeur.
     enum class Draw { None, Runs, Opaque, Ground } draw = Draw::None;
     if (clip_y != 5) {
-        if (clip_x != 0 || u16(cpu, kOverlay) != 0) return std::nullopt;
+        if (u16(cpu, kOverlay) != 0) return std::nullopt;
         if (kind == 0x1E) {
+            if (clip_x != 0) return std::nullopt;
             draw = Draw::Ground;  // FUN_00435070, sans retournement
         } else if (mirror != 0) {
             return std::nullopt;
@@ -331,7 +418,7 @@ std::optional<uint32_t> dispatch(Cpu& cpu, uint32_t self, int32_t id, int32_t x,
             if (mode == 1 || *cpu.host(entry + 0x33) == 0 || u32(cpu, entry + 0x40) != 0) return std::nullopt;
             draw = Draw::Runs;
         } else {
-            if (kind == 0x0C || kind == 0x14 || clip_y != 0) return std::nullopt;
+            if (kind == 0x0C || kind == 0x14 || clip_x != 0 || clip_y != 0) return std::nullopt;
             draw = Draw::Opaque;
         }
     }
@@ -357,12 +444,89 @@ std::optional<uint32_t> dispatch(Cpu& cpu, uint32_t self, int32_t id, int32_t x,
     put32(cpu, kRows, drawn);
     switch (draw) {
         case Draw::None: return 0u;  // invisible : l'original renvoie alors 0
-        case Draw::Runs: draw_runs_from(cpu, static_cast<uint32_t>(image), shadow); break;
+        case Draw::Runs:  // FUN_004161b0, FUN_004163b0 ou FUN_004165d0 selon le rognage en largeur
+            if (clip_x == 1) draw_runs_left_from(cpu, static_cast<uint32_t>(image), shadow);
+            else if (clip_x == 2) draw_runs_right_from(cpu, static_cast<uint32_t>(image), shadow);
+            else draw_runs_from(cpu, static_cast<uint32_t>(image), shadow);
+            break;
         // Ni rognée ni retournée : le décalage que l'original ajoute à l'image est nul.
         case Draw::Opaque: copy_rectangle_from(cpu, static_cast<uint32_t>(image)); break;
         case Draw::Ground: draw_ground(cpu, static_cast<uint32_t>(image), clip_y); break;
     }
     return static_cast<uint32_t>(visible);
+}
+
+// FUN_00509c20 puis FUN_00509cd0 : rognage de l'image décrite par kTargetX, kTargetY, kImageWidth
+// et kImageHeight, avec toutes les variables qu'écrivent les deux fonctions.
+void clip_sprite(Cpu& cpu) {
+    const int16_t width = s16(cpu, kImageWidth), height = s16(cpu, kImageHeight);
+    const HorizontalClip h = clip_horizontal(i32(cpu, kTargetX), width, i32(cpu, kClipLeft), i32(cpu, kClipRight));
+    put8(cpu, kClipX, h.state);
+    put32(cpu, kSkipLeft, h.skip_left);
+    put32(cpu, kRight, h.right);
+    put32(cpu, kTargetX, h.left);
+    put32(cpu, kColumns, h.visible);
+    put32(cpu, kSourceSkip, (width - h.visible) * 2);
+    put32(cpu, kTargetSkip, (i32(cpu, kRowPixels) - h.visible) * 2);
+    const VerticalClip v = clip_vertical(i32(cpu, kTargetY), height, i32(cpu, kClipTop), i32(cpu, kClipBottom));
+    put32(cpu, kVisibleRows, v.rows);
+    put8(cpu, kClipY, h.state == 5 ? 5 : v.state);
+    put32(cpu, kSkippedRows, v.skipped);
+    put32(cpu, kTargetY, v.top);
+    put32(cpu, kRows, v.drawn);
+}
+
+// FUN_005adf00(this, identifiant, x, y) : la partie haute d'un bâtiment, c'est-à-dire la partie
+// compressée qui suit la base en losange dans l'image (entrée +0x35 non nulle). Elle est placée
+// d'après la largeur de la base, de 1 à 6 cases ; pour une autre largeur, la position et la
+// hauteur restent celles du sprite précédent, comme dans l'original. Le miroir de l'entrée
+// (+0x3E) n'est pas suivi. Renvoie 1 quand l'entrée a une partie haute, 0 sinon. Seule la
+// surimpression (FUN_00416820 et ses variantes) est laissée à l'original, décidée avant toute
+// écriture.
+std::optional<uint32_t> building_top(Cpu& cpu, uint32_t self, int32_t id, int32_t x, int32_t y) {
+    const int32_t bank = id / 16384, number = id % 16384;
+    if (number < 1 && bank == 0) return 0u;
+    const uint32_t base = self + static_cast<uint32_t>(bank) * 0xCC44;
+    if (i32(cpu, base + 0xDC34) <= number) return 0u;
+    const uint32_t entry = u32(cpu, base + 0x1000) + static_cast<uint32_t>(number) * 0x48;
+    if (*cpu.host(entry + 0x35) == 0) return 0u;
+    if (u16(cpu, kOverlay) != 0) return std::nullopt;
+    int32_t image = i32(cpu, entry);
+    put32(cpu, kSpriteImage, image);
+    if (image < 1) return 0u;
+    image += i32(cpu, entry + 8);
+    put32(cpu, kSpriteImage, image);
+    const int16_t width = s16(cpu, entry + 0x14), height = s16(cpu, entry + 0x16);
+    put16(cpu, kImageWidth, width);
+    // Largeur de la base : décalage en x, en y (ajouté à y - hauteur) et lignes ôtées à la hauteur.
+    struct Base {
+        int16_t width;
+        int32_t dx, dy;
+        int16_t lines;
+    };
+    static constexpr Base kBases[] = {{0x166, -150, 180, 91}, {0x12A, -120, 150, 76}, {0xEE, -90, 120, 61},
+                                      {0xB2, -60, 90, 46},    {0x76, -30, 60, 31},    {0x3A, 0, 30, 16}};
+    for (const Base& b : kBases) {
+        if (width != b.width) continue;
+        put32(cpu, kTargetX, x + b.dx);
+        put32(cpu, kTargetY, y - height + b.dy);
+        put16(cpu, kImageHeight, static_cast<int16_t>(height - b.lines));
+        break;
+    }
+    clip_sprite(cpu);
+    if (*cpu.host(kClipY) == 5) return 1u;
+    const bool shadow = *cpu.host(entry + 0x3B) != 0;
+    switch (*cpu.host(kClipX)) {
+        case 1: draw_runs_left_from(cpu, static_cast<uint32_t>(image), shadow); break;
+        case 2: draw_runs_right_from(cpu, static_cast<uint32_t>(image), shadow); break;
+        default: draw_runs_from(cpu, static_cast<uint32_t>(image), shadow); break;
+    }
+    return 1u;
+}
+
+std::optional<uint32_t> building_top_call(Cpu& cpu) {
+    return building_top(cpu, cpu.reg(Cpu::Reg::ECX), static_cast<int32_t>(cpu.arg(0)), static_cast<int32_t>(cpu.arg(1)),
+                        static_cast<int32_t>(cpu.arg(2)));
 }
 
 std::optional<uint32_t> dispatch_call(Cpu& cpu) {
@@ -414,6 +578,8 @@ constexpr Replacement kReplacements[] = {
     {kCopyRectangleKeyed, {0x55, 0x8B, 0xEC, 0x53, 0x56}, 0, copy_rectangle_keyed},
     {kClearFrame, {0xA1, 0x40, 0xC0, 0x63, 0x00}, 0, clear_frame},
     {kDrawRuns, {0x8B, 0x44, 0x24, 0x04, 0x83}, 0, draw_runs},
+    {kDrawRunsLeft, {0x8B, 0x44, 0x24, 0x04, 0x53}, 0, draw_runs_left},
+    {kDrawRunsRight, {0x8B, 0x44, 0x24, 0x04, 0x53}, 0, draw_runs_right},
     {kDrawRunsBlended, {0xA1, 0x24, 0xAB, 0xF2, 0x00}, 0, draw_runs_blended},
     {kStrcmpi, {0x55, 0x8B, 0xEC, 0x57, 0x56}, 0, strcmpi},
 };
@@ -423,6 +589,10 @@ constexpr Replacement kReplacements[] = {
 std::optional<uint32_t> draw_sprite(Cpu& cpu, uint32_t self, int32_t id, int32_t x, int32_t y, int32_t mode,
                                     uint8_t mirror) {
     return sprite::dispatch(cpu, self, id, x, y, mode, mirror);
+}
+
+std::optional<uint32_t> draw_building_top(Cpu& cpu, uint32_t self, int32_t id, int32_t x, int32_t y) {
+    return sprite::building_top(cpu, self, id, x, y);
 }
 
 void install_native_functions(Process& p) {
@@ -435,6 +605,10 @@ void install_native_functions(Process& p) {
     }
     if (matches(cpu, kSpriteDispatch, {0x81, 0xEC, 0x14, 0x01, 0x00, 0x00, 0x8B, 0x84, 0x24, 0x1C, 0x01, 0x00, 0x00})) {
         cpu.add_fast_path(kSpriteDispatch, 0x18, 6, sprite::dispatch_call);  // « SUB ESP,0x114 » déplacé
+        ++installed;
+    }
+    if (matches(cpu, kBuildingTop, {0x56, 0x8B, 0x74, 0x24, 0x08, 0x8B, 0xC6, 0x99})) {
+        cpu.add_fast_path(kBuildingTop, 0x0C, 5, sprite::building_top_call);  // « PUSH ESI ; MOV ESI,[ESP+8] »
         ++installed;
     }
     if (matches(cpu, kKeySearch, kKeySearchBytes, sizeof kKeySearchBytes)) {

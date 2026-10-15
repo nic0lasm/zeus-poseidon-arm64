@@ -41,8 +41,11 @@ constexpr uint32_t kCopyRectangle = 0x00413DC0;       // FUN_00413dc0 : copie d'
 constexpr uint32_t kDrawRunsBlended = 0x00413E30;     // FUN_00413e30 : image par suites, mélangée
 constexpr uint32_t kCopyRectangleKeyed = 0x00416010;  // FUN_00416010 : copie, magenta transparent
 constexpr uint32_t kDrawRuns = 0x004161B0;            // FUN_004161b0 : image par suites (et ombre)
+constexpr uint32_t kDrawRunsLeft = 0x004163B0;        // FUN_004163b0 : la même, rognée à gauche
+constexpr uint32_t kDrawRunsRight = 0x004165D0;       // FUN_004165d0 : la même, rognée à droite
 constexpr uint32_t kClearFrame = 0x0050B410;          // FUN_0050b410 : efface le tampon d'affichage
 constexpr uint32_t kSpriteDispatch = 0x005ACF50;      // FUN_005acf50 : répartiteur de sprites
+constexpr uint32_t kBuildingTop = 0x005ADF00;         // FUN_005adf00 : partie haute d'un bâtiment
 constexpr uint32_t kStrcmpi = 0x005CC640;             // __strcmpi de la bibliothèque C (VC++ 6)
 // Boucle de recherche de clé de FUN_00505770 (lecture de « Zeus eventmsg.txt ») : début et sortie.
 constexpr uint32_t kKeySearch = 0x005059F8, kKeySearchEnd = 0x00505A33;

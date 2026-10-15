@@ -211,8 +211,8 @@ adresse	taille	nom	module	statut	preuve	type
 00416070	195	FUN_00416070	inconnu	inconnu	aucun indice	fonction
 00416140	106	FUN_00416140	inconnu	inconnu	aucun indice	fonction
 004161b0	508	draw_runs	rendu	natif	image par suites (et ombre) ; remplacée par native.cpp	fonction
-004163b0	530	FUN_004163b0	inconnu	inconnu	aucun indice	fonction
-004165d0	583	FUN_004165d0	inconnu	inconnu	aucun indice	fonction
+004163b0	530	draw_runs_left	rendu	natif	image par suites rognée à gauche ; remplacée par native.cpp ; rendering.md §8	fonction
+004165d0	583	draw_runs_right	rendu	natif	image par suites rognée à droite ; remplacée par native.cpp ; rendering.md §8	fonction
 00416820	707	FUN_00416820	inconnu	inconnu	aucun indice	fonction
 00416af0	155	FUN_00416af0	inconnu	inconnu	aucun indice	fonction
 00416b90	149	FUN_00416b90	inconnu	inconnu	aucun indice	fonction
@@ -220,7 +220,7 @@ adresse	taille	nom	module	statut	preuve	type
 00416f00	157	FUN_00416f00	inconnu	inconnu	aucun indice	fonction
 00416fa0	151	FUN_00416fa0	inconnu	inconnu	aucun indice	fonction
 00417040	109	FUN_00417040	inconnu	inconnu	aucun indice	fonction
-004170b0	76	FUN_004170b0	inconnu	inconnu	aucun indice	fonction
+004170b0	76	runs_skip_rows	rendu	documenté	saute les lignes masquées d'une image par suites (octet bas d'EAX seul) ; rendering.md §8	fonction
 00417100	60	FUN_00417100	inconnu	inconnu	aucun indice	fonction
 00417140	159	FUN_00417140	inconnu	inconnu	aucun indice	fonction
 004171e0	162	FUN_004171e0	inconnu	inconnu	aucun indice	fonction
@@ -4157,7 +4157,7 @@ adresse	taille	nom	module	statut	preuve	type
 005ac7c0	1769	FUN_005ac7c0	scénario	inconnu	chaîne (cartes et campagnes)	fonction
 005aceb0	145	FUN_005aceb0	inconnu	inconnu	aucun indice	fonction
 005acf50	4016	sprite_dispatch	rendu	nommé	répartiteur de sprites ; natif partiel : chemin rapide dans native.cpp	fonction
-005adf00	681	FUN_005adf00	inconnu	inconnu	aucun indice	fonction
+005adf00	681	building_top_draw	rendu	nommé	partie haute d'un bâtiment ; natif partiel : chemin rapide dans native.cpp (sauf surimpression)	fonction
 005ae1b0	681	FUN_005ae1b0	inconnu	inconnu	aucun indice	fonction
 005ae460	402	FUN_005ae460	inconnu	inconnu	aucun indice	fonction
 005ae600	303	FUN_005ae600	inconnu	inconnu	aucun indice	fonction

@@ -232,11 +232,13 @@ exit), and a function can get a native fast path that falls back to the original
 | `0x00413DC0` | copies an opaque rectangle to the frame buffer |
 | `0x00416010` | same, with magenta as the transparent colour |
 | `0x004161B0` | draws a run-length compressed image, optionally as a shadow |
+| `0x004163B0`, `0x004165D0` | the same, clipped on the left or on the right |
 | `0x00413E30` | draws a run-length compressed image blended with the background |
 | `0x0050B410` | clears the frame buffer |
 | `0x005CC640` | `_strcmpi` from the C runtime |
 | `0x005059F8` | the loop that looks up each key of `Model\Zeus eventmsg.txt` at start-up (18 million `_strcmpi` calls): start-up went from 3.5–5 s to under a second |
-| `0x005ACF50` | the sprite dispatcher, for its common cases (run-length and opaque images, neither clipped sideways nor mirrored, 95 % of the calls, and ground tiles not clipped sideways), with its clipping (`0x00509C20`, `0x00509CD0`); every other case falls back to the original |
+| `0x005ACF50` | the sprite dispatcher, for its common cases (run-length images not mirrored, clipped or not; opaque images and ground tiles not clipped sideways), with its clipping (`0x00509C20`, `0x00509CD0`); every other case falls back to the original |
+| `0x005ADF00` | the top of a building, the compressed part above its base, placed by the width of the base; with an overlay colour it falls back to the original |
 | `0x00435070` | draws a ground tile, a 58 × 30 diamond (`src/win32/native_draw.cpp`) |
 | `0x00457900` | the ground of one city tile, for its common case: flat land in the normal view, animated water included |
 | `0x00458170` | the city drawing loop, its first pass over the visible tiles (the ground), through a host jump at the head of the loop that hands back to the original for any other case |
