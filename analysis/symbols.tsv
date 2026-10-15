@@ -663,11 +663,11 @@ adresse	taille	nom	module	statut	preuve	type
 0043caf0	6812	FUN_0043caf0	inconnu	inconnu	aucun indice	fonction
 0043e590	3234	FUN_0043e590	inconnu	inconnu	aucun indice	fonction
 0043f240	3272	FUN_0043f240	inconnu	inconnu	aucun indice	fonction
-0043ff10	604	FUN_0043ff10	rendu	inconnu	hypothèse : appelants/appelés (poids 5 sur 5 en rendu)	fonction
-00440170	1339	FUN_00440170	rendu	inconnu	hypothèse : appelants/appelés (poids 5 sur 5 en rendu)	fonction
-004406b0	2349	FUN_004406b0	rendu	inconnu	hypothèse : appelants/appelés (poids 5 sur 5 en rendu)	fonction
-00440fe0	3687	FUN_00440fe0	rendu	inconnu	hypothèse : appelants/appelés (poids 5 sur 5 en rendu)	fonction
-00441e50	5288	FUN_00441e50	rendu	inconnu	hypothèse : appelants/appelés (poids 5 sur 5 en rendu)	fonction
+0043ff10	604	base_draw_2	rendu	natif	socle de 2 x 2 cases ; réécrit dans le répartiteur natif (native.cpp) ; rendering.md §8	fonction
+00440170	1339	base_draw_3	rendu	natif	socle de 3 x 3 cases ; réécrit dans le répartiteur natif (native.cpp) ; rendering.md §8	fonction
+004406b0	2349	base_draw_4	rendu	natif	socle de 4 x 4 cases ; réécrit dans le répartiteur natif (native.cpp) ; rendering.md §8	fonction
+00440fe0	3687	base_draw_5	rendu	natif	socle de 5 x 5 cases ; réécrit dans le répartiteur natif (native.cpp) ; rendering.md §8	fonction
+00441e50	5288	base_draw_6	rendu	natif	socle de 6 x 6 cases ; réécrit dans le répartiteur natif (native.cpp) ; rendering.md §8	fonction
 00443300	604	FUN_00443300	inconnu	inconnu	aucun indice	fonction
 00443560	1339	FUN_00443560	inconnu	inconnu	aucun indice	fonction
 00443aa0	2349	FUN_00443aa0	inconnu	inconnu	aucun indice	fonction

@@ -49,6 +49,9 @@ constexpr uint32_t kDrawRunsMirroredRight = 0x00415680; // FUN_00415680 : la mê
 constexpr uint32_t kCopyRowsKeyed = 0x00415F50;         // FUN_00415f50 : copie à clé de lignes entières
 constexpr uint32_t kGroundLeft = 0x004377B0, kGroundLeftEnd = 0x00438050;    // FUN_004377b0 : losange rogné à gauche
 constexpr uint32_t kGroundRight = 0x00438A90, kGroundRightEnd = 0x00439340;  // FUN_00438a90 : losange rogné à droite
+// FUN_0043ff10 à FUN_00441e50 : socles de 2 à 6 cases, réécrits dans le répartiteur (native.cpp).
+constexpr uint32_t kBases = 0x0043FF10, kBasesEnd = 0x004432F8;
+constexpr uint32_t kBaseOffset = 0x00F29F74;  // ajouté à l'adresse de chaque losange d'un socle (rôle inconnu)
 constexpr uint32_t kClearFrame = 0x0050B410;          // FUN_0050b410 : efface le tampon d'affichage
 constexpr uint32_t kSpriteDispatch = 0x005ACF50;      // FUN_005acf50 : répartiteur de sprites
 constexpr uint32_t kBuildingTop = 0x005ADF00;         // FUN_005adf00 : partie haute d'un bâtiment

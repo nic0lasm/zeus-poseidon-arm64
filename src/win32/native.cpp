@@ -488,6 +488,37 @@ void put16(Cpu& cpu, uint32_t address, int16_t value) { std::memcpy(cpu.host(add
 void put32(Cpu& cpu, uint32_t address, int32_t value) { std::memcpy(cpu.host(address), &value, 4); }
 int16_t s16(Cpu& cpu, uint32_t address) { return static_cast<int16_t>(u16(cpu, address)); }
 
+void clip_sprite(Cpu& cpu);
+
+// FUN_0043ff10 (2 x 2 cases), FUN_00440170, FUN_004406b0, FUN_00440fe0, FUN_00441e50 (6 x 6) : le
+// socle d'un bâtiment de n x n cases, dessiné losange par losange dans l'ordre où il est rangé
+// (formats/sg3.md) : rangée r de min(r, 2n - 2 - r) + 1 cases, centrées, 60 pixels en x et 15 en y
+// entre deux voisines. Chaque losange est rogné (FUN_00509c20, FUN_00509cd0) puis dessiné par
+// FUN_00435070, FUN_004377b0 ou FUN_00438a90, depuis kSpriteImage + 1 800 x rang + [0x00F29F74].
+// Renvoie 58, comme l'original.
+uint32_t draw_base(Cpu& cpu, int32_t tiles, int32_t x, int32_t y) {
+    put16(cpu, kImageWidth, 0x3A);
+    put16(cpu, kImageHeight, 0x1E);
+    uint32_t rank = 0;
+    for (int32_t r = 0; r <= 2 * tiles - 2; ++r) {
+        const int32_t count = std::min(r, 2 * tiles - 2 - r) + 1;
+        for (int32_t j = 0; j < count; ++j, ++rank) {
+            put32(cpu, kTargetX, x + 60 * j - 30 * (count - 1));
+            put32(cpu, kTargetY, y + 15 * r);
+            clip_sprite(cpu);
+            const uint8_t clip_y = *cpu.host(kClipY);
+            if (clip_y == 5) continue;
+            const uint32_t image = u32(cpu, kSpriteImage) + rank * 0x708 + u32(cpu, kBaseOffset);
+            switch (*cpu.host(kClipX)) {
+                case 1: draw_ground_half(cpu, image, clip_y, true); break;
+                case 2: draw_ground_half(cpu, image, clip_y, false); break;
+                default: draw_ground(cpu, image, clip_y); break;
+            }
+        }
+    }
+    return 0x3Au;
+}
+
 // `check_only` : s'arrête avant la première écriture, pour savoir si le cas est traité.
 std::optional<uint32_t> dispatch(Cpu& cpu, uint32_t self, int32_t id, int32_t x, int32_t y, int32_t mode,
                                  uint8_t mirror_arg, bool check_only = false) {
@@ -525,7 +556,32 @@ std::optional<uint32_t> dispatch(Cpu& cpu, uint32_t self, int32_t id, int32_t x,
     // rognage. Les autres largeurs de ce type passent par d'autres routines.
     int16_t height = height16;
     if (kind == 0x1E) {
-        if (width16 != 0x3A || !ground_known()) return std::nullopt;
+        if (!ground_known()) return std::nullopt;
+        // Socles de 2 à 6 cases (0x005AD5F0 et suivantes) : appelés avant tout rognage.
+        int32_t tiles = 0;
+        switch (width16) {
+            case 0x76: tiles = 2; break;
+            case 0xB2: tiles = 3; break;
+            case 0xEE: tiles = 4; break;
+            case 0x12A: tiles = 5; break;
+            case 0x166: tiles = 6; break;
+            default: break;
+        }
+        if (tiles != 0) {
+            if (!ground_halves_known() || !bases_known() || u16(cpu, kOverlay) != 0) return std::nullopt;
+            if (check_only) return 0u;
+            put32(cpu, kSpriteX, x);
+            put32(cpu, kSpriteY, y);
+            put32(cpu, kSpriteId, id);
+            put32(cpu, kSpriteImage, image);
+            put16(cpu, kImageWidth, width16);
+            put16(cpu, kImageHeight, height16);
+            put8(cpu, kSpriteKind, kind);
+            put32(cpu, kTargetX, x);
+            put32(cpu, kTargetY, y);
+            return draw_base(cpu, tiles, x, y);
+        }
+        if (width16 != 0x3A) return std::nullopt;
         height = 0x1E;
     }
 

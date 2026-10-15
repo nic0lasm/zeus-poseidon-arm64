@@ -31,6 +31,7 @@ bool ground_known();
 // FUN_004377b0 / FUN_00438a90 sans surimpression : losange rogné à gauche (`left`) ou à droite.
 void draw_ground_half(Cpu& cpu, uint32_t image, uint8_t clip_y, bool left);
 bool ground_halves_known();
+bool bases_known();  // FUN_0043ff10 à FUN_00441e50, socles de 2 à 6 cases (native.cpp)
 
 // Boucle de dessin de la ville (native_draw.cpp) ; renvoie le nombre de remplacements installés.
 int install_native_drawing(Process& process);

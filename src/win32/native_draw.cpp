@@ -690,6 +690,7 @@ uint64_t fingerprint(Cpu& cpu, const uint32_t (*ranges)[2], size_t count) {
 
 bool ground_code = false;    // FUN_00435070 vérifiée
 bool ground_halves = false;  // FUN_004377b0 et FUN_00438a90 vérifiées
+bool base_code = false;      // FUN_0043ff10 à FUN_00441e50 vérifiées
 
 }  // namespace
 
@@ -750,12 +751,14 @@ void draw_ground_half(Cpu& cpu, uint32_t image, uint8_t clip_y, bool left) {
 
 bool ground_known() { return ground_code; }
 bool ground_halves_known() { return ground_halves; }
+bool bases_known() { return base_code; }
 
 int install_native_drawing(Process& p) {
     Cpu& cpu = p.cpu();
     ground_code = fingerprint(cpu, kDrawGround, kDrawGroundEnd) == 0x00E2CC5E0BBFF6E0ull;
     ground_halves = fingerprint(cpu, kGroundLeft, kGroundLeftEnd) == 0xDDD1B557B7C45DF4ull &&
                     fingerprint(cpu, kGroundRight, kGroundRightEnd) == 0x9305F17B50FA7CE8ull;
+    base_code = fingerprint(cpu, kBases, kBasesEnd) == 0xB1A5E39B2210D914ull;
     if (ground_halves) {
         // « PUSH EBP ; MOV EBP,ESP ; CMP word ptr [surimpression],0 » déplacés ; EAX est rendu tel quel.
         for (const bool left : {true, false})

@@ -308,8 +308,12 @@ instruction by instruction, where marked *structure*.
 - **Isometric bases** of n × n tiles (`0x0043FF10` for n = 2 … `0x00441E50` for n = 6): the base
   is drawn as separate 58×30 diamonds, each clipped and drawn by the three diamond routines,
   1,800 bytes (`0x708`) apart in the data, plus the value at `0x00F29F74` (role not established).
-  For n = 2: (x, y), (x − 30, y + 15), (x + 30, y + 15), (x, y + 30). *verified for n = 2;
-  hypothesis that larger n follow the row layout of `formats/sg3.md`.*
+  The diamonds follow the row layout of `formats/sg3.md`: row r (0 … 2n − 2) holds
+  min(r, 2n − 2 − r) + 1 diamonds, centred on x, 60 pixels apart, at y + 15 r. For n = 2: (x, y),
+  (x − 30, y + 15), (x + 30, y + 15), (x, y + 30). They are called by the dispatcher before any
+  clipping and set width and height to 58 × 30; they return 58. *verified (n = 2 in the listing;
+  n = 2 to 5 by the native rewrite, every city drawing of the nine scenarios compared call by
+  call; n = 6 is never drawn there), native in the dispatcher.*
 - **Building tops** `0x005ADF00(id, x, y)` / mirrored `0x005AE1B0` (`__thiscall`, `this` =
   `0x012AEBE8`, 12 bytes of arguments popped): for an entry with `+0x35` (the mirror link
   `+0x3E` is *not* followed; the image pointer is stored in `0x00F13A18` even when it is ≤ 0 and
@@ -520,10 +524,12 @@ native `0x00457900`; the counters; building tops `0x005ADF00` and sloped tops `0
 red, not turned, no `0x0053E5F0`, no towers); step 5 when nothing is drawn (no animation, types
 outside the `switch`, or tiles that are not anchors); `0x0044F320` for types it does not draw;
 step 7 when the three lists are empty. Scenario `working-city`, 300 s deterministic, 606,993
-cells: **490,265 (81 %) are handled entirely in native code**; the original resumes 35,158 times
-at the start of a cell (mostly bases of 2 to 6 tiles and `0x00546530`), 52,802 times after the
-counters (sanctuaries and monuments, `0x0053E5F0`), 8,123 after the object (animations) and
-20,645 at the walkers.
+cells: **490,265 (81 %) were handled entirely in native code** when this pass was first rewritten;
+the original resumed 35,158 times at the start of a cell (mostly bases of 2 to 6 tiles and
+`0x00546530`), 52,802 times after the counters (sanctuaries and monuments, `0x0053E5F0`), 8,123
+after the object (animations) and 20,645 at the walkers. With the bases and the clipped diamonds
+native: **509,717 (84 %)**; the original resumes 5,924 times at the start of a cell (all
+`0x00546530`), 53,708 after the counters, 16,220 after the object and 21,424 at the walkers.
 
 ### 11.3 One walker, `0x0044FEF0`
 
@@ -620,8 +626,8 @@ steps before it, and the most frequent come first within a step. Counts: origina
 | 7 | alpha variants `0x00414CE0`, `0x00414540`, `0x00414190`, `0x004150B0`, `0x00414910`; tint `0x005B86A0`, `0x005B8910`, `0x005B8B60`; squares `0x00417290`, `0x004171E0`, `0x00417140`, `0x00417100`; mirrored keyed `0x00415E30`, `0x00415EC0` | rare cases | 0 | 0 | original |
 | 8 | `0x005ACF50` | dispatcher: every remaining case, then the whole function | 8,215,286 | — (all screens) | fast path (clipped run-length images included) |
 | 9 | `0x005ADF00`, `0x005AE1B0`, `0x0045A690`, `0x0045A790` | building tops | 433,862 / 0 / 45,747 / 0 | 937 / 0 / 99 / 0 | `0x005ADF00` fast path (all but the overlay) |
-| 10 | `0x0043FF10`, `0x00440170`, `0x004406B0`, `0x00440FE0`, `0x00441E50` | bases of 2–6 tiles | 23,888 / 2,410 / 3,627 / 1,389 / 0 | 52 / 5 / 8 / 3 / 0 | original |
-| 11 | `0x00457900` | ground of a tile, remaining cases | 593,891 | 1,283 | fast path (flat, sloped, flags `0x4020`), 42,500 still emulated |
+| 10 | `0x0043FF10`, `0x00440170`, `0x004406B0`, `0x00440FE0`, `0x00441E50` | bases of 2–6 tiles | 23,888 / 2,410 / 3,627 / 1,389 / 0 | 52 / 5 / 8 / 3 / 0 | **native** (in the dispatcher; overlay: original) |
+| 11 | `0x00457900` | ground of a tile, remaining cases | 593,891 | 1,283 | fast path (flat, sloped, flags `0x4020`), 5,941 still emulated (42,500 before the bases were native) |
 | 12 | `0x00449B30` | sort the walkers of a tile | 1,411,706 | 3,049 | original |
 | 13 | `0x0045A5A0`, `0x0041D3D0`, `0x0041D150` | walkers and water life of a tile | 606,993 / 620,704 / 0 | 1,311 / 1,341 / 0 | `0x0041D3D0` fast path (when it draws nothing: every call outside a Poseidon game); `0x0045A5A0` waits for the sort (12) |
 | 14 | `0x0044FEF0` | one walker | 27,178 | 59 | fast path (11.3): all but the C++ objects of sanctuaries, the trader's text and tinted walkers whose image the dispatcher refuses; in `working-city` no drawn walker is left to the original (`--count 0x0044FF29`: 0) |

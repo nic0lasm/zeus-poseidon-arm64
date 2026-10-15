@@ -45,6 +45,11 @@ adresse	nom	module	statut	preuve	type
 00435070	ground_diamond_draw	rendu	nommé	sol en losange (empreinte vérifiée par native_draw.cpp)	fonction
 004377b0	ground_diamond_left	rendu	nommé	losange rogné à gauche (moitié fixe) ; natif partiel : chemin rapide dans native_draw.cpp (sauf surimpression)	fonction
 00438a90	ground_diamond_right	rendu	nommé	losange rogné à droite (moitié fixe) ; natif partiel : chemin rapide dans native_draw.cpp (sauf surimpression)	fonction
+0043ff10	base_draw_2	rendu	natif	socle de 2 x 2 cases ; réécrit dans le répartiteur natif (native.cpp) ; rendering.md §8	fonction
+00440170	base_draw_3	rendu	natif	socle de 3 x 3 cases ; réécrit dans le répartiteur natif (native.cpp) ; rendering.md §8	fonction
+004406b0	base_draw_4	rendu	natif	socle de 4 x 4 cases ; réécrit dans le répartiteur natif (native.cpp) ; rendering.md §8	fonction
+00440fe0	base_draw_5	rendu	natif	socle de 5 x 5 cases ; réécrit dans le répartiteur natif (native.cpp) ; rendering.md §8	fonction
+00441e50	base_draw_6	rendu	natif	socle de 6 x 6 cases ; réécrit dans le répartiteur natif (native.cpp) ; rendering.md §8	fonction
 00446a70	terrain_events_update	terrain	documenté	tour : les 8 objets du rang 115 (0x0078C578, 28 octets) ; ceux en cours recalculent le sol (0x00521520, 0x0049BBB0) ; rôle hypothèse ; simulation.md §2	fonction
 004483f0	buildings_timer_countdown	bâtiments	documenté	étape 6 : pour les maisons (+0x05 non nul), décompte +0x100 tant que +0x85 est levé, puis baisse +0x85 ; nombre en cours dans 0x00FEB524 ; simulation.md §3	fonction
 004488c0	random_next	terrain	documenté	deux registres de 31 bits, 31 pas par tirage ; docs/engine/terrain.md §5	fonction
