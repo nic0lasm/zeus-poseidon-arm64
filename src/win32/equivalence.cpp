@@ -63,6 +63,12 @@ constexpr StateZone kZones[] = {
     // générateur (0x00F137E0, 0x00F137E4, blocs 43 et 42) et en tire six valeurs (0x00F137C4 à
     // 0x00F137D8). La zone couvre tout, de 0x00F13624 à 0x00F137E8.
     {-1, 0x00F13624, 0x1C4},
+    // Hors sauvegarde, recalculées au chargement (formats/sav.md) : décalage des indices de case
+    // (0x00DA2F80), bornes de la zone jouable (0x00DA2F78, 0x00DA2F7C), orientation de la vue
+    // (0x00DA2F88) ; dernière réserve occupée du bloc 81 (0x0091EBF0) ; liste des numéros de
+    // personnage libres (0x00DBB84C, reconstruite par FUN_004d9f40), dont la taille, jusqu'au bloc
+    // 28, est une hypothèse.
+    {-1, 0x00DA2F78, 0x14}, {-1, 0x0091EBF0, 4}, {-1, 0x00DBB84C, 0x1F3C},
 };
 
 // Noms des zones connues (game_gog.h, docs/reverse-engineering.md).
@@ -76,7 +82,8 @@ constexpr ZoneName kZoneNames[] = {
     {kTileSlope, "carte : pente"},                  {kTileHeight, "carte : hauteur"},
     {kFigures - 8, "personnages (2000 fiches)"},    {kBuildings - 0x10, "bâtiments (4000 fiches)"},
     {0x00F137E4, "générateur aléatoire (registre)"}, {0x00F137E0, "générateur aléatoire (registre)"},
-    {0x00F13624, "générateur aléatoire (tour)"},
+    {0x00F13624, "générateur aléatoire (tour)"},  {0x00DA2F78, "carte : décalage, bornes, orientation"},
+    {0x0091EBF0, "dernière réserve occupée"},        {0x00DBB84C, "numéros de personnage libres"},
 };
 
 // Empreinte 64 bits d'une zone : FNV-1a sur des mots de 8 octets, avec un brassage des bits hauts
@@ -164,23 +171,33 @@ constexpr Cpu::Reg kRegs[] = {Cpu::Reg::EAX, Cpu::Reg::ECX, Cpu::Reg::EDX, Cpu::
                               Cpu::Reg::ESP, Cpu::Reg::EBP, Cpu::Reg::ESI, Cpu::Reg::EDI};
 constexpr const char* kRegNames[] = {"EAX", "ECX", "EDX", "EBX", "ESP", "EBP", "ESI", "EDI"};
 
-// Registres qui ne font pas partie du résultat. Pour une fonction, ECX et EDX ne sont jamais
-// relus par l'appelant (registres libres de toutes les conventions d'appel de Visual C++), ni EAX
-// pour une fonction sans valeur de retour (signatures de Ghidra). Pour un morceau de code, le
-// commentaire du remplacement donne la preuve. Une adresse absente : ECX et EDX pour une
-// fonction, aucun pour un morceau de code. Les indicateurs ne sont jamais comparés.
+// Ce qui ne fait pas partie du résultat d'une fonction connue.
+//   - Registres : ECX et EDX ne sont jamais relus par l'appelant (registres libres de toutes les
+//     conventions d'appel de Visual C++), ni EAX quand la fonction ne renvoie rien (signature de
+//     Ghidra) ou que ses appelants ne lisent pas sa valeur. Pour un morceau de code, le
+//     commentaire du remplacement donne la preuve. Les indicateurs ne sont jamais comparés.
+//   - Arguments : la fonction d'origine réutilise ses emplacements d'arguments sur la pile comme
+//     variables (Visual C++ le fait) ; l'appelant les dépile sans les relire. `args` octets à partir
+//     de ESP + 4 à l'entrée ne sont donc pas comparés.
+// Une adresse absente : ECX et EDX pour une fonction, aucun registre pour un morceau de code, et
+// tous les arguments comparés.
 struct Known {
-    uint32_t start, end, ignored;
+    uint32_t start, end, ignored, args;
 };
 constexpr Known kKnown[] = {
-    {kCopyRectangle, 0, kEax | kEcx | kEdx},       // void FUN_00413dc0(source)
-    {kDrawRunsBlended, 0, kEax | kEcx | kEdx},     // void FUN_00413e30(image, table)
-    {kCopyRectangleKeyed, 0, kEax | kEcx | kEdx},  // void FUN_00416010(source)
-    {kDrawRuns, 0, kEax | kEcx | kEdx},            // void FUN_004161b0(image, ombre)
-    {kClearFrame, 0, kEax | kEcx | kEdx},          // void FUN_0050b410(void)
-    {kCityDraw, 0, kEax | kEcx | kEdx},            // void FUN_00458170(mode)
+    {kCopyRectangle, 0, kEax | kEcx | kEdx, 4},       // void FUN_00413dc0(source)
+    {kDrawRunsBlended, 0, kEax | kEcx | kEdx, 8},     // void FUN_00413e30(image, table)
+    {kCopyRectangleKeyed, 0, kEax | kEcx | kEdx, 4},  // void FUN_00416010(source)
+    {kDrawRuns, 0, kEax | kEcx | kEdx, 8},            // void FUN_004161b0(image, ombre)
+    {kClearFrame, 0, kEax | kEcx | kEdx, 0},          // void FUN_0050b410(void)
+    {kCityDraw, 0, kEax | kEcx | kEdx, 4},            // void FUN_00458170(mode)
+    {kStrcmpi, 0, kEcx | kEdx, 8},                    // int _strcmpi(a, b)
+    {kSpriteDispatch, 0, kEcx | kEdx, 0},             // stdcall : ses arguments sont dépilés par elle
+    // FUN_00457900(case, x, y, rangée impaire) : ses deux appelants réécrivent EAX avant de le lire
+    // (0x0045864A, puis 0x00458653 ; 0x00458C33, puis 0x00458C48, 0x00458CFF ou 0x00458D8A).
+    {kGroundTile, 0, kEax | kEcx | kEdx, 16},
     // native.cpp, search_key : EAX, ECX et les indicateurs sont réécrits avant d'être relus.
-    {kKeySearch, kKeySearchEnd, kEax | kEcx},
+    {kKeySearch, kKeySearchEnd, kEax | kEcx, 0},
 };
 
 struct Range {
@@ -196,7 +213,10 @@ public:
         : process_(process), cpu_(process.cpu()), start_(start), end_(end), every_(std::max<uint32_t>(every, 1)) {
         ignored_ = end ? 0 : kEcx | kEdx;
         for (const Known& k : kKnown)
-            if (k.start == start && k.end == end) ignored_ = k.ignored;
+            if (k.start == start && k.end == end) {
+                ignored_ = k.ignored;
+                args_bytes_ = k.args;
+            }
         cpu_.add_code_hook(start_, [this](Cpu&) { enter(); });
         if (end_)
             cpu_.add_code_hook(end_, [this](Cpu& c) {
@@ -217,8 +237,9 @@ public:
         char what[48];
         if (end_) std::snprintf(what, sizeof what, "%#010x:%#010x", start_, end_);
         else std::snprintf(what, sizeof what, "%#010x", start_);
-        std::fprintf(stderr, "vérification %s : %llu passages, %llu comparés (1 sur %u), %s\n", what,
-                     static_cast<unsigned long long>(calls_), static_cast<unsigned long long>(compared_), every_,
+        std::fprintf(stderr, "vérification %s : %llu passages, %llu comparés (1 sur %u), %llu laissés à l'original (appels de l'hôte), %s\n",
+                     what, static_cast<unsigned long long>(calls_), static_cast<unsigned long long>(compared_), every_,
+                     static_cast<unsigned long long>(skipped_),
                      failure_.empty() ? (compared_ ? "tous identiques" : "aucun") : "DIFFÉRENCE");
         if (!failure_.empty()) std::fprintf(stderr, "%s", failure_.c_str());
         return failure_.empty();
@@ -269,9 +290,12 @@ private:
         for (int i = 0; i < 8; ++i) regs[i] = cpu_.reg(kRegs[i]);
         if (phase_ == Phase::Original) {
             if (host_calls) {
-                fail("l'exécution d'origine appelle " + std::to_string(host_calls) +
-                     " fois une fonction de l'hôte (système, son, horloge) : effets impossibles à "
-                     "rejouer à l'identique, appel non comparable\n");
+                // Les effets d'une fonction de l'hôte (horloge, fichiers, tas) ne se rejouent pas à
+                // l'identique : l'appel garde le résultat de l'original, sans comparaison.
+                ++skipped_;
+                phase_ = Phase::Idle;
+                cpu_.set_native(true);
+                if (!end_) cpu_.jump(return_address_);
                 return;
             }
             std::memcpy(original_regs_, regs, sizeof regs);
@@ -349,7 +373,7 @@ private:
             const uint32_t size = r.end - from;
             if (from >= r.end || std::memcmp(expected, actual, size) == 0) continue;
             for (uint32_t i = 0; i < size; ++i)
-                if (expected[i] != actual[i]) {
+                if (expected[i] != actual[i] && !in_arguments(from + i)) {
                     if (!found) first = from + i;
                     found = true;
                     ++differing;
@@ -372,6 +396,11 @@ private:
             text += '\n';
         }
         return text;
+    }
+
+    // Emplacements des arguments de l'appel vérifié (voir Known).
+    bool in_arguments(uint32_t address) const {
+        return address - (entry_esp_ + 4) < args_bytes_;
     }
 
     const uint8_t* expected_byte(uint32_t address) const {
@@ -407,11 +436,11 @@ private:
     Process& process_;
     Cpu& cpu_;
     const uint32_t start_, end_, every_;
-    uint32_t ignored_ = 0;
+    uint32_t ignored_ = 0, args_bytes_ = 0;
     uint32_t return_thunk_ = 0;
     Phase phase_ = Phase::Idle;
     bool restarting_ = false;
-    uint64_t calls_ = 0, compared_ = 0, host_calls_ = 0;
+    uint64_t calls_ = 0, compared_ = 0, skipped_ = 0, host_calls_ = 0;
     CpuContext entry_;
     uint32_t entry_esp_ = 0, caller_ = 0, return_address_ = 0;
     uint32_t args_[6] = {};
