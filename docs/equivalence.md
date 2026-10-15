@@ -79,7 +79,9 @@ python3 tools/check_scenarios.py --verify 0x005ACF50 --every 5000
 
 `--verify ADDRESS` checks a function from its entry to its return; `--verify START:END` checks a
 piece of code from `START` until execution reaches `END` with the same stack pointer (a loop
-replaced natively). `--verify-every N` checks one pass in N. On each checked pass:
+replaced natively). `START` must be reached once per pass: for a loop, the instruction
+before it, not its head (which a pass reaches again at the same stack depth, reported as a
+failure). `--verify-every N` checks one pass in N. On each checked pass:
 
 1. at the entry, the processor state and all writable memory are copied (the image's sections,
    the part of the heap already handed out, the stack, the thread block);
