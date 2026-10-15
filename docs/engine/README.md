@@ -21,17 +21,26 @@ the game.
   whole of it. Three more are replaced only in their common cases (a fast path or a rewritten
   loop, the original code still running for the rest): they stay *named* and say so in their
   evidence column.
-- **Executed code running natively: 56.9 %** (plus 13.2 % in partly native functions). Measured
-  on a 60-second deterministic run of the first tutorial with `--no-native`, as the share of the
-  executed code bytes that belong to native functions. It counts bytes of executed instructions,
-  not instructions, and one scenario is not the whole game: read it as an order of magnitude.
+- **Functions understood: 75 of 4,872** (1.5 %): named, documented or native.
+- **Computation done natively: 54 %.** Scenario `working-city` (the last tutorial, a large city)
+  for its full 300 s, deterministic clock, run with `--no-native` so that the whole game is
+  emulated and profiled. The profile times every block of x86 code the game executes (corrected
+  for the cost of the measure, as in `tools/profile_report.py`). **54.1 %** of that time is spent
+  in the 6 native functions (`copy_rectangle`, `draw_runs`, `strcmpi`, `clear_frame`,
+  `draw_runs_blended`), plus **12.4 %** in functions that are only partly native; the rest is
+  original code that is still emulated. The share of executed code bytes gives the same answer
+  (54.2 % + 12.8 %). It is a share of the *game's own code*: the time the host spends in Win32
+  calls, blits and sound (blocks outside the game's `.text`, 9.8 % of the time measured) is
+  excluded. Caveats: the profiler itself slows the run down and its cost is estimated, a byte
+  count is not an instruction count (a repeated string instruction counts once), and one
+  scenario is not the whole game.
 
 Reproduce:
 
 ```bash
-./build/zeus-run --run original/gog/app/Zeus.exe --headless --write-dir build/essais/profil \
-    --mute --no-native --deterministic --seconds 60 --profile build/essais/profil.tsv \
-    --script "5:key 27; 12:click 220,101; 17:char 78; 20:click 556,320; 27:click 644,523; 33:click 212,120"
+./build/zeus-run --run original/gog/app/Zeus.exe --headless --deterministic --mute --no-native \
+    --write-dir build/essais/profil --seconds 300 --profile build/essais/profil.tsv \
+    --script "$(grep -v '^#' tests/scenarios/working-city.txt | tr '\n' ';' | sed 's/;$//')"
 python3 tools/coverage.py --profile build/essais/profil.tsv
 ```
 
@@ -85,4 +94,13 @@ answers were wrong.
 The code map is produced by a read-only Ghidra script (`tools/ghidra/ExportCodeMap.java`, run as
 in [reverse-engineering.md](../reverse-engineering.md)) and `tools/build_symbols.py`. The Ghidra
 project of the GOG executable holds 4,842 functions with a body; 30 more are named in our notes
-at addresses Ghidra did not mark as function starts.
+at addresses Ghidra did not mark as function starts: **4,872 in all**. The C library is
+*included* (281 functions, 6 %), and so is the part of the executable that no module claims.
+
+### Why not 8,397?
+
+8,397 is the number of functions in `.text` of the **2.1 edition** of `Zeus.exe`
+(`analysis/notes/sources-et-binaires.md`); the 2.0 edition has about 4,900 and the GOG edition
+4,858 before our additions. The GOG executable is the only one the game runs from, and its
+addresses are the only ones in this map, so every counter is out of 4,872. If the other editions
+are mapped later, they get their own totals.

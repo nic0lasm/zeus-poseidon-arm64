@@ -74,12 +74,12 @@ an engine written by hand and documented** — the way Julius did for *Caesar II
 original stays the reference and the judge: each rewritten part must prove, turn by turn, that it
 gives exactly the same game state. Nothing is translated mechanically. No dates are promised.
 
-**Engine progress:** 6 of 4,872 functions replaced by hand-written native code; 56.9 % of the executed game code now runs natively (one measured scenario). [Code map and counters](docs/engine/README.md).
+**Engine progress:** 75 of the 4,872 functions of the GOG executable are understood (named, documented or native) and 6 are replaced by hand-written native code; those 6 account for 54 % of the game's computation time on the `working-city` scenario (emulated x86 code only, host work excluded). [Code map and counters](docs/engine/README.md).
 
 - **1.x Playable** — keep it light and in every edition: first launch ([#55](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/55)), language packs
   ([#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24), **testers wanted**), processor use ([#22](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/22)). [Milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/2)
 - **Phase A — Instruments** — equivalence on the full game state ([#26](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/26)); a code map and two public
-  counters: functions understood out of 8,397, and share of the computation done natively ([#69](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/69)).
+  counters: functions understood out of 4,872, and share of the computation done natively ([#69](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/69)).
   [Milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/7)
 - **Phase B — Data** — the savegame described in full ([#70](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/70)), then maps and adventures, images,
   texts, tables ([#30](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/30)); each format read, then written back byte for byte. [Milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/8)

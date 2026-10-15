@@ -9,10 +9,14 @@ nommé, documenté, natif. Une fonction « nommé » dont la preuve commence par
 est comptée à part (chemin rapide ou boucle réécrite, le reste du code d'origine tournant encore).
 
 Part en natif : à partir d'un profil de `zeus-run --no-native --profile PROFIL.tsv` (le jeu
-entièrement émulé), la part des octets de code exécutés qui appartiennent à des fonctions de
-statut « natif ». C'est une mesure d'octets d'instructions, pas un nombre d'instructions : les
-longueurs d'instructions x86 varient, mais la part est la même à longueur moyenne égale. Les
-anciennes sorties de profil à trois colonnes (sans la taille des blocs) ne conviennent pas.
+entièrement émulé), deux mesures sur le code du jeu seul (les blocs hors du .text, c'est-à-dire
+le travail de l'hôte appelé par le jeu, sont exclus) :
+  - le temps de calcul : temps passé dans les fonctions de statut « natif », corrigé du coût de
+    la mesure, sur le temps passé dans le code x86 du jeu ;
+  - les octets de code exécutés (blocs × taille) : pas un nombre d'instructions exact, et une
+    instruction répétée (rep movs) y compte pour une.
+L'hôte (Win32, blits, son) est donné à part, en part du temps mesuré. Les profils à trois colonnes
+(sans la taille des blocs) ne conviennent pas.
 --summary n'imprime que les deux compteurs, en une ligne ; --markdown, les tableaux de
 docs/engine/README.md.
 """
@@ -37,25 +41,40 @@ def lire_symboles(chemin):
 
 
 def part_native(fonctions, chemin):
-    """(octets natifs, octets partiels, octets exécutés, par module) d'après un profil."""
+    """Mesures d'un profil, pour le code du jeu seul (les blocs hors du .text sont ceux de l'hôte).
+
+    Renvoie un dict : pour « octets » et « temps », les parts (natif, partiel) du code du jeu, et
+    la part de l'hôte dans le temps mesuré. Le temps est corrigé du coût de la mesure, comme dans
+    profile_report.py (temps moyen le plus court des blocs exécutés plus de 100 000 fois).
+    """
     debuts = [f[0] for f in fonctions]
-    natif = partiel = total = 0
+    fin = max(f[0] + f[1] for f in fonctions if f[1] > 0)
+    blocs = []
     for ligne in open(chemin):
         champs = ligne.split()
         if len(champs) < 4:
             raise SystemExit("profil sans taille de bloc : à refaire avec un zeus-run récent")
-        adresse, executions, taille = int(champs[0], 16), int(champs[2]), int(champs[3])
-        octets = executions * taille
-        total += octets
-        i = bisect.bisect_right(debuts, adresse) - 1
-        if i < 0:
+        blocs.append((int(champs[0], 16), int(champs[1]), int(champs[2]), int(champs[3])))
+    chargees = [t / e for _, t, e, _ in blocs if e >= 100000]
+    surcout = min(chargees) if chargees else 0.0
+    mesure = collections.defaultdict(float)
+    for adresse, nanos, executions, taille in blocs:
+        temps = max(nanos - surcout * executions, 0.0)
+        if adresse >= fin or adresse < debuts[0]:
+            mesure["hôte"] += temps
             continue
+        i = bisect.bisect_right(debuts, adresse) - 1
         _, _, _, _, statut, preuve = fonctions[i]
-        if statut == "natif":
-            natif += octets
-        elif preuve.startswith("natif partiel") or "natif partiel" in preuve:
-            partiel += octets
-    return natif, partiel, total
+        genre = "natif" if statut == "natif" else "partiel" if "natif partiel" in preuve else "reste"
+        mesure["octets", genre] += executions * taille
+        mesure["temps", genre] += temps
+    jeu_octets = sum(mesure["octets", g] for g in ("natif", "partiel", "reste"))
+    jeu_temps = sum(mesure["temps", g] for g in ("natif", "partiel", "reste"))
+    return {"octets_natif": mesure["octets", "natif"] / jeu_octets,
+            "octets_partiel": mesure["octets", "partiel"] / jeu_octets,
+            "temps_natif": mesure["temps", "natif"] / jeu_temps,
+            "temps_partiel": mesure["temps", "partiel"] / jeu_temps,
+            "hote": mesure["hôte"] / (jeu_temps + mesure["hôte"])}
 
 
 def main():
@@ -74,8 +93,11 @@ def main():
     natives = par_statut["natif"]
     texte_natif = ""
     if a.profile:
-        natif, partiel, total = part_native(fonctions, a.profile)
-        texte_natif = f"{100 * natif / total:.1f} % du code exécuté en natif (+ {100 * partiel / total:.1f} % partiel)"
+        m = part_native(fonctions, a.profile)
+        texte_natif = (f"{100 * m['temps_natif']:.1f} % du temps de calcul du jeu dans des fonctions natives "
+                       f"(+ {100 * m['temps_partiel']:.1f} % partiel) ; {100 * m['octets_natif']:.1f} % des octets de "
+                       f"code exécutés (+ {100 * m['octets_partiel']:.1f} % partiel) ; l'hôte pèse {100 * m['hote']:.1f} % "
+                       f"du temps mesuré")
     if a.summary:
         print(f"{natives} fonctions natives sur {len(fonctions)}" + (f" ; {texte_natif}" if texte_natif else ""))
         return
