@@ -24,13 +24,73 @@ flowchart LR
 
 | Step | Theme | State | Follow it |
 |---|---|---|---|
-| **1.x — Playable** | The game as it is: lighter on the machine, every language edition, a simpler first launch | released (1.1); ongoing | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/2) · [#22](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/22) · [#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24) · [#55](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/55) |
-| **Phase A — Instruments** | Equivalence harness on the full game state; code map; two public counters (functions understood out of 4,872, share of the computation done natively) | next | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/7) · [#26](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/26) · [#69](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/69) |
-| **Phase B — Data** | Savegame `.sav` described in full, then maps and adventures, images, texts, tables; each format read then written back byte for byte | planned | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/8) · [#70](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/70) · [#30](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/30) |
-| **Phase C — Native engine** | Rendering, interface and texts, terrain, movement and walkers, housing and buildings, economy, gods, heroes and monsters, army, events and adventures, savegame | planned | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/9) · [#71](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/71) |
+| **1.x — Playable** | The game as it is: lighter on the machine, every language edition, a simpler first launch | released (1.1); 1.2 once the rendering in progress is merged | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/2) · [#22](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/22) · [#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24) · [#55](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/55) |
+| **Phase A — Instruments** | Equivalence harness on the full game state; code map; two public counters (functions understood out of 4,872, share of the computation done natively) | done; counters kept current | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/7) · [#26](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/26) · [#69](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/69) |
+| **Phase B — Data** | Savegame `.sav` described in full, then maps and adventures, images, texts, tables; each format read then written back byte for byte | done for what the engine reads | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/8) · [#70](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/70) · [#30](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/30) |
+| **Phase C — Native engine** | Rendering, interface and texts, terrain, movement and walkers, housing and buildings, economy, gods, heroes and monsters, army, events and adventures, savegame | in progress: rendering | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/9) · [#71](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/71) |
 | **2.0 — Native engine** | No emulator to play; Linux and Intel follow from it | after the engine | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/3) · [#25](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/25) · [#38](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/38) · [#39](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/39) · [#40](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/40) · [#41](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/41) |
 | **Modding (branch)** | Changes to the game, on a `modding` branch | later | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/10) · [#72](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/72) |
 | exploration | The City Building Series: *Emperor*, *Pharaoh*, *Caesar III* | on hold | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/5) · [#28](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/28) · [#29](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/29) |
+
+## Where we stand (review of 15 October 2026)
+
+One day after 1.1, Phases A and B are in place and Phase C has started with the rendering.
+
+- **Instruments.** The game state is compared tick by tick, and any native function call by
+  call ([equivalence.md](equivalence.md)); every function of the executable is on the code map
+  with its module and status ([engine/README.md](engine/README.md)).
+- **Data.** Saved games (219 files), maps (57) and adventures (`.set`, `.pak`) are read and
+  written back byte for byte, texts too; tables, building plans and event messages are read,
+  the tables checked against a re-implementation of the game's own parser.
+- **Engine.** Three subsystem pages (rendering, interface and texts, terrain), each ending with
+  the ordered list of functions to rewrite. The city drawing is largely native: 8 functions
+  replaced whole, 195 understood out of 4,872, and 48.7 % of the game's computation done
+  natively on the large city (+ 14.7 % in functions that are partly native).
+
+What the review shows:
+
+1. **The rest of the drawing is about completeness, not speed.** The last pixel routines changed
+   nothing measurable in real time (#88). A small city is at about 23 % of a core; the large city
+   lost about a third of its time per tick since 1.1 (84 %), still well above the 35 % of #22.
+   Its remaining cost is in the walkers, the building extras and the simulation: a hypothesis
+   until it is measured (step 5 below).
+2. **2.0 is mostly the simulation, and its size is not known yet.** 4,131 functions, 76 % of the
+   executable's code (1.09 MB of 1.43 MB), belong to no module so far; rendering, interface,
+   texts and terrain together are 10.5 % of it. The native share of the computation grows fast
+   because drawing is concentrated in a few functions; the count of functions understood grows
+   slowly.
+3. **The bench cannot prove what the scenarios never call.** Rendering steps 5 to 7 (glyph
+   masks, overlays, rare blends), the base of 6 × 6 tiles and every overlay branch are reached by
+   none of the nine scenarios.
+4. **What costs the most time is around the rewrites, not in them.** Setting up the bench on a
+   fresh machine (game files, references of the pure original, nine scenarios) costs more than
+   most rewrites, and it is slow on Linux: Ubuntu 24.04 ships Unicorn 2.0.1, which cannot use
+   non-executable pages, so every memory write takes the emulator's slow path
+   (`src/win32/cpu.cpp`, `Cpu::enable_paging`). Branches that edit the same lines (counters, the
+   "where the list stands" paragraphs, the table of native functions) cost rebases. Work that
+   lived on one machine only was nearly lost twice.
+
+### Next steps, in order
+
+Steps 2, 4 and 5 can run side by side: each touches its own files.
+
+| # | Step | Why now | Done when |
+|---|---|---|---|
+| 1 | Finish the rendering in progress: bases of 2 to 6 tiles (#91), walker sort, walkers ([rendering §13](engine/rendering.md#13-order-of-the-rewrite), steps 10, 12 to 14) | already written, verification under way | merged; frames, state and call-by-call checks identical |
+| 2 | A fast, repeatable bench on Linux: Unicorn 2.1 or later, references of the pure original recorded once per change of the Windows layer and reused | every later step runs the bench several times | the nine scenarios recorded and replayed on a fresh Linux machine with one command |
+| 3 | Release 1.2 | players get the native drawing (a small city from about 35 % to about 23 % of a core) | played through on a Mac, as for 1.0 |
+| 4 | A tenth scenario for the rare drawing cases (a building marked red, glyph masks, the rare blends, a 6 × 6 base), then rendering steps 5 to 7 | no proof is possible without it, and 2.0 needs them | the scenario reaches each of those functions; steps 5 to 7 native and checked call by call |
+| 5 | Map the simulation: a profile of the large city in real time with native code on, and the call tree of the simulation tick placing functions in modules | sizes 2.0 and orders the rest of Phase C by measured cost | every function the simulation tick reaches in the nine scenarios has a module; a page `docs/engine/simulation.md` gives the order of a tick and what each module costs |
+| 6 | Terrain in native code, steps 1 to 4 of [terrain §10](engine/terrain.md#10-order-of-the-rewrite) (random draw, diamond tests, neighbour counts, free building area) | documented and self-contained; the first native code of the simulation, whose results are the game state itself, so the first real test of the tick-by-tick comparison | steps 1 to 4 native; state identical at every tick of every scenario |
+| 7 | The other subsystems in the order step 5 gives; interface and texts once the sprite dispatcher is native whole | their value is fidelity more than speed ([interface §10](engine/interface.md#10-cost-in-real-time)) | — |
+
+How the work is checked, from now on:
+
+- Counters (`docs/engine/README.md`, the README) and the "where the list stands" paragraphs are
+  refreshed in one change after a batch of merges, not in every pull request.
+- Real-time figures in a pull request compare `main` and the branch on the same machine at the
+  same time; absolute figures (share of a core) are measured on a Mac, before a release.
+- Work in progress lives on a pushed branch from its first commit.
 
 ## What does not change
 
@@ -61,9 +121,10 @@ Before rewriting anything, the means to prove it.
 - **Equivalence harness** ([#26](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/26), done): the whole game state compared tick by tick between the
   pure original and the host, and one game function run original and native from the same
   state with registers and memory compared ([equivalence.md](equivalence.md)).
-- **Code map and counters** ([#69](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/69)): each of the 4,872 functions of the GOG executable filed under a module, and two
+- **Code map and counters** ([#69](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/69), done): each of the 4,872 functions of the GOG executable filed under a module, and two
   public numbers — functions understood out of 4,872, and the share of the computation done
-  natively.
+  natively ([engine/README.md](engine/README.md)). Most functions have no module yet: placing
+  them is step 5 of the next steps above.
 
 ## Phase B — Data
 
@@ -75,12 +136,19 @@ The game's files, described completely and rewritten byte for byte.
 
 **Done when** each format read and then written back gives the identical file.
 
+**Where it stands.** Saved games, maps, adventures (`.set`, `.pak`) and texts are read and
+written back byte for byte; the `Model` tables, building plans, event messages and images are
+read. The engine only reads files, so this is
+enough for Phase C: writing images and tables back moves to the modding branch, where it is
+needed, and the meaning of each savegame block is filled in as Phase C reaches its subsystem.
+
 ## Phase C — Native engine by subsystem
 
 One parent issue ([#71](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/71)) lists the subsystems: rendering, interface and texts, terrain, movement
 and walkers, housing and buildings, economy, gods, heroes and monsters, army, events and
 adventures, savegame. For each: a page in `docs/engine/`, the native code, and the proof of
-equivalence against the emulated original. Lower processor use ([#22](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/22)) comes along.
+equivalence against the emulated original. Lower processor use ([#22](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/22)) comes along. The rendering
+is under way; the order of what follows is in the next steps above.
 
 ## 2.0 — Native engine
 
