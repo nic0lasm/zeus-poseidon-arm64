@@ -271,6 +271,10 @@ def main(argv):
     arch = os.uname().machine
     if arch not in APPIMAGETOOL_SHA256:
         sys.exit(f"architecture {arch} non prise en charge")
+    # Les chemins des sources (__FILE__ des assertions de SDL et d'Unicorn) deviennent relatifs :
+    # aucun chemin de la machine de construction dans l'AppImage.
+    for flags in ("CFLAGS", "CXXFLAGS"):
+        os.environ[flags] = f"{os.environ.get(flags, '')} -ffile-prefix-map={ROOT}=.".strip()
     if "--apt" in argv:
         sudo = [] if os.geteuid() == 0 else ["sudo"]
         run(*sudo, "apt-get", "update", "-qq")
