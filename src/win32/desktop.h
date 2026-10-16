@@ -94,6 +94,9 @@ private:
     void to_game(int window_x, int window_y);
     void toggle_fullscreen();
     bool texture_565_ = false;
+    // Couleur ARGB8888 de chaque pixel 16 bits du jeu (555 ou 565) : la texture se remplit en un
+    // passage au format du rendu, sans la conversion générale de SDL à chaque image.
+    std::vector<uint32_t> colors_;
     int width_ = kScreenWidth, height_ = kScreenHeight, texture_w_ = 0, texture_h_ = 0;
     int presents_ = 0;
     bool stop_ = false, screenshot_wanted_ = false;

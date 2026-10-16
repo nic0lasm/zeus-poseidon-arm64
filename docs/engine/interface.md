@@ -574,6 +574,12 @@ page content `0x00517000` 3.7 %, `0x005170A0` 1.7 %, the two draw tables 0.9 %),
 15 µs per string): the largest interface item, now native (§12, remark f). Everything else of the interface is
 under 4 % each; the panel line drawing `0x004F58C0` is 1.2 %, the draw table `0x004316F0` 1.1 %.
 
+Correction (#125): most of the presentation's share above came from the measurement itself. Any `--script` made
+`Desktop::present` convert every frame to RGB24 for a capture, about 0.8 ms per frame on a cloud core; since #125
+it happens only when the script asks for a capture (`shot`). Without it, the host's copies cost 0.10 ms per pass
+headless, 0.05 ms once done in place. With a visible window the cost is SDL's: 1.6–1.9 ms per pass with the software
+renderer after #125 (2.2 ms before).
+
 ## 11. Starting point: the native attempt of #35 (closed, no gain)
 
 Branch `textes-panneau-natif` (local, not merged; two commits on `3173f7f`) replaced, with fast paths:

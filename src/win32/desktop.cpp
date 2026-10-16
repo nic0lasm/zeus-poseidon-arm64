@@ -114,8 +114,7 @@ void Desktop::present(const uint8_t* pixels, int width, int height, int pitch, b
     if (!window_) create_window("Zeus", width, height);
     if (!texture_ || texture_w_ != width || texture_h_ != height || texture_565_ != rgb565) {
         if (texture_) SDL_DestroyTexture(texture_);
-        texture_ = SDL_CreateTexture(renderer_, rgb565 ? SDL_PIXELFORMAT_RGB565 : SDL_PIXELFORMAT_RGB555,
-                                     SDL_TEXTUREACCESS_STREAMING, width, height);
+        texture_ = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, width, height);
         if (!texture_) throw std::runtime_error(SDL_GetError());
         SDL_SetTextureScaleMode(texture_, SDL_ScaleModeNearest);
         if (upscaled_) SDL_DestroyTexture(upscaled_);
@@ -123,6 +122,14 @@ void Desktop::present(const uint8_t* pixels, int width, int height, int pitch, b
         texture_w_ = width;
         texture_h_ = height;
         texture_565_ = rgb565;
+        // Table tirée de SDL lui-même : la texture garde exactement les couleurs qu'il produisait
+        // en convertissant chaque image.
+        std::vector<uint16_t> all(65536);
+        for (size_t c = 0; c < all.size(); ++c) all[c] = static_cast<uint16_t>(c);
+        colors_.resize(all.size());
+        if (SDL_ConvertPixels(256, 256, rgb565 ? SDL_PIXELFORMAT_RGB565 : SDL_PIXELFORMAT_RGB555, all.data(), 512,
+                              SDL_PIXELFORMAT_ARGB8888, colors_.data(), 1024) != 0)
+            throw std::runtime_error(SDL_GetError());
     }
     if (!frame_log_path.empty()) {
         if (!frame_log_) frame_log_ = std::fopen(frame_log_path.c_str(), "w");
@@ -133,7 +140,15 @@ void Desktop::present(const uint8_t* pixels, int width, int height, int pitch, b
     }
     // Fenêtre cachée sans capture de son contenu : rien à dessiner.
     if (!headless || !window_shot_path.empty()) {
-        SDL_UpdateTexture(texture_, nullptr, pixels, pitch);
+        void* out = nullptr;
+        int out_pitch = 0;
+        if (SDL_LockTexture(texture_, nullptr, &out, &out_pitch) != 0) throw std::runtime_error(SDL_GetError());
+        for (int y = 0; y < height; ++y) {
+            const uint8_t* row = pixels + static_cast<size_t>(y) * pitch;
+            uint32_t* dst = reinterpret_cast<uint32_t*>(static_cast<uint8_t*>(out) + static_cast<size_t>(y) * out_pitch);
+            for (int x = 0; x < width; ++x) dst[x] = colors_[static_cast<uint16_t>(row[2 * x] | row[2 * x + 1] << 8)];
+        }
+        SDL_UnlockTexture(texture_);
 
         // L'image garde ses proportions et se centre dans la fenêtre. À un facteur entier, chaque
         // pixel du jeu devient un carré net. Sinon on agrandit d'abord au facteur entier supérieur,
@@ -265,7 +280,9 @@ void Desktop::add_script(const std::string& text) {
     const std::vector<ScriptEvent> events = parse_script(text);
     script_.insert(script_.end(), events.begin(), events.end());
     std::stable_sort(script_.begin(), script_.end(), [](const ScriptEvent& a, const ScriptEvent& b) { return a.at < b.at; });
-    screenshot_wanted_ = !script_.empty();
+    // L'image RGB24 ne se prépare à chaque image que si le script demande une capture : cette
+    // conversion coûtait autant que le reste de la présentation dans toute partie scriptée.
+    screenshot_wanted_ = std::any_of(script_.begin(), script_.end(), [](const ScriptEvent& e) { return e.kind == ScriptEvent::Kind::Shot; });
 }
 
 void Desktop::alert(const std::string& title, const std::string& text) {

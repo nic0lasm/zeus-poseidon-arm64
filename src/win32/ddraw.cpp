@@ -7,6 +7,7 @@
 // est recopiée dans la fenêtre à chaque fin d'écriture.
 
 #include <cstdio>
+#include <cstring>
 #include <map>
 #include <memory>
 #include <stdexcept>
@@ -42,7 +43,6 @@ struct State {
     std::map<uint32_t, Surface> surfaces;  // adresse de l'objet -> surface
     uint32_t surface_vtable = 0, clipper_vtable = 0, palette_vtable = 0;
     int mode_width = 800, mode_height = 600;
-    std::vector<uint8_t> frame;  // tampon hôte pour l'affichage
 };
 
 struct Method {
@@ -110,11 +110,9 @@ void install_ddraw(Process& p) {
         if (found == st->surfaces.end()) throw std::runtime_error("surface inconnue");
         return found->second;
     };
-    // Recopie la surface primaire dans la fenêtre.
-    auto present = [&p, &cpu, st](const Surface& s) {
-        st->frame.resize(static_cast<size_t>(s.pitch) * s.height);
-        cpu.read(s.pixels, st->frame.data(), st->frame.size());
-        p.desktop().present(st->frame.data(), s.width, s.height, s.pitch, false);
+    // Recopie la surface primaire dans la fenêtre, lue en place dans la mémoire émulée.
+    auto present = [&p, &cpu](const Surface& s) {
+        p.desktop().present(cpu.host(s.pixels), s.width, s.height, s.pitch, false);
         if (p.desktop().should_stop()) p.exit(0);
     };
     auto new_surface = [&p, st](int width, int height, bool primary) {
@@ -150,21 +148,21 @@ void install_ddraw(Process& p) {
         if (dy < 0) { r.top -= dy; dy = 0; }
         const int w = std::min(r.right - r.left, dst.width - dx), h = std::min(r.bottom - r.top, dst.height - dy);
         if (w <= 0 || h <= 0) return;
-        std::vector<uint8_t> line(static_cast<size_t>(w) * 2), under(keyed ? line.size() : 0);
+        // En place dans la mémoire émulée, ligne par ligne dans le même ordre qu'avant ; chaque
+        // ligne source est lue en entier avant d'écrire la destination (surfaces qui se recouvrent).
+        const size_t bytes = static_cast<size_t>(w) * 2;
+        std::vector<uint16_t> line(keyed ? static_cast<size_t>(w) : 0);
+        const uint16_t key = static_cast<uint16_t>(src.color_key);
         for (int y = 0; y < h; ++y) {
-            const uint32_t from = src.pixels + static_cast<uint32_t>((r.top + y) * src.pitch + r.left * 2);
-            const uint32_t to = dst.pixels + static_cast<uint32_t>((dy + y) * dst.pitch + dx * 2);
-            cpu.read(from, line.data(), line.size());
-            if (keyed) {
-                cpu.read(to, under.data(), under.size());
-                const uint8_t lo = static_cast<uint8_t>(src.color_key), hi = static_cast<uint8_t>(src.color_key >> 8);
-                for (int x = 0; x < w; ++x)
-                    if (line[2 * x] == lo && line[2 * x + 1] == hi) {
-                        line[2 * x] = under[2 * x];
-                        line[2 * x + 1] = under[2 * x + 1];
-                    }
+            const uint8_t* from = cpu.host(src.pixels + static_cast<uint32_t>((r.top + y) * src.pitch + r.left * 2));
+            uint8_t* to = cpu.host(dst.pixels + static_cast<uint32_t>((dy + y) * dst.pitch + dx * 2));
+            if (!keyed) {
+                std::memmove(to, from, bytes);
+                continue;
             }
-            cpu.write(to, line.data(), line.size());
+            std::memcpy(line.data(), from, bytes);
+            for (int x = 0; x < w; ++x)
+                if (line[static_cast<size_t>(x)] != key) std::memcpy(to + 2 * x, &line[static_cast<size_t>(x)], 2);
         }
     };
 
