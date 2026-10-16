@@ -507,7 +507,7 @@ int install_native_walkers(Process& p) {
         ++installed;
     }
     if (fingerprint(cpu, kWalkerSortCode, kWalkerSortEnd) == kWalkerSortHash) {
-        cpu.add_fast_path(kWalkerSort, 0, 7, walker_sort_call);  // « MOV EAX,[ESP+4] ; SUB ESP,0x194 » déplacés
+        cpu.add_fast_path(kWalkerSort, 0, 10, walker_sort_call);  // « MOV EAX,[ESP+4] ; SUB ESP,0x194 » déplacés
         ++installed;
     }
     return installed;
