@@ -62,15 +62,35 @@ propres CD ([détails](docs/languages.md), en anglais).
   depuis vos propres CD.
 - **Le confort** — molette dans les listes, pause quand vous passez à une autre application,
   démarrage en moins d'une seconde.
-- **La fidélité prouvée** — huit scénarios rejoués comparent chaque image à une référence : une
-  modification qui changerait un seul pixel du jeu ne peut pas passer inaperçue.
+- **La fidélité prouvée** — dix scénarios rejoués comparent chaque image et tout l'état de la
+  partie, tour par tour, avec le jeu d'origine : une modification qui changerait un seul pixel
+  ou un seul nombre de la simulation ne peut pas passer inaperçue.
+
+### Plus léger à chaque version
+
+La version 1.2 fait passer la plus grande partie du dessin de la ville et les parties les plus
+coûteuses de la simulation de l'original émulé à du code natif écrit à la main, chaque partie
+prouvée identique à l'original :
+
+- **Une petite ville à environ 23 % d'un cœur**, contre environ 35 % en 1.1 et 51 à 60 % en
+  1.0.1 (en temps réel, sur Mac) : le second passage du dessin de la ville (ce qui se tient sur
+  chaque case : bâtiments, animations, sanctuaires, marcheurs) reste en natif sur 97 % de ses
+  cases dans la grande ville du dernier tutoriel.
+- **Le tour de simulation d'une grande ville environ trois fois plus rapide** : de 5,3–5,8 ms à
+  1,6 ms au banc (`working-city`, horloge déterministe), avec les recherches de chemin, la
+  boucle des marcheurs, les soldats et les bâtiments composés (sanctuaires, monuments) en natif.
+- **Cadres des fenêtres en natif** : 10 à 12 % de temps de calcul en moins sur les scénarios de
+  la grande ville et des options.
+- **La preuve à chaque modification** : dix scénarios, images et état de la partie identiques à
+  chaque tour, et chaque fonction native vérifiée appel par appel contre l'original
+  ([equivalence.md](docs/equivalence.md), en anglais).
 
 ## La suite
 
 Le but : que *Zeus* et *Poséidon* restent jouables aussi longtemps qu'on aura envie d'y jouer — le
 jeu d'origine, sur les machines qu'on possède, prouvé identique à l'original.
 
-Le jeu est jouable aujourd'hui (1.1). La suite consiste à **remplacer l'original morceau par
+Le jeu est jouable aujourd'hui (1.2). La suite consiste à **remplacer l'original morceau par
 morceau par un moteur écrit à la main et documenté**, comme Julius l'a fait pour *Caesar III*.
 L'original émulé reste la référence et le juge : chaque partie réécrite doit prouver, tour par
 tour, qu'elle donne exactement le même état de partie. Rien n'est traduit mécaniquement. Aucune
@@ -98,6 +118,7 @@ Le plan complet : [docs/roadmap.md](docs/roadmap.md) (en anglais).
 
 | Version | Points forts |
 |---|---|
+| [**1.2**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.2) | plus léger : dessin de la ville, cadres des fenêtres et textes en natif (petite ville à environ 23 % d'un cœur au lieu de 35 %) ; tour de simulation d'une grande ville environ trois fois plus rapide ; dix scénarios prouvés identiques à l'original, tour par tour |
 | [**1.1**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.1) | premier lancement en moins de clics (téléchargement en un clic, sélecteur dans Téléchargements, plus de question de langue) ; modes larges plus hauts ; sol de la ville dessiné en natif (petite ville à 35 % d'un cœur au lieu d'environ 50 %) |
 | [**1.0.1**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.0.1) | le jeu à sa vraie vitesse (il tournait aux deux tiers depuis la 0.2) ; répartiteur de sprites natif |
 | [**1.0**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.0) | première version stable : le code de la 0.9, joué à la main |
@@ -137,8 +158,10 @@ dossier du jeu n'est jamais modifié : tout ce que le jeu écrit (sauvegardes, r
 
 Le jeu importe 202 fonctions Windows. Chacune est une petite fonction native dans `src/win32/` ;
 une fonction pas encore écrite arrête le programme en se nommant, ce qui a guidé le travail. Les
-routines les plus sollicitées du jeu — dessin des sprites, leur répartiteur, une boucle du
-démarrage — tournent aussi en natif, chacune prouvée identique image par image. Le jeu voit un
+routines les plus sollicitées du jeu — dessin des sprites et leur répartiteur, l'essentiel du
+dessin de la ville, cadres des fenêtres et textes, et les parties les plus coûteuses de la
+simulation (recherches de chemin, marcheurs, bâtiments composés) — tournent aussi en natif,
+chacune prouvée identique image par image et tour par tour. Le jeu voit un
 dossier `C:\Zeus` privé : les lectures aboutissent dans vos fichiers du jeu, les écritures dans
 un dossier séparé. Voir [docs/architecture.md](docs/architecture.md).
 

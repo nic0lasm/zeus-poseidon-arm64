@@ -61,15 +61,34 @@ CDs…*: the application builds a French pack from the images of your own CDs
   your own CDs.
 - **Small comforts** — mouse wheel in lists, pause when you switch to another application, start
   in under a second.
-- **Faithful by proof** — eight replayable scenarios compare every frame with a reference, so a
-  change that alters a single pixel of the game cannot slip in.
+- **Faithful by proof** — ten replayable scenarios compare every frame and the whole game state,
+  tick by tick, with the original game, so a change that alters a single pixel or a single
+  number of the simulation cannot slip in.
+
+### Lighter with every version
+
+Version 1.2 moves most of the city drawing and the costliest parts of the simulation from the
+emulated original to native code written by hand, each part proven identical to the original:
+
+- **A small city at about 23 % of a core**, against about 35 % in 1.1 and 51–60 % in 1.0.1
+  (real time, on a Mac): the second pass of the city drawing (what stands on each tile:
+  buildings, animations, sanctuaries, walkers) now stays in native code for 97 % of its tiles in
+  the large city of the last tutorial.
+- **The simulation tick of a large city about three times faster**: from 5.3–5.8 ms to 1.6 ms on
+  the bench (`working-city`, deterministic clock), with route searches, the walker loop,
+  soldiers and composite buildings (sanctuaries, monuments) in native code.
+- **Window frames in native code**: 10 to 12 % less CPU time over the large-city and options
+  scenarios.
+- **Proof on every change**: ten scenarios, frames and game state identical at every tick, and
+  each native function checked call by call against the original
+  ([equivalence.md](docs/equivalence.md)).
 
 ## Where we are going
 
 The aim: keep *Zeus* and *Poseidon* playable for as long as people want to play them — the
 original game, on the machines people own, proven identical to the original.
 
-The game is playable today (1.1). The way forward is to **replace the original piece by piece with
+The game is playable today (1.2). The way forward is to **replace the original piece by piece with
 an engine written by hand and documented** — the way Julius did for *Caesar III*. The emulated
 original stays the reference and the judge: each rewritten part must prove, turn by turn, that it
 gives exactly the same game state. Nothing is translated mechanically. No dates are promised.
@@ -96,6 +115,7 @@ The full plan: [docs/roadmap.md](docs/roadmap.md).
 
 | Version | Highlights |
 |---|---|
+| [**1.2**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.2) | lighter: city drawing, window frames and texts in native code (small city at about 23 % of a core instead of 35 %); simulation tick of a large city about three times faster; ten scenarios proven identical to the original, tick by tick |
 | [**1.1**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.1) | first launch in fewer clicks (one-click download, picker in Downloads, no language question); taller wide modes; city ground drawn natively (small city 35 % of a core instead of about 50 %) |
 | [**1.0.1**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.0.1) | the game at its real speed (it ran at two thirds of it since 0.2); native sprite dispatcher |
 | [**1.0**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.0) | first stable version: the code of 0.9, played through by hand |
@@ -148,8 +168,10 @@ scripted runs and troubleshooting: [docs/getting-started.md](docs/getting-starte
 
 The game imports 202 Windows functions. Each one is a small native function in `src/win32/`; a
 function that is not written yet stops the program and names itself, which is what drove the
-work. The game's hottest routines — sprite drawing, its dispatcher, a start-up loop — also run
-natively, each proven identical frame by frame. The game sees a private `C:\Zeus` folder: reads
+work. The game's hottest routines — sprite drawing and its dispatcher, most of the city
+drawing, window frames and texts, and the costliest parts of the simulation (route searches,
+walkers, composite buildings) — also run natively, each proven identical frame by frame and
+tick by tick. The game sees a private `C:\Zeus` folder: reads
 fall through to your game files, writes go to a separate directory.
 
 More: [docs/architecture.md](docs/architecture.md) and the findings in

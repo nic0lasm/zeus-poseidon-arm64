@@ -24,7 +24,7 @@ flowchart LR
 
 | Step | Theme | State | Follow it |
 |---|---|---|---|
-| **1.x — Playable** | The game as it is: lighter on the machine, every language edition, a simpler first launch | released (1.1); 1.2 once the rendering in progress is merged | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/2) · [#22](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/22) · [#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24) · [#55](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/55) |
+| **1.x — Playable** | The game as it is: lighter on the machine, every language edition, a simpler first launch | released (1.2) | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/2) · [#22](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/22) · [#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24) · [#55](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/55) |
 | **Phase A — Instruments** | Equivalence harness on the full game state; code map; two public counters (functions understood out of 4,872, share of the computation done natively) | done; counters kept current | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/7) · [#26](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/26) · [#69](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/69) |
 | **Phase B — Data** | Savegame `.sav` described in full, then maps and adventures, images, texts, tables; each format read then written back byte for byte | done for what the engine reads | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/8) · [#70](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/70) · [#30](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/30) |
 | **Phase C — Native engine** | Rendering, interface and texts, terrain, movement and walkers, housing and buildings, economy, gods, heroes and monsters, army, events and adventures, savegame | in progress: rendering | [milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/9) · [#71](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/71) |
@@ -79,7 +79,7 @@ Steps 2, 4 and 5 can run side by side: each touches its own files.
 |---|---|---|---|
 | 1 | Finish the rendering in progress: bases of 2 to 6 tiles (#91), walker sort, walkers ([rendering §13](engine/rendering.md#13-order-of-the-rewrite), steps 10, 12 to 14) | already written, verification under way | merged; frames, state and call-by-call checks identical. **Done (16 October), except rendering steps 5 to 7, which wait for step 4:** bases (#91), sprite sort and dispatcher groundwork (#95, #96) merged; building extras (#99) and walker loops (#101) merged; only the rendering steps 5 to 7 remain (step 4) |
 | 2 | A fast, repeatable bench on Linux: Unicorn 2.1 or later, references of the pure original recorded once per change of the Windows layer and reused | every later step runs the bench several times | the nine scenarios recorded and replayed on a fresh Linux machine with one command. **Done (#93)** |
-| 3 | Release 1.2 | players get the native drawing (a small city from about 35 % to about 23 % of a core) | played through on a Mac, as for 1.0 |
+| 3 | Release 1.2 | players get the native drawing (a small city from about 35 % to about 23 % of a core) | played through on a Mac, as for 1.0. **Done (16 October): [v1.2](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.2) published from `main` after #111, played on a Mac; its archive is now built by the CI (`release` workflow)** |
 | 4 | A tenth scenario for the rare drawing cases (a building marked red, glyph masks, the rare blends, a 6 × 6 base), then rendering steps 5 to 7 | no proof is possible without it, and 2.0 needs them | the scenario reaches each of those functions; steps 5 to 7 native and checked call by call |
 | 5 | Map the simulation: a profile of the large city in real time with native code on, and the call tree of the simulation tick placing functions in modules | sizes 2.0 and orders the rest of Phase C by measured cost | every function the simulation tick reaches in the nine scenarios has a module; a page `docs/engine/simulation.md` gives the order of a tick and what each module costs. **Done (#94)**: 537 of the 601 functions specific to the tick have a module |
 | 6 | Terrain in native code, steps 1 to 4 of [terrain §10](engine/terrain.md#10-order-of-the-rewrite) (random draw, diamond tests, neighbour counts, free building area) | documented and self-contained; the first native code of the simulation, whose results are the game state itself, so the first real test of the tick-by-tick comparison | steps 1 to 4 native; state identical at every tick of every scenario. **Done (#97)** |
@@ -90,8 +90,9 @@ Steps 2, 4 and 5 can run side by side: each touches its own files.
 Merged: #91 (bases of 2 to 6 tiles), #93 (fast bench), #94 (simulation map), #95 and #96 (walker
 drawing, aquatic life, walker sort), #97 (terrain), #98 (composite-building helpers), #99
 (building extras of the drawing), #100 (road search), #101 (walker loops of the drawing), #102
-(walker loop of the simulation). Next in the merge queue: the soldiers batch of the simulation
-walkers.
+(walker loop of the simulation), #104 and #105 (soldiers), #106 (tenth scenario `rare`), #107
+(panel texts), #108 and #110 (cycle), #109 (window frames), #111 (overlay, blends and glyph
+masks: rendering steps 5 to 7). Version 1.2 published on 16 October.
 
 Measured, as the pull requests give it (`working-city`, deterministic clock, `main` and branch
 side by side on one cloud machine):
@@ -253,6 +254,7 @@ and serves modders and tool makers.
 
 | Version | Highlights |
 |---|---|
+| [1.2](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.2) | lighter: second drawing pass, walkers, window frames and texts in native code; simulation tick of the large city about three times faster; ten scenarios checked tick by tick |
 | [1.1](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.1) | easier first launch; taller wide modes; native ground drawing; Linux build in CI |
 | [1.0.1](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.0.1) | the game at its real speed; native sprite dispatcher; this roadmap |
 | [1.0](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.0) | first stable version: the code of 0.9, played through by hand |
