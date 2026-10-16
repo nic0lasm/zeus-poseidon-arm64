@@ -570,7 +570,6 @@ constexpr uint32_t kPanelFont = 0x00EF8C9C;   // police des textes des panneaux
 // Dessin d'une chaîne d'une ligne (native_strings.cpp ; docs/engine/interface.md §7.4).
 constexpr uint32_t kDrawString = 0x00508800, kDrawStringEnd = 0x00508D33;  // FUN_00508800, FUN_00508b50, FUN_00508d10
 constexpr uint64_t kDrawStringHash = 0x6AB5B8B394FFCD5Cull;
-constexpr uint32_t kTextColour = 0x00F1397C;     // couleur du glyphe en cours, 16 bits
 constexpr uint32_t kTextPlain = 0x00F13970;      // non nul : un seul dessin par glyphe
 constexpr uint32_t kTextShadow = 0x00F13974;     // non nul : ombre en couleur 0
 constexpr uint32_t kTextOutline = 0x00F13978;    // non nul : contour en couleur 0 dessus et dessous

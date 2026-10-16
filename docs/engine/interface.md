@@ -565,6 +565,15 @@ hot spot of the interface, but not a big real-time one. Its value for the projec
 (the equivalence bench, the language packs) more than CPU time. The heavier real-time consumer to watch is the
 objectives screen, which lays out about five texts per turn (`0x0052C070`) and is on screen for long stretches.
 
+Measured on 16 October 2026 (`main` after #111): `working-city` in real time for 150 s, with `--time-span` counting
+the emulator thread's CPU time instead of the wall clock (a local change of `now_ns`, not kept). Shares of that
+thread: the map `0x0051CAB0` 32 %, the simulation ticks 21.5 %, the presentation `0x0050C1B0` 10.6 % (almost all of
+it in the host's `BltFast` to the primary surface), the side panel `0x0058EA20` 10 % (0.9 ms per city frame: the
+page content `0x00517000` 3.7 %, `0x005170A0` 1.7 %, the two draw tables 0.9 %), the input pass 2.7 %, `0x0058EB20`
+2 %. Across every screen, the string renderer `0x00508800` took **6.3 %** (138,000 strings, 1.13 million glyphs,
+15 µs per string): the largest interface item, now native (§12, remark f). Everything else of the interface is
+under 4 % each; the panel line drawing `0x004F58C0` is 1.2 %, the draw table `0x004316F0` 1.1 %.
+
 ## 11. Starting point: the native attempt of #35 (closed, no gain)
 
 Branch `textes-panneau-natif` (local, not merged; two commits on `3173f7f`) replaced, with fast paths:
@@ -618,12 +627,12 @@ section 1 (`working-city` / `options` / `tutorial`). "Native" = already replaced
 |---|---|---|---|---|---|
 | 1 | `0x00507F20` | width of a character | 9.98 M / 8.73 M / 8.44 M | glyph table, image entries | rewritten inside step 6's line fill, not intercepted (11.1) |
 | 2 | `0x004F57A0` | width of a word | 2.20 M / 1.78 M / 1.77 M | 1 | rewritten inside step 6's line fill, not intercepted (11.1) |
-| 3 | `0x004F59B0`, `0x00508B50` | one glyph (panel text / line text) | 1.15 M + 1.01 M / 0.91 M + 2.49 M / 0.89 M + 1.28 M | the dispatcher `0x005ACF50` (native fast path) | original |
+| 3 | `0x004F59B0`, `0x00508B50` | one glyph (panel text / line text) | 1.15 M + 1.01 M / 0.91 M + 2.49 M / 0.89 M + 1.28 M | the dispatcher `0x005ACF50` (native fast path) | `0x00508B50` rewritten inside step 8, not intercepted (remark f); `0x004F59B0` original |
 | 4 | `0x005091B0` | width of the next word (line breaker) | 11 k / 88 k / 37 k | 1 | original |
 | 5 | `0x004F58C0`, `0x004F5260` | draw a line, register a link box | 34 k / 38 k / 36 k ; 0 / 198 / 0 | 2, 3 | original |
 | 6 | `0x004F5300` | layout of a text (modes 0 and 1, `@` codes) | 2,280 / 3,906 / 2,395 | 2, 3, 5 | partly native: line clear and line fill (11.1) |
 | 7 | `0x00507BF0` | find string (group, index) | 64 k / 236 k / 83 k | text file loader `0x0050ADA0` | native (11.1) |
-| 8 | `0x00508800` | string renderer (styles, `_`, `#`) | 83 k / 285 k / 116 k | 3 | original |
+| 8 | `0x00508800` | string renderer (styles, `_`, `#`) | 83 k / 285 k / 116 k | 3 | **native** (`src/win32/native_strings.cpp`, remark f) |
 | 9 | `0x00507DA0`, `0x00508670` | string width; centred string | 77 k + 64 k / 138 k + 121 k / 97 k + 84 k | 1 | original |
 | 10 | `0x00508D90`, `0x00508D40`, `0x00508060`, `0x00508080` | string by (group, rank) | 4 k + 36 k / 106 k + 64 k / 10 k + 42 k | 7, 8, 9 | original |
 | 11 | `0x00508540`, `0x00507FC0`, `0x00508F00` | numbers: write digits, parse, number + text | 2.8 k + 11 k + 1.4 k / 44 k + 30 k + 37 k / 12 k + 30 k + 5 k | 8 | original |
@@ -653,6 +662,15 @@ identical to the references, and every call of the four functions in `options`, 
 passes `--verify`. One hook per call replaces one dispatcher hook per tile plus the emulated loop: on one
 cloud machine, three alternating runs each, `working-city` goes from 24.2–25.1 s to 21.5–22.4 s of CPU and
 `options` from 36.3–37.4 s to 32.0–32.6 s.
+(f) Step 8 is native (`src/win32/native_strings.cpp`): one fast path per string computes every glyph of
+`0x00508800` the way `0x00508B50` places it (the outline and shadow styles draw it two or three times), checks
+that the native sprite dispatcher handles them all, then draws them in order, writing the glyph colour
+`0x00F1397C` before each one, or hands the whole call back. The language pack (`language.cpp`), installed after
+the native code, is followed: when its NOPs are at `0x00508C7F` the Polish exceptions are skipped and the line
+height of its table is used, as its hook at the entry of `0x00508B50` does. Frames and state identical in the
+ten scenarios; `--verify 0x00508800` identical in `options`, `working-city` and `tutorial` and, with a pack
+made of the GOG character table, in `tutorial`. In real time, `working-city` over 150 s (`main` and the
+branch side by side, two pairs): 30.2–30.8 s of CPU before, 28.0–28.2 s after.
 
 ## 13. Open questions
 

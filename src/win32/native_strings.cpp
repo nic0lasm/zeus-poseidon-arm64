@@ -14,9 +14,9 @@
 // Un seul chemin rapide par chaîne (Cpu::add_fast_path) calcule ici tous les glyphes, vérifie
 // avant la première écriture que le répartiteur natif sait tous les dessiner (sprite_handled),
 // puis les dessine dans l'ordre de l'original ; sinon il rend la main sans avoir rien écrit et
-// l'original fait tout. Le répartiteur ne lit aucune des variables qu'écrivent ces fonctions
-// (couleur 0x00F1397C comprise, écrite tout de même avant chaque glyphe comme l'original), et
-// ce que lit sprite_handled n'est écrit par aucun dessin. EAX vaut 0 comme dans l'original ; les
+// l'original fait tout. Des variables qu'écrivent ces fonctions, le répartiteur ne lit que la
+// couleur kGlyphColour (0x00F1397C, pour les masques de glyphes), écrite avant chaque glyphe comme
+// dans l'original ; ce que lit sprite_handled n'est écrit par aucun dessin. EAX vaut 0 comme dans l'original ; les
 // emplacements d'arguments que l'original réutilise (pointeur du texte, octet bas de la couleur
 // et du drapeau) reçoivent les mêmes valeurs.
 //
@@ -91,7 +91,7 @@ bool polish(uint32_t code) {
 
 struct Glyph {
     int32_t id, x, y;
-    uint16_t colour;  // valeur de 0x00F1397C pendant le dessin
+    uint16_t colour;  // valeur de kGlyphColour pendant le dessin
 };
 
 // État que FUN_00508800 lit et écrit, gardé ici jusqu'à la fin de l'appel.
@@ -101,7 +101,7 @@ struct Render {
     bool pack;
     uint32_t font;
     int32_t line_height;   // kLineHeight
-    uint16_t colour;       // 0x00F1397C
+    uint16_t colour;       // kGlyphColour
     uint32_t drawn_glyph;  // kDrawnImage
     std::vector<Glyph>& glyphs;
 
@@ -248,7 +248,7 @@ std::optional<uint32_t> render_call(Cpu& cpu) {
     for (const Glyph& g : r.glyphs)
         if (!sprite_handled(cpu, kSpriteBanks, g.id, g.x, g.y, 0, 0)) return std::nullopt;
     for (const Glyph& g : r.glyphs) {
-        put16(cpu, kTextColour, g.colour);
+        put16(cpu, kGlyphColour, g.colour);
         draw_sprite(cpu, kSpriteBanks, g.id, g.x, g.y, 0, 0);
     }
 
@@ -264,7 +264,7 @@ std::optional<uint32_t> render_call(Cpu& cpu) {
         put32(cpu, kTextMarkFound, 1);
     }
     put32(cpu, kLineHeight, static_cast<uint32_t>(r.line_height));
-    put16(cpu, kTextColour, r.colour);
+    put16(cpu, kGlyphColour, r.colour);
     put32(cpu, kDrawnImage, r.drawn_glyph);
     put32(cpu, kTextCursor, cursor + static_cast<uint32_t>(space));
     put32(cpu, kTextCount, count);

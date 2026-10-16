@@ -5,6 +5,8 @@ pull request.
 
 ## Unreleased
 
+- **One-line strings in native code.** The string renderer `0x00508800`, through which every one-line text of the game is drawn (panel titles and values, buttons, menus), gets a fast path in `src/win32/native_strings.cpp` that places every glyph as `0x00508B50` does, outline and shadow styles included, checks that the native sprite dispatcher handles them all and draws them, or hands the call back; the language pack is followed. In real play it was the largest item of the interface, 6.3 % of the emulator thread's time in the large city. Frames and state identical in the ten scenarios, every checked call identical (with and without a language pack); in real time, `working-city` needs 7 to 9 % less CPU (30.2–30.8 s → 28.0–28.2 s over 150 s). Where the rest of the interface's time goes in real play is in `docs/engine/interface.md` §10. Step 8 of the interface plan.
+
 ## 1.2 — 2026-10-16
 
 - **Release archive built by the CI.** A `release` workflow builds the application on an Apple Silicon Mac of GitHub as `tools/publish.py release` does (reduced FFmpeg, standalone Python, Release build, local signature, self-test, search for words that must never be published) and attaches both archives to a GitHub release when it is published; on a pull request that touches the release chain, the archive stays an artefact of the run. The README (English and French) presents 1.2 and its figures.
