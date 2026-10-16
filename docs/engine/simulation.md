@@ -269,7 +269,13 @@ By measured cost, and by what can be checked one call at a time (`--verify`,
       bearer puts layout 5 through the offset table like the others. Time over the run: horsemen
       61 → 21 ms, standard bearers 45 → 11 ms; tick of `working-city` 2.10–2.25 → 1.84–1.88 ms
       (two runs of each, alternating).
-   3. **Growers** (type 4, `0x004AE160`): 0.19 ms per tick.
+   3. **Growers** (type 4, `0x004AE160`): 0.19 ms per tick, but spread over many paths and
+      callees, unlike the soldiers. The largest share is shared walker movement `0x004D1170`
+      (61 calls per tick from growers, peddlers, noblemen, `0x004B3E00`, goats, warehousemen…)
+      and its step loop `0x004D7BD0`, about 5 % of the tick under `--call-graph`; that time is
+      itself spread over `0x004D9330` (tile lists), `0x004DFB70`, `0x004D8220` (routes),
+      `0x004D94F0` and `0x004D8BB0`, none above 2 %. A native movement step would serve every
+      walking handler at once: the next lot to weigh before the growers' own code.
    4. `figure_type_value` (`0x004E1B20`, 300 calls per tick from most handlers): only inside a
       native caller, since a hook costs about as much as its emulated code.
    5. The other handlers, each under 3 % of the tick: warehousemen (`0x004AF930`), peddlers
