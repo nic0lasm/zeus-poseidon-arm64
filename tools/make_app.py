@@ -19,6 +19,8 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SYSTEM = ("/usr/lib/", "/System/")
+# Homebrew vit dans /opt/homebrew sur Apple Silicon et dans /usr/local sur Intel.
+BREW = os.environ.get("HOMEBREW_PREFIX") or ("/opt/homebrew" if os.path.isdir("/opt/homebrew") else "/usr/local")
 
 
 def run(*args):
@@ -38,7 +40,7 @@ def resolve(reference, user):
     for prefix in ("@loader_path/", "@rpath/"):
         if reference.startswith(prefix):
             name = reference[len(prefix):]
-            for base in (folder, "/opt/homebrew/lib"):
+            for base in (folder, os.path.join(BREW, "lib")):
                 if os.path.exists(os.path.join(base, name)):
                     return os.path.realpath(os.path.join(base, name))
             raise SystemExit(f"dépendance introuvable : {reference} (citée par {user})")
@@ -69,7 +71,7 @@ def main(argv):
 
     # sdl2-compat charge SDL3 à l'exécution, sans le déclarer, sous le nom « libSDL3.dylib »
     # cherché d'abord à côté de lui : on l'ajoute à la main, sous ce nom.
-    extra = [p for p in ("/opt/homebrew/lib/libSDL3.dylib",) if os.path.exists(p)]
+    extra = [p for p in (os.path.join(BREW, "lib", "libSDL3.dylib"),) if os.path.exists(p)]
 
     copied = {}  # chemin réel d'origine -> copie dans le paquet
     pending = [(program, binary)] + [(None, e) for e in extra]

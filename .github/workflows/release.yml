@@ -1,6 +1,6 @@
 name: release
 
-# Construit l'archive de l'application sur un Mac Apple Silicon de GitHub, comme
+# Construit l'archive de l'application sur un Mac Apple Silicon et sur un Mac Intel de GitHub, comme
 # `tools/publish.py release` sur la machine du mainteneur : FFmpeg réduit (LGPL), Python autonome,
 # construction Release, paquet signé localement, autotest, recherche des mots interdits.
 # À la publication d'une version GitHub, les deux archives (nom versionné et nom stable) y sont
@@ -21,7 +21,15 @@ permissions:
 
 jobs:
   macos-app:
-    runs-on: macos-14
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-14
+            suffix: macos-arm64
+          - runner: macos-15-intel
+            suffix: macos-intel
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: Dependencies
@@ -43,16 +51,16 @@ jobs:
         run: |
           cd build/diffusion
           minos=$(find "Zeus Poseidon.app" -type f \( -perm -u+x -o -name '*.dylib' \) -exec otool -l {} \; 2>/dev/null | awk '/minos/ {print $2}' | sort -V | tail -1)
-          echo "::notice::macOS $minos minimum; $(ls -l Zeus-Poseidon-$VERSION-macos-arm64.zip | awk '{print $5}') octets; SHA-256 $(shasum -a 256 Zeus-Poseidon-$VERSION-macos-arm64.zip | cut -d' ' -f1)"
+          echo "::notice::macOS $minos minimum; $(ls -l Zeus-Poseidon-$VERSION-${{ matrix.suffix }}.zip | awk '{print $5}') octets; SHA-256 $(shasum -a 256 Zeus-Poseidon-$VERSION-${{ matrix.suffix }}.zip | cut -d' ' -f1)"
       - uses: actions/upload-artifact@v4
         with:
-          name: Zeus-Poseidon-${{ env.VERSION }}-macos-arm64
-          path: build/diffusion/Zeus-Poseidon-${{ env.VERSION }}-macos-arm64.zip
+          name: Zeus-Poseidon-${{ env.VERSION }}-${{ matrix.suffix }}
+          path: build/diffusion/Zeus-Poseidon-${{ env.VERSION }}-${{ matrix.suffix }}.zip
       - name: Attach to the release
         if: github.event_name == 'release'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload "${{ github.event.release.tag_name }}" \
-            "build/diffusion/Zeus-Poseidon-$VERSION-macos-arm64.zip" \
-            build/diffusion/Zeus-Poseidon-macos-arm64.zip
+            "build/diffusion/Zeus-Poseidon-$VERSION-${{ matrix.suffix }}.zip" \
+            build/diffusion/Zeus-Poseidon-${{ matrix.suffix }}.zip

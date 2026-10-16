@@ -19,6 +19,7 @@ Chaque étape s'arrête à la première anomalie ; la sortie tient en quelques l
 """
 import hashlib
 import os
+import platform
 import shutil
 import subprocess
 import sys
@@ -101,7 +102,9 @@ def release(version):
     run("codesign", "--verify", "--deep", "--strict", APP)
     run(os.path.join(APP, "Contents", "MacOS", "zeus-poseidon"), "--selftest")
     print(f"application {version} construite, signature vérifiée, --selftest réussi")
-    name = f"Zeus-Poseidon-{version}-macos-arm64.zip"
+    # Suffixe selon le processeur de la machine qui construit : arm64 (Apple Silicon) ou intel.
+    suffix = "macos-arm64" if platform.machine() == "arm64" else "macos-intel"
+    name = f"Zeus-Poseidon-{version}-{suffix}.zip"
     archive = os.path.join(DIFFUSION, name)
     if os.path.exists(archive):
         # Une archive déjà publiée ne se remplace pas : seule celle d'une version sans tag peut l'être.
@@ -121,7 +124,7 @@ def release(version):
         digest = hashlib.sha256(f.read()).hexdigest()
     print(f"{name} : {os.path.getsize(archive) / 1e6:.1f} Mo, {count} fichiers, aucun mot interdit")
     # Même archive sous un nom sans version : le lien releases/latest/download/… ne change jamais.
-    stable = os.path.join(DIFFUSION, "Zeus-Poseidon-macos-arm64.zip")
+    stable = os.path.join(DIFFUSION, f"Zeus-Poseidon-{suffix}.zip")
     shutil.copyfile(archive, stable)
     print(f"{os.path.basename(stable)} : mêmes octets, à joindre à la version")
     print(f"SHA-256 {digest}")
