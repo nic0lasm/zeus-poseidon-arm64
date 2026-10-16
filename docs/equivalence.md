@@ -152,7 +152,7 @@ the 13,073 ticks, in all nine scenarios.
 | `0x004488C0` | random draw | 1 in 1 | 103 | 103 | 0 | 2 | identical |
 | `0x00457900` | ground of one city tile | 1 in 100 | 6,043,020 | 60,435 | 0 | 9 | identical |
 | `0x00458170` | the whole city drawing loop, with every native piece it reaches (ground loop jump, ground tile, sprite dispatcher, diamond tile, walker loops of the second pass) | 1 in 1 | 20,391 | 20,391 | 0 | 9 | identical |
-| `0x0045A5A0` | sort and draw the walkers of a tile (calls left by the native second pass) | 1 in 10 | 172,965 | 17,300 | 0 | 8 | identical |
+| `0x0045A5A0` | sort and draw the walkers of a tile (calls left by the native second pass) | 1 in 25 | 90,239 | 3,614 | 0 | 6 | identical |
 | `0x00496B50` | rectangle holding a reserved point of the map | 1 in 1 | 22 | 22 | 0 | 5 | identical |
 | `0x0049CAE0` | neighbours carrying a mask | 1 in 10 | 437,098 | 43,715 | 0 | 9 | identical |
 | `0x004A0DC0` | rectangle free for building, with the native diamond tests inside | 1 in 1 | 12,931 | 12,931 | 0 | 9 | identical |
@@ -168,7 +168,7 @@ all outside the result and now excluded with their evidence: the argument slots 
 never read. `0x0044FEF0` also uses its five argument slots as variables and returns nothing; it is
 not called in `poseidon`. `0x00449B30` returns nothing either and is not called in `poseidon`; most of its calls
 find an empty list (`working-city`, original alone: 30,396 calls with a walker, 1,680 that sort). `0x0045A5A0`
-returns nothing and is not called in `poseidon`; the rows of `0x0045A5A0` and `0x00458170` were measured on
+returns nothing; with the animations and sanctuaries native it is no longer called in `poseidon`, `options` or `window`; the rows of `0x0045A5A0` and `0x00458170` were measured on
 2026-10-16 with the walker loops native. The rows of `0x00413DC0`, `0x00416010`, `0x0050B410`, `0x005CC640`, `0x00458170`
 and the key lookup loop come from an earlier run of the same bench, which also compared argument
 slots and covered 137 zones.
