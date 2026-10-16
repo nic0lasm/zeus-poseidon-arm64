@@ -149,8 +149,12 @@ the 13,073 ticks, in all nine scenarios.
 | `0x0041D3D0` | water life of a tile, when there is none to draw | 1 in 100 | 598,355 | 5,987 | 0 | 9 | identical |
 | `0x00449B30` | sort of the walkers of a tile | 1 in 25 | 590,271 | 23,616 | 0 | 8 | identical |
 | `0x0044FEF0` | one walker | 1 in 5 | 91,648 | 18,333 | 0 | 8 | identical |
+| `0x004488C0` | random draw | 1 in 1 | 103 | 103 | 0 | 2 | identical |
 | `0x00457900` | ground of one city tile | 1 in 100 | 6,043,020 | 60,435 | 0 | 9 | identical |
 | `0x00458170` | the whole city drawing loop, with every native piece it reaches (ground loop jump, ground tile, sprite dispatcher, diamond tile) | 1 in 1 | 20,391 | 20,391 | 0 | 9 | identical |
+| `0x00496B50` | rectangle holding a reserved point of the map | 1 in 1 | 22 | 22 | 0 | 5 | identical |
+| `0x0049CAE0` | neighbours carrying a mask | 1 in 10 | 437,098 | 43,715 | 0 | 9 | identical |
+| `0x004A0DC0` | rectangle free for building, with the native diamond tests inside | 1 in 1 | 12,931 | 12,931 | 0 | 9 | identical |
 | `0x005059F8:0x00505A33` | key lookup loop of `Zeus eventmsg.txt` | 1 in 50 | 75,294 | 1,512 | 0 | 9 | identical |
 | `0x0050B410` | frame clear | 1 in 1 | 13,131 | 13,131 | 0 | 9 | identical |
 | `0x005ACF50` | sprite dispatcher | 1 in 3,000 | 132,799,553 | 44,264 | 7 | 9 | identical |
@@ -212,8 +216,14 @@ called in `editor`.
 `route_search` writes the tile it searches to into the slot of its second argument; the rewrite
 does the same, so the slot is compared.
 
-Every native replacement of `src/win32/native.cpp`, `native_draw.cpp`, `native_walkers.cpp`, `native_buildings.cpp` and `native_routes.cpp` is covered: the ground
-loop jump (`0x0045829D`) and the diamond tile (`0x00435070`) run inside `0x00458170`.
+The terrain rows (`native_terrain.cpp`) were measured on 2026-10-16. The diamond tests
+`0x00496010` and `0x00496080` were also checked on their own while they were intercepted (4,805
+of 48 million calls and 1,640 of 1.6 million, identical); they now run natively only inside
+`0x004A0DC0`.
+
+Every native replacement of `src/win32/native.cpp`, `native_draw.cpp`, `native_walkers.cpp`,
+`native_buildings.cpp`, `native_routes.cpp` and `native_terrain.cpp` is covered: the ground loop
+jump (`0x0045829D`) and the diamond tile (`0x00435070`) run inside `0x00458170`.
 
 **Walkers loop** (`src/win32/native_figures.cpp`, 2026-10-16). Not checkable call by call: every
 pass of `walkers_update` calls `GetTickCount`, and the bench leaves a call that reaches the host

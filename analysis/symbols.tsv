@@ -1303,8 +1303,8 @@ adresse	taille	nom	module	statut	preuve	type
 00495dd0	178	FUN_00495dd0	inconnu	inconnu	aucun indice	fonction
 00495e90	273	FUN_00495e90	inconnu	inconnu	aucun indice	fonction
 00495fb0	81	FUN_00495fb0	inconnu	inconnu	aucun indice	fonction
-00496010	107	map_in_play_area	terrain	natif	case dans le losange jouable (0x00DA2F90…A4) ; docs/engine/terrain.md §2 ; remplacée par native_terrain.cpp	fonction
-00496080	152	map_near_play_edge	terrain	natif	dans le losange, à moins de m cases du bord ; docs/engine/terrain.md §2 ; remplacée par native_terrain.cpp	fonction
+00496010	107	map_in_play_area	terrain	documenté	case dans le losange jouable (0x00DA2F90…A4) ; docs/engine/terrain.md §2 ; réécrite dans native_terrain.cpp pour 0x004A0DC0, non interceptée (plus lente par le crochet)	fonction
+00496080	152	map_near_play_edge	terrain	documenté	dans le losange, à moins de m cases du bord ; docs/engine/terrain.md §2 ; réécrite dans native_terrain.cpp pour 0x004A0DC0, non interceptée (plus lente par le crochet)	fonction
 00496120	433	FUN_00496120	inconnu	inconnu	aucun indice	fonction
 004962e0	67	FUN_004962e0	inconnu	inconnu	aucun indice	fonction
 00496330	284	FUN_00496330	inconnu	inconnu	aucun indice	fonction

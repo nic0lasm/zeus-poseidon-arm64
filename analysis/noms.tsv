@@ -122,8 +122,8 @@ adresse	nom	module	statut	preuve	type
 00493830	desirability_from_buildings	terrain	documenté	efface la grille puis répand l'attrait de chaque bâtiment ; docs/engine/terrain.md §7.2	fonction
 00493c80	desirability_from_terrain	terrain	documenté	jardins, gravats, avenues et boulevards ; docs/engine/terrain.md §7.3	fonction
 00495860	cycle_buildings_pass_32	bâtiments	documenté	étape 32, après 0x005B9EE0 : bâtiments, année, mois ; rôle inconnu ; simulation.md §3	fonction
-00496010	map_in_play_area	terrain	natif	case dans le losange jouable (0x00DA2F90…A4) ; docs/engine/terrain.md §2 ; remplacée par native_terrain.cpp	fonction
-00496080	map_near_play_edge	terrain	natif	dans le losange, à moins de m cases du bord ; docs/engine/terrain.md §2 ; remplacée par native_terrain.cpp	fonction
+00496010	map_in_play_area	terrain	documenté	case dans le losange jouable (0x00DA2F90…A4) ; docs/engine/terrain.md §2 ; réécrite dans native_terrain.cpp pour 0x004A0DC0, non interceptée (plus lente par le crochet)	fonction
+00496080	map_near_play_edge	terrain	documenté	dans le losange, à moins de m cases du bord ; docs/engine/terrain.md §2 ; réécrite dans native_terrain.cpp pour 0x004A0DC0, non interceptée (plus lente par le crochet)	fonction
 00496b50	map_area_has_marker	terrain	natif	rectangle contenant un point réservé de la carte ; docs/engine/terrain.md §9 ; remplacée par native_terrain.cpp	fonction
 0049af50	walls_drag	terrain	documenté	tracé de murs en glissant ; docs/engine/terrain.md §9	fonction
 0049cae0	terrain_count_neighbours	terrain	natif	nombre des 8 voisines portant un masque ; docs/engine/terrain.md §5 ; remplacée par native_terrain.cpp	fonction

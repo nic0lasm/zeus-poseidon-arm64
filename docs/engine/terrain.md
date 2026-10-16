@@ -387,15 +387,21 @@ the callers of `0x00496010` active in that run are `0x0049FF10`
 `0x0051F450` (1,411), `0x00451C70` (179) and `0x00448990` (10 calls of a 4,424-byte function
 with loops); which of them dominates was not measured per call site.
 
-**Where the list stands.** Steps 1 to 4 are native (`src/win32/native_terrain.cpp`, step 6 of the
-[plan](../roadmap.md)) except the four pattern tests of step 3 (`0x004A2510`, `0x004A2180`,
-`0x004A2590`, `0x004A2AC0`): no scenario calls them, so nothing would prove a rewrite, and they
-stay with the original. The inline copies of the random draw stay emulated with the functions
-that hold them. Each native function also returns the upper bytes of `EAX` that the original
-leaves there (the tests only set `AL`), and `0x004A0DC0` keeps its two flags in the argument
-slots of x and y and its first tile in `0x00DA2418`, as the original does. Proof: state identical
-at every tick of the nine scenarios, and every function checked call by call
-([equivalence.md](../equivalence.md#results-for-todays-replacements)).
+**Where the list stands.** Steps 1 to 4 are written in `src/win32/native_terrain.cpp` (step 6
+of the [plan](../roadmap.md)). Four of them replace the original: the random draw, the neighbour
+count, the reserved-point test and the free-area test. The two diamond tests of step 2 are native
+only inside the free-area test: called alone, they cost less emulated (about fifteen
+instructions) than a call into native code through the emulator, about 140 ns; intercepted, they
+made `poseidon` (28 million calls) 12 % slower in processor time. A test this small pays only
+inside a larger native caller. The four pattern tests of step 3 (`0x004A2510`, `0x004A2180`,
+`0x004A2590`, `0x004A2AC0`) are not written: no scenario calls them, so nothing would prove a
+rewrite. The inline copies of the random draw stay emulated with the functions that hold them.
+Each native function also returns the upper bytes of `EAX` that the original leaves there (the
+tests only set `AL`), and `0x004A0DC0` keeps its two flags in the argument slots of x and y and
+its first tile in `0x00DA2418`, as the original does. Proof: state identical at every tick of the
+nine scenarios, every function checked call by call
+([equivalence.md](../equivalence.md#results-for-todays-replacements)), and processor time equal
+to `main` on `poseidon` and `working-city`.
 
 ## 11. Open questions
 

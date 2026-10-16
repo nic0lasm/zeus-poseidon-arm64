@@ -6,7 +6,10 @@
 //
 //   1. FUN_004488c0 : le générateur aléatoire (§5). Ses copies en ligne dans d'autres fonctions
 //      restent émulées.
-//   2. FUN_00496010, FUN_00496080 : dans le losange jouable, près de son bord (§2).
+//   2. FUN_00496010, FUN_00496080 : dans le losange jouable, près de son bord (§2). Réécrites
+//      pour FUN_004a0dc0 natif, mais pas interceptées : l'appel d'une fonction native par
+//      l'émulateur coûte environ 140 ns, plus que leur quinzaine d'instructions émulées. Sur
+//      poseidon (28 millions d'appels), les intercepter rendait le scénario 12 % plus lent.
 //   3. FUN_0049cae0 : nombre des 8 voisines portant un masque (§5).
 //   4. FUN_004a0dc0 : rectangle libre pour bâtir (§9), et FUN_00496b50 : rectangle contenant un
 //      point réservé de la carte.
@@ -21,7 +24,6 @@
 
 #include <cstdint>
 #include <cstring>
-#include <iterator>
 
 #include "win32/game_gog.h"
 #include "win32/native.h"
@@ -111,8 +113,6 @@ uint32_t in_play_area(Cpu& cpu, int32_t x, int32_t y) {
     return with_al(u(x + y), x + y <= d.right + d.y + 1);
 }
 
-uint32_t in_play_area_call(Cpu& cpu) { return in_play_area(cpu, arg(cpu, 0), arg(cpu, 1)); }
-
 // FUN_00496080(x, y, m) : dans le losange, à moins de m cases de son bord.
 uint32_t near_play_edge(Cpu& cpu, int32_t x, int32_t y, int32_t m) {
     const uint32_t inside = in_play_area(cpu, x, y);
@@ -126,8 +126,6 @@ uint32_t near_play_edge(Cpu& cpu, int32_t x, int32_t y, int32_t m) {
     if (y <= d.y) return with_al(u(d.y), x - y + m > d.right - d.y);
     return with_al(u(d.right + d.y + 1), x + y + m > d.right + d.y + 1);
 }
-
-uint32_t near_play_edge_call(Cpu& cpu) { return near_play_edge(cpu, arg(cpu, 0), arg(cpu, 1), arg(cpu, 2)); }
 
 // FUN_0049cae0(masque, case) : nombre des 8 voisines dont la nature porte un des bits du masque.
 uint32_t count_neighbours(Cpu& cpu) {
@@ -213,13 +211,13 @@ uint32_t area_buildable(Cpu& cpu) {
 struct Replacement {
     uint32_t address, end;
     uint64_t hash;
-    uint32_t (*fn)(Cpu&);
+    uint32_t (*fn)(Cpu&);  // nul : code vérifié, dont dépend une autre réécriture, laissé à l'original
 };
 
 constexpr Replacement kReplacements[] = {
     {kRandomNext, kRandomNextEnd, 0xC9FF4B6F41258CC9ull, random_next},
-    {kInPlayArea, kInPlayAreaEnd, 0x5CB83714115FC874ull, in_play_area_call},
-    {kNearPlayEdge, kNearPlayEdgeEnd, 0xEA0DD650ED256EF8ull, near_play_edge_call},
+    {kInPlayArea, kInPlayAreaEnd, 0x5CB83714115FC874ull, nullptr},
+    {kNearPlayEdge, kNearPlayEdgeEnd, 0xEA0DD650ED256EF8ull, nullptr},
     {kCountNeighbours, kCountNeighboursEnd, 0xC60CABF5237BECCFull, count_neighbours},
     {kAreaHasMarker, kAreaHasMarkerEnd, 0x4913E2834F326D44ull, area_has_marker},
     {kAreaBuildable, kAreaBuildableEnd, 0xE0F3CA6B096803E2ull, area_buildable},
@@ -229,12 +227,17 @@ constexpr Replacement kReplacements[] = {
 
 int install_native_terrain(Process& p) {
     Cpu& cpu = p.cpu();
-    // FUN_00496080 et FUN_004a0dc0 appellent FUN_00496010 et FUN_00496080 : leur version native
-    // suppose les deux autres conformes, d'où une vérification de toutes avant d'en remplacer une.
+    // FUN_004a0dc0 appelle FUN_00496080, qui appelle FUN_00496010 : sa version native suppose les
+    // deux autres conformes, d'où une vérification de toutes avant d'en remplacer une.
     for (const Replacement& r : kReplacements)
         if (fingerprint(cpu, r.address, r.end) != r.hash) return 0;
-    for (const Replacement& r : kReplacements) cpu.replace_function(r.address, 0, r.fn);
-    return static_cast<int>(std::size(kReplacements));
+    int installed = 0;
+    for (const Replacement& r : kReplacements)
+        if (r.fn) {
+            cpu.replace_function(r.address, 0, r.fn);
+            ++installed;
+        }
+    return installed;
 }
 
 }  // namespace zeus::win32
