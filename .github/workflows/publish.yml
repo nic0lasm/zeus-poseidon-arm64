@@ -1,0 +1,36 @@
+name: publish
+
+# Publie une version au push d'une étiquette vX.Y : crée la version GitHub avec les notes de
+# docs/releases/X.Y.md, puis fait construire et joindre les archives Mac (release.yml) et les
+# AppImage Linux (release-linux.yml). Une version créée par le GITHUB_TOKEN ne déclenche pas
+# l'événement « release published », d'où l'appel direct des deux workflows.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  create:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          notes="docs/releases/${tag#v}.md"
+          test -f "$notes"
+          gh release create "$tag" --verify-tag --title "Zeus Poseidon ${tag#v}" --notes-file "$notes"
+  macos:
+    needs: create
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: ${{ github.ref_name }}
+  linux:
+    needs: create
+    uses: ./.github/workflows/release-linux.yml
+    with:
+      tag: ${{ github.ref_name }}

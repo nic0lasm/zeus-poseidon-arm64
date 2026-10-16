@@ -8,6 +8,12 @@ name: release
 on:
   release:
     types: [published]
+  # Appelé par publish.yml, qui crée la version au push d'une étiquette vX.Y.
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        required: true
   pull_request:
     paths:
       - .github/workflows/release.yml
@@ -36,7 +42,7 @@ jobs:
         run: brew install cmake ninja pkgconf sdl2 unicorn nasm
       - name: Version
         run: |
-          tag="${{ github.event.release.tag_name }}"
+          tag="${{ inputs.tag || github.event.release.tag_name }}"
           version="${tag#v}"
           echo "VERSION=${version:-0.0}" >> "$GITHUB_ENV"
       - name: Reduced FFmpeg and standalone Python
@@ -57,10 +63,10 @@ jobs:
           name: Zeus-Poseidon-${{ env.VERSION }}-${{ matrix.suffix }}
           path: build/diffusion/Zeus-Poseidon-${{ env.VERSION }}-${{ matrix.suffix }}.zip
       - name: Attach to the release
-        if: github.event_name == 'release'
+        if: github.event_name == 'release' || inputs.tag != ''
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload "${{ github.event.release.tag_name }}" \
+          gh release upload "${{ inputs.tag || github.event.release.tag_name }}" \
             "build/diffusion/Zeus-Poseidon-$VERSION-${{ matrix.suffix }}.zip" \
             build/diffusion/Zeus-Poseidon-${{ matrix.suffix }}.zip

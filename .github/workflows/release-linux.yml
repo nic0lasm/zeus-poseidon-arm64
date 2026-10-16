@@ -8,6 +8,12 @@ name: release-linux
 on:
   release:
     types: [published]
+  # Appelé par publish.yml, qui crée la version au push d'une étiquette vX.Y.
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        required: true
   pull_request:
     paths:
       - .github/workflows/release-linux.yml
@@ -34,7 +40,7 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: Version
         run: |
-          tag="${{ github.event.release.tag_name }}"
+          tag="${{ inputs.tag || github.event.release.tag_name }}"
           version="${tag#v}"
           echo "VERSION=${version:-0.0}" >> "$GITHUB_ENV"
       - name: Build the AppImage
@@ -56,10 +62,10 @@ jobs:
           name: Zeus-Poseidon-${{ env.VERSION }}-linux-${{ matrix.arch }}
           path: build/diffusion/Zeus-Poseidon-${{ env.VERSION }}-linux-${{ matrix.arch }}.AppImage
       - name: Attach to the release
-        if: github.event_name == 'release'
+        if: github.event_name == 'release' || inputs.tag != ''
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload "${{ github.event.release.tag_name }}" \
+          gh release upload "${{ inputs.tag || github.event.release.tag_name }}" \
             "build/diffusion/Zeus-Poseidon-$VERSION-linux-${{ matrix.arch }}.AppImage" \
             "build/diffusion/Zeus-Poseidon-linux-${{ matrix.arch }}.AppImage"
