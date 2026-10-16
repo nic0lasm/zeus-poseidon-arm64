@@ -8,7 +8,7 @@ gets its own page when it is rewritten, as [terrain](terrain.md) did. It answers
 
 Statuses are those of the other pages: **verified** (read in the code, or measured) and
 **hypothesis** (inferred from the data a function touches, from its callers, or from the shape of
-Julius, the Caesar III rewrite, whose game the engine shares; never proven). Addresses are those
+Julius, the open rewrite of Caesar III, an earlier game of the same studio; never proven). Addresses are those
 of the GOG executable; our names are in [`analysis/symbols.tsv`](../../analysis/symbols.tsv), with
 their evidence in [`analysis/noms.tsv`](../../analysis/noms.tsv). Saved-game ranks refer to
 [`formats/sav.md`](../../formats/sav.md).
@@ -18,8 +18,8 @@ their evidence in [`analysis/noms.tsv`](../../analysis/noms.tsv). Saved-game ran
 - **Call tree of the tick.** `zeus-run --call-graph FILE.tsv` records every call made while the
   game runs (call site, callee, count) and the time of every block of game code, split between
   inside and outside the tick (`0x00513A30`). The nine scenarios of the bench were recorded with
-  the original code alone (`--no-native`, deterministic clock), plus `working-city` with the native
-  code on: 13,073 ticks, 409 of them in the large city of `working-city`.
+  the original code alone (`--no-native`, deterministic clock), 13,073 ticks, plus `working-city`
+  again with the native code on (409 ticks in its large city).
   `tools/simulation_map.py report` sums them up and writes
   [`analysis/simulation.tsv`](../../analysis/simulation.tsv): every function executed during the
   tick, the branches of the tick it descends from, its direct callers during the tick, and the
