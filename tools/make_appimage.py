@@ -103,8 +103,10 @@ def build_sdl():
     download(SDL_URL, archive, SDL_SHA256)
     sources = os.path.join(DEPS, f"SDL2-{SDL}")
     shutil.rmtree(sources, ignore_errors=True)
+    # Les projets Android de l'archive contiennent des liens qui sortent du dossier : écartés.
     with tarfile.open(archive) as tar:
-        tar.extractall(DEPS, filter="data")
+        tar.extractall(DEPS, filter=lambda member, path: None if "/android-project" in member.name
+                       else tarfile.data_filter(member, path))
     build = os.path.join(sources, "build")
     run("cmake", "-S", sources, "-B", build, "-G", "Ninja", "-DCMAKE_BUILD_TYPE=Release", "-DSDL_SHARED=ON",
         "-DSDL_STATIC=OFF", "-DSDL_TEST=OFF", f"-DCMAKE_INSTALL_PREFIX={prefix}", "-DCMAKE_INSTALL_LIBDIR=lib")
