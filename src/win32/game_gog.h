@@ -263,6 +263,16 @@ constexpr uint32_t kFormationHead = 0x004E2480, kFormationHeadEnd = 0x004E24FC; 
 constexpr uint32_t kLoadSprites = 0x004FFB70, kLoadSpritesEnd = 0x004FFBA2;        // FUN_004ffb70
 constexpr uint32_t kAnimationImage = 0x005AF770, kAnimationImageEnd = 0x005AF9D6;  // FUN_005af770, 005af8c0
 constexpr uint32_t kSpritesLoaded = 0x00F0E610;       // par lot d'images de FUN_004ffb70 : 1 chargé
+// Déplacement des personnages : FUN_004d1170(personnage, allure), FUN_004d7bd0(personnage, pas),
+// FUN_004d94f0(personnage).
+constexpr uint32_t kMoveFigure = 0x004D1170, kMoveFigureEnd = 0x004D1524;  // avec sa table de sauts
+constexpr uint32_t kMoveSteps = 0x004D7BD0, kMoveStepsEnd = 0x004D7CBC;
+constexpr uint32_t kStepInTile = 0x004D94F0, kStepInTileEnd = 0x004D962C;  // avec sa table de sauts
+constexpr uint32_t kFigurePathLeft = 0x00DBD7C2;    // cases restantes du chemin (16 bits)
+constexpr uint32_t kFigureJump = 0x00DBD7FF;        // pas restants d'un saut (8 bits)
+constexpr uint32_t kFigureLiftTop = 0x00DBD801;     // plafond de kFigureLift (8 bits)
+constexpr uint32_t kFigureSpeedCount = 0x00DBD8E8;  // compteur de l'allure 5 (8 bits)
+constexpr uint32_t kFigureStepFlag = 0x00DBB830;    // remis à 0 après chaque déplacement (32 bits)
 // Champs d'une fiche de personnage (à leur adresse pour la fiche 0).
 constexpr uint32_t kFigureFrame = 0x00DBD789;        // pas de l'animation (8 bits)
 constexpr uint32_t kFigureFallbackDirection = 0x00DBD79A;

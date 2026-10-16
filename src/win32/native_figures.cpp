@@ -366,6 +366,74 @@ std::optional<uint32_t> standard_bearer(Cpu& cpu) {
     return image;
 }
 
+// --- Déplacement ------------------------------------------------------------------------------
+
+// FUN_004d94f0 : un pas dans la case. La position fine (+0x42, +0x44) avance d'un cran dans la
+// direction (+9 ; au-delà de 7, rien). Pendant un saut (+0x6F, décompté à chaque pas), la hauteur
+// (+0x70) monte vers son plafond (+0x71), deux fois sur une case d'eau ou de rivage
+// (0x10000400) ; à la fin du saut, +0x5D et le plan +0x15 reviennent à 0. Hors saut, la hauteur
+// redescend d'un cran.
+void step_in_tile(const Memory& m, uint32_t r) {
+    const uint32_t x = kFigureFineX + r, y = kFigureFineY + r;
+    const auto add = [&m](uint32_t a, int v) { m.put16(a, static_cast<int16_t>(m.s16(a) + v)); };
+    switch (m.u8(kFigureDirection + r)) {
+        case 0: add(y, -1); break;
+        case 1: add(y, -1); add(x, 1); break;
+        case 2: add(x, 1); break;
+        case 3: add(y, 1); add(x, 1); break;
+        case 4: add(y, 1); break;
+        case 5: add(y, 1); add(x, -1); break;
+        case 6: add(x, -1); break;
+        case 7: add(y, -1); add(x, -1); break;
+        default: break;
+    }
+    const uint8_t jump = m.u8(kFigureJump + r);
+    if (jump == 0) {
+        if (m.u8(kFigureLift + r) != 0) m.put8(kFigureLift + r, m.u8(kFigureLift + r) - 1);
+        return;
+    }
+    m.put8(kFigureJump + r, jump - 1);
+    if (jump == 1) {
+        m.put8(kFigureAtPlace + r, 0);
+        m.put8(kFigureLayer + r, 0);
+        return;
+    }
+    const auto rise = [&m, r] {
+        const uint8_t top = m.u8(kFigureLiftTop + r);
+        if (m.u8(kFigureLift + r) < top) m.put8(kFigureLift + r, m.u8(kFigureLift + r) + 1);
+        if (m.u8(kFigureLift + r) > top) m.put8(kFigureLift + r, m.u8(kFigureLift + r) - 1);
+    };
+    rise();
+    if (m.u32(kTileFlags + m.u32(kFigureTile + r) * 4) & 0x10000400) rise();
+}
+
+// FUN_004d1170(personnage, allure), vitesses 5 (trois pas sur quatre, compteur +0x158) et 6 (un pas
+// par tour), quand le pas reste dans la case : FUN_004d7bd0(personnage, 1) avance le pas (+0x31)
+// puis appelle FUN_004d94f0. Laissés à l'original : les autres allures, le personnage sans chemin
+// (+0x32 nul ou négatif : FUN_004d8220 le cherche), l'arrivée sur une case (pas 15 :
+// FUN_004dfb70, FUN_004d8b10, FUN_004d8bb0) et le milieu de la case (pas 8 : FUN_004d9330).
+std::optional<uint32_t> move_figure(Cpu& cpu) {
+    const Memory m{cpu.host(0)};
+    const int32_t figure = static_cast<int32_t>(cpu.arg(0));
+    const uint32_t speed = cpu.arg(1), r = record(figure);
+    if (speed != 5 && speed != 6) return std::nullopt;
+    if (speed == 5 && m.u8(kFigureSpeedCount + r) > 2) {  // 0x004D14C4 : tour sans pas
+        m.put8(kFigureSpeedCount + r, 0);
+        return static_cast<uint32_t>(figure);
+    }
+    if (m.s16(kFigurePathLeft + r) <= 0) return std::nullopt;
+    const int8_t step = static_cast<int8_t>(m.u8(kFigureStep + r) + 1);
+    if (step >= 15 || step == 8) return std::nullopt;
+
+    m.put8(kFigureStep + r, static_cast<uint8_t>(step));
+    step_in_tile(m, r);
+    m.put32(kFigureStepFlag, 0);
+    if (speed == 6) return r;
+    const uint8_t count = m.u8(kFigureSpeedCount + r) + 1;
+    m.put8(kFigureSpeedCount + r, count);
+    return (r & 0xFFFFFF00u) | count;
+}
+
 template <size_t N>
 uint64_t code_fingerprint(Cpu& cpu, const uint32_t (&ranges)[N][2]) {
     uint64_t hash = 0xCBF29CE484222325ull;
@@ -399,6 +467,12 @@ constexpr uint32_t kMounted[][2] = {
 };
 constexpr uint64_t kMountedHash = 0x01032A8C17B6C6FAull;
 
+// Déplacement : FUN_004d1170 et sa table de sauts, FUN_004d7bd0, FUN_004d94f0 et sa table.
+constexpr uint32_t kMovement[][2] = {
+    {kMoveFigure, kMoveFigureEnd}, {kMoveSteps, kMoveStepsEnd}, {kStepInTile, kStepInTileEnd},
+};
+constexpr uint64_t kMovementHash = 0x288AF3446813FC18ull;
+
 }  // namespace
 
 int install_native_figures(Process& p) {
@@ -419,6 +493,11 @@ int install_native_figures(Process& p) {
             cpu.add_fast_path(kStandardBearer, 0, 8, standard_bearer);
             installed += 2;
         }
+    }
+    if (code_fingerprint(cpu, kMovement) == kMovementHash) {
+        // « MOV EAX,[ESP+8] ; PUSH ESI » déplacés.
+        cpu.add_fast_path(kMoveFigure, 0, 5, move_figure);
+        ++installed;
     }
     return installed;
 }
