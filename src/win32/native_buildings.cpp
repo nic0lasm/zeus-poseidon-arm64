@@ -14,12 +14,17 @@
 // « MOV AL,1 ; RET » (entrée) ; une autre forme, ou une classe absente, rend la main au code
 // d'origine avant toute écriture.
 //
+// En plus, deux morceaux du cycle qui ne font que lire ces tables ou effacer : le parcours des
+// bâtiments de multi_tile_buildings_update et un effacement de buildings_spawn_walkers (voir
+// multi_tile_update et spawn_clear).
+//
 // Les valeurs de retour reproduisent tout EAX, octets hauts compris : plusieurs fonctions
 // renvoient un booléen dans AL en laissant dans le reste de EAX ce qui s'y trouvait.
 //
 // Adresses : win32/game_gog.h. Le code n'est modifié que si tous les octets réécrits ici sont
 // ceux attendus (empreinte FNV-1a, comparée avant toute modification).
 
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <optional>
@@ -389,9 +394,45 @@ constexpr uint32_t kRewritten[][2] = {
 };
 constexpr uint64_t kRewrittenHash = 0x11F95702691B2962ull;
 
-uint64_t fingerprint(Cpu& cpu) {
+// FUN_00534f60 (this = 0x00FE5100), multi_tile_buildings_update, à chaque tour : parcourt les
+// bâtiments en service de 1 à [0x0091EBF8], appelle FUN_00534d60 pour un monument (types 100 à
+// 114) et saute les fiches des autres pièces d'un bâtiment composé (FUN_00540020). Elle n'écrit
+// rien d'autre : sans monument, tout est fait ici. Avec un monument, laissée à l'original.
+std::optional<uint32_t> multi_tile_update(Cpu& cpu) {
+    const uint32_t self = cpu.reg(Cpu::Reg::ECX);
+    for (int32_t i = 1; i <= i32(cpu, kBuildingsLast); ++i) {
+        const uint32_t b = at(kBuildings, i, 0x118);
+        if (u8(cpu, b - 0x10) != 1) continue;
+        const int32_t type = s16(cpu, b);
+        if (type >= 100 && type <= 0x72) return std::nullopt;  // FUN_00534d60
+        if (!composite_type(type)) continue;
+        const int32_t parts = parts_count(cpu, self, type);
+        if (parts < 1) return std::nullopt;  // l'original tournerait sur place
+        i += parts - 1;
+    }
+    return u32(cpu, kBuildingsLast);
+}
+
+// FUN_0040ead0, appelée par buildings_spawn_walkers : en 0x0040EB09, deux « REP STOSD » effacent
+// deux tableaux qui se suivent (2 × 0x1A5E0 entiers de 32 bits, EAX = 0). L'émulateur les fait
+// entier par entier : 1 ms par appel dans la grande ville.
+uint32_t spawn_clear(Cpu& cpu) {
+    if (cpu.reg(Cpu::Reg::EAX) != 0) return 0;
+    constexpr uint32_t kBytes = 2 * 0x1A5E0 * 4;
+    std::memset(cpu.host(kSpawnGrids), 0, kBytes);
+    cpu.set_reg(Cpu::Reg::ECX, 0);
+    cpu.set_reg(Cpu::Reg::EDI, kSpawnGrids + kBytes);
+    return kSpawnClearEnd;
+}
+
+// Code lu par ces deux-là (FUN_005344a0 et FUN_00540020 sont dans kRewritten).
+constexpr uint32_t kScanned[][2] = {{kMultiTileUpdate, kMultiTileUpdateEnd}, {kSpawnClear, kSpawnClearEnd}};
+constexpr uint64_t kScannedHash = 0x2341B3AF6DBF6C4Dull;
+
+template <size_t N>
+uint64_t fingerprint(Cpu& cpu, const uint32_t (&ranges)[N][2]) {
     uint64_t hash = 0xCBF29CE484222325ull;
-    for (const auto& range : kRewritten)
+    for (const auto& range : ranges)
         for (uint32_t a = range[0]; a < range[1]; ++a) hash = (hash ^ *cpu.host(a)) * 0x100000001B3ull;
     return hash;
 }
@@ -400,7 +441,8 @@ uint64_t fingerprint(Cpu& cpu) {
 
 int install_native_buildings(Process& p) {
     Cpu& cpu = p.cpu();
-    if (fingerprint(cpu) != kRewrittenHash) return 0;
+    if (fingerprint(cpu, kRewritten) != kRewrittenHash) return 0;
+    const bool scanned = fingerprint(cpu, kScanned) == kScannedHash;
     cpu.replace_function(kTypeComposite, 4, [](Cpu& c) { return type_composite(static_cast<int32_t>(c.arg(0))); });
     cpu.replace_function(kPartClass, 4, [](Cpu& c) { return part_class(c, static_cast<int32_t>(c.arg(0))); });
     cpu.replace_function(kCompositeParts, 4, [](Cpu& c) {
@@ -426,7 +468,11 @@ int install_native_buildings(Process& p) {
     cpu.add_fast_path(kCompositeBounds, 0x24, 8, bounds_call);
     cpu.add_fast_path(kCompositeRoadEntry, 0x18, 7, road_entry_call);
     composites_installed = true;
-    return 11;
+    if (!scanned) return 11;
+    // « MOV EAX,[0x0091EBF8] » et « MOV ECX,0x1A5E0 ; MOV EDI,0x00A3FDC4 » déplacés.
+    cpu.add_fast_path(kMultiTileUpdate, 0, 5, multi_tile_update);
+    cpu.add_code_jump(kSpawnClear, 10, spawn_clear);
+    return 13;
 }
 
 }  // namespace zeus::win32

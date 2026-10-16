@@ -281,7 +281,19 @@ By measured cost, and by what can be checked one call at a time (`--verify`,
    5. The other handlers, each under 3 % of the tick: warehousemen (`0x004AF930`), peddlers
       (`0x004B5F10`), noblemen (`0x004B8D90`), goats (`0x004BC380`)…
 5. **The cycle**: 17 % of the tick, step by step; 31 (`buildings_spawn_walkers`, 16 KB) is the
-   largest.
+   largest. In `working-city` it runs 8 times, about 9 ms each (`--time-span`), so about 0.17 ms
+   per tick on average. Its time is spread over its callees, measured one by one: the composite
+   building under a tile (`0x004E1060` → `0x0053EC10`, a scan of the 4,000 building records, then
+   `0x0053E740` for the composite ones: 13.9 ms over the run, 8.9 of them in `0x0053E740`),
+   `0x0040EAD0` (22.3 ms, including the clear below), `0x0048CDB0` (6 ms), `0x005B4B40`
+   (5 ms), `0x004E94C0` (5 ms)… **First lot done** (`native_buildings.cpp`): two
+   `REP STOSD` in `0x0040EAD0` (`0x0040EB09`) clear 864 KB entry by entry under the emulator,
+   1 ms per call; a host jump clears them at once. In the same lot, step 6
+   (`multi_tile_buildings_update` `0x00534F60`, every tick) scans the buildings for monuments
+   and does nothing else: 0.12 ms per tick of 5,000 records and as many hooked calls of
+   `0x005344A0`; a fast path makes the scan, and leaves a city with a monument to the original.
+   Tick of `working-city`: median 1.77 → 1.59 ms; `buildings_spawn_walkers`: median 8.9 → 8.0 ms
+   (six runs of each, alternating). Next: `0x0053EC10` and `0x0053E740`.
 
 ## 9. Open questions
 

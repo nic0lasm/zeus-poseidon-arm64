@@ -194,6 +194,11 @@ counted only for their callers that are still emulated.
 The first run found one difference, in the native code: `0x00546620` returns the address of its
 second output in `EAX` for orientation 0 too, which the rewrite had taken for 0.
 
+**Multi-tile scan and spawn clear** (`src/win32/native_buildings.cpp`, 2026-10-16, every call
+checked). `0x00534F60` (`multi_tile_buildings_update`): 15,533 passes over the ten scenarios,
+all compared, all identical. `0x0040EAD0`, which holds the native clear at `0x0040EB09`: called
+only in `working-city`, 8 passes, all compared, identical.
+
 **Routes** (`src/win32/native_routes.cpp`, 2026-10-16, same bench, every call checked). Each
 target was checked in the scenarios that call it (counted with `zeus-run --count`); none is
 called in `editor`.

@@ -217,6 +217,11 @@ constexpr uint32_t kCompositeRoadEntry = 0x0053F810, kCompositeRoadEntryEnd = 0x
 constexpr uint32_t kCompositePartsCount = 0x00540020, kCompositePartsCountEnd = 0x0054004F;  // FUN_00540020
 constexpr uint32_t kCompositeExtrasCount = 0x00540090, kCompositeExtrasCountEnd = 0x005400BF;  // FUN_00540090
 constexpr uint32_t kOffsetRotate = 0x00546620, kOffsetRotateEnd = 0x0054669D;            // FUN_00546620
+// Lus seulement : multi_tile_buildings_update, et l'effacement de trois tableaux dans FUN_0040ead0.
+constexpr uint32_t kMultiTileUpdate = 0x00534F60, kMultiTileUpdateEnd = 0x00534FE4;  // FUN_00534f60
+constexpr uint32_t kSpawnClear = 0x0040EB09, kSpawnClearEnd = 0x0040EB21;  // deux « REP STOSD »
+constexpr uint32_t kSpawnGrids = 0x00A3FDC4;     // deux tableaux de 0x1A5E0 entiers de 32 bits
+constexpr uint32_t kBuildingsLast = 0x0091EBF8;  // plus grand numéro de bâtiment (32 bits)
 // Variables lues par ces fonctions.
 constexpr uint32_t kCompositeClasses = 0x00640E08;      // objets des classes de pièces 0 à 163
 constexpr uint32_t kCompositeClassesHigh = 0x00641098;  // objets des classes 1000 à 1006
