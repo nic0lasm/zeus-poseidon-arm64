@@ -25,7 +25,7 @@ original game, with no Windows, no Wine and no virtual machine.**
 | | |
 |---|---|
 | **What it is** | The real *Zeus* + *Poseidon* (Impressions Games, 2000): the original, unmodified game code, run on a Mac. Same simulation, same rules, same save files. Not a remake. |
-| **Status** | Playable from start to finish. Latest version: **[1.3](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest)** (16 October 2026). |
+| **Status** | Playable from start to finish. Latest version: **[1.4](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest)** (16 October 2026). |
 | **Runs on** | Mac with Apple Silicon (M1 or later), macOS 14 or later; Mac with an Intel processor, macOS 15 or later; Linux x86-64 and arm64. See [Download](#download). |
 | **You need** | Your own copy of the game, GOG edition. This repository contains no game files ([Legal](#legal)). |
 | **Faithful** | Ten replayable scenarios compare every frame and the whole game state, tick by tick, with the original game. |
@@ -93,16 +93,18 @@ the terminal); start it with `ZEUS_ASK_LANGUAGE=1` for the language choice.
 Each version moves more of the work from the emulated original to native code written by hand,
 each part proven identical to the original.
 
-| Measure | 1.0.1 | 1.1 | 1.2 | 1.3 |
-|---|---:|---:|---:|---:|
-| Small city, real time on a Mac (share of one core) | 51–60 % | about 35 % | about 23 % | not measured yet ([#127](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/127), anyone with a Mac) |
-| Simulation tick of a large city (bench, `working-city`) | | 5.3–5.8 ms | 1.6 ms | **1.6 ms** |
-| City drawing kept in native code (second pass, large city) | | | 97 % of the tiles | **97 %** of the tiles |
-| Game frozen by a save (large city, real time) | | | 3.85 s | **0.33 s** |
+| Measure | 1.0.1 | 1.1 | 1.2 | 1.3 | 1.4 |
+|---|---:|---:|---:|---:|---:|
+| Small city, real time on a Mac (share of one core) | 51–60 % | about 35 % | about 23 % | not measured yet ([#127](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/127), anyone with a Mac) | |
+| Simulation tick of a large city (bench, `working-city`) | | 5.3–5.8 ms | 1.6 ms | 1.6 ms | **1.6 ms** |
+| City drawing kept in native code (second pass, large city) | | | 97 % of the tiles | 97 % of the tiles | **97 %** of the tiles |
+| Game frozen by a save (large city, real time) | | | 3.85 s | 0.33 s | **0.33 s** |
+| Colour conversion of a 1024×768 frame for the window | | | | 4.1 ms | **0.65 ms** |
 
 Also in 1.2: window frames in native code (10 to 12 % less CPU over the large-city and options
 scenarios). New in 1.3: one-line texts in native code, 7 to 9 % less CPU in real play
-on the large city ([#113](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/113)).
+on the large city ([#113](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/113)). New in 1.4: a lighter display, 7 to 12 % less
+CPU with the window visible ([#131](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/131)).
 
 **Engine progress:** 322 of the 4,872 functions of the GOG executable are understood (named,
 documented or native) and 24 are replaced whole by native code; native code does 53.2 % of the
@@ -115,9 +117,10 @@ The speed lots that a player could feel in the emulated code are done; what is l
 about 1 % of the run per piece. The next steps go to what players notice
 ([full plan](docs/roadmap.md#after-13-review-of-16-october-2026-evening), [1.4 milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/12)):
 
-1. **A lighter display** ([#125](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/125)): each frame is still copied through the emulator, up to 9 % of the CPU.
-2. **Loading a game**, measured, and without a pause if it has one ([#126](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/126)).
-3. **More editions**: language packs ([#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24)) and the Steam edition ([#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128)). If you own one, your report helps more than any new feature.
+Done in 1.4: **a lighter display** ([#125](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/125)); **loading a game** measured at
+0.16 s, nothing to speed up ([#126](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/126)). Next:
+
+1. **More editions**: language packs ([#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24)) and the Steam edition ([#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128)). If you own one, your report helps more than any new feature.
 
 Longer term, the aim stays the same: keep *Zeus* and *Poseidon* playable for as long as people
 want to play them. A fully native engine (2.0, no emulator, the way Julius did for
@@ -128,6 +131,7 @@ the bench stay ready for it. No dates are promised.
 
 | Version | Highlights |
 |---|---|
+| [**1.4**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.4) | lighter display: frames copied in place and the window's texture in the renderer's format (7 to 12 % less CPU with the window visible; colour conversion 4.1 → 0.65 ms per frame) |
 | [**1.3**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.3) | saves without a pause (3.85 s → 0.33 s on a large city); Intel Mac archive (macOS 15+); Linux AppImages (x86-64, arm64); one-line texts in native code (7 to 9 % less CPU) |
 | [**1.2**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.2) | lighter: city drawing, window frames and texts in native code (small city at about 23 % of a core instead of 35 %); simulation tick of a large city about three times faster; ten scenarios proven identical to the original, tick by tick |
 | [**1.1**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.1) | first launch in fewer clicks (one-click download, picker in Downloads, no language question); taller wide modes; city ground drawn natively (small city 35 % of a core instead of about 50 %) |
