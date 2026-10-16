@@ -222,6 +222,15 @@ constexpr uint32_t kMultiTileUpdate = 0x00534F60, kMultiTileUpdateEnd = 0x00534F
 constexpr uint32_t kSpawnClear = 0x0040EB09, kSpawnClearEnd = 0x0040EB21;  // deux « REP STOSD »
 constexpr uint32_t kSpawnGrids = 0x00A3FDC4;     // deux tableaux de 0x1A5E0 entiers de 32 bits
 constexpr uint32_t kBuildingsLast = 0x0091EBF8;  // plus grand numéro de bâtiment (32 bits)
+// Lus seulement : chantiers des bâtiments composés, avancement et recherche d'une partie à servir.
+constexpr uint32_t kSiteProgress = 0x0053ECA0, kSiteProgressEnd = 0x0053F633;  // FUN_0053eca0
+constexpr uint32_t kSiteNeed = 0x0053E740, kSiteNeedEnd = 0x0053EC0B;          // FUN_0053e740
+constexpr uint32_t kSiteSearch = 0x0053EC10, kSiteSearchEnd = 0x0053EC94;      // FUN_0053ec10
+constexpr uint32_t kPartObject = 0x0053C200, kPartObjectEnd = 0x0053C276;      // FUN_0053c200
+// Méthodes des classes de parties lues par ces trois fonctions (les autres sont plus haut).
+constexpr uint32_t kPartWeightOne = 0x0053E520, kPartWeightTwo = 0x0055DB60,
+                   kPartWeightFour = 0x0053B7C0;  // +0x3C, +0x40 : « MOV EAX,n ; RET 4 »
+constexpr uint32_t kPartFinished = 0x00541670;    // +0x60 : avancement ≥ étapes − 1
 // Variables lues par ces fonctions.
 constexpr uint32_t kCompositeClasses = 0x00640E08;      // objets des classes de pièces 0 à 163
 constexpr uint32_t kCompositeClassesHigh = 0x00641098;  // objets des classes 1000 à 1006

@@ -16,7 +16,8 @@
 //
 // En plus, deux morceaux du cycle qui ne font que lire ces tables ou effacer : le parcours des
 // bâtiments de multi_tile_buildings_update et un effacement de buildings_spawn_walkers (voir
-// multi_tile_update et spawn_clear).
+// multi_tile_update et spawn_clear) ; et les chantiers des bâtiments composés, leur avancement
+// et la recherche d'une partie à servir, quand aucune ne l'est (site_progress, site_search).
 //
 // Les valeurs de retour reproduisent tout EAX, octets hauts compris : plusieurs fonctions
 // renvoient un booléen dans AL en laissant dans le reste de EAX ce qui s'y trouvait.
@@ -425,6 +426,198 @@ uint32_t spawn_clear(Cpu& cpu) {
     return kSpawnClearEnd;
 }
 
+// --- Chantiers des bâtiments composés --------------------------------------------------------
+//
+// Chaque partie d'un bâtiment composé a sa fiche ; FUN_0053c200(this, bâtiment) rend l'objet de
+// la classe de la partie et y écrit le bâtiment en +4, que ses méthodes relisent. Les méthodes
+// lues ici ne font que lire la fiche : `building` remplace le champ +4.
+
+// FUN_0053c200 : objet de la classe de la partie, ou 0. `write` : écrit le bâtiment en +4 de
+// l'objet trouvé, comme l'original (FUN_0053c1b0 y met d'abord 0).
+uint32_t part_object(Cpu& cpu, uint32_t self, int32_t building, bool write) {
+    const uint32_t r = at(kBuildings, building, 0x118);
+    const int32_t type = s16(cpu, r);
+    const uint32_t parts = parts_of(cpu, self, type);
+    if (parts == 0) return 0;
+    const int32_t index = s16(cpu, r + 2);
+    if (index < 0 || index >= parts_count(cpu, self, type)) return 0;
+    const uint32_t object = class_object(cpu, i32(cpu, at(parts, index, kPartSize) + 8));
+    if (object != 0 && write) put_i32(cpu, object + 4, building);
+    return object;
+}
+
+uint32_t method(Cpu& cpu, uint32_t object, uint32_t slot) { return u32(cpu, u32(cpu, object) + slot); }
+
+// Méthodes inconnues : le calcul s'arrête et rend la main à l'original.
+struct Methods {
+    bool known = true;
+
+    // FUN_005358e0 (+0x18) : étapes de la hauteur de la partie, 0 pour un sanctuaire (sauf la
+    // partie de classe 0x7A du type 0x62, une étape plus basse).
+    int32_t stages(Cpu& cpu, uint32_t object, int32_t building) {
+        if (method(cpu, object, 0x18) != kPartStages) return known = false, 0;
+        const uint32_t r = at(kBuildings, building, 0x118);
+        const int32_t type = s16(cpu, r);
+        const uint32_t parts = parts_of(cpu, kCompositeTables, type);
+        if (parts == 0) return known = false, 0;
+        const uint32_t part = at(parts, s16(cpu, r + 2), kPartSize);
+        const bool special = type == 0x62 && i32(cpu, part + 8) == 0x7A;
+        if (!special && composite_type(type)) return 0;
+        return (i32(cpu, part + 0x10) - (special ? 1 : 0)) / 2 * 4;
+    }
+    // +0x08 : nombre d'étapes du chantier de la partie.
+    int32_t steps(Cpu& cpu, uint32_t object, int32_t building) {
+        switch (method(cpu, object, 0x08)) {
+            case kPartFramesOne: return 1;
+            case kPartFramesPlus1: return stages(cpu, object, building) + 1;
+            case kPartFramesPlus2: return stages(cpu, object, building) + 2;
+            case kPartFramesPlus3: return stages(cpu, object, building) + 3;
+            case kPartFramesPlus4: return stages(cpu, object, building) + 4;
+            default: return known = false, 0;
+        }
+    }
+    // FUN_0053e210 (+0x04) : étapes faites, champ +0x48 de la fiche.
+    int32_t progress(Cpu& cpu, uint32_t object, int32_t building) {
+        if (method(cpu, object, 0x04) != kPartProgress) return known = false, 0;
+        return i32(cpu, at(kBuildings, building, 0x118) + 0x48);
+    }
+    // +0x3C et +0x40 (étape) : poids d'une étape, le même pour toutes.
+    int32_t weight(Cpu& cpu, uint32_t object, uint32_t slot) {
+        switch (method(cpu, object, slot)) {
+            case kPartWeightOne: return 1;
+            case kPartWeightTwo: return 2;
+            case kPartWeightFour: return 4;
+            default: return known = false, 0;
+        }
+    }
+    // FUN_00541670 (+0x60) : la partie est finie.
+    bool finished(Cpu& cpu, uint32_t object, int32_t building) {
+        if (method(cpu, object, 0x60) != kPartFinished) return known = false, true;
+        return progress(cpu, object, building) >= steps(cpu, object, building) - 1;
+    }
+    // Méthodes « XOR AL,AL ; RET » et « MOV AL,1 ; RET ».
+    bool flag(Cpu& cpu, uint32_t object, uint32_t slot) {
+        const uint32_t m = method(cpu, object, slot);
+        if (m != kReturnFalse && m != kReturnTrue) known = false;
+        return m == kReturnTrue;
+    }
+};
+
+// FUN_0053eca0(this, bâtiment, compte rendu) sans compte rendu (ses sept appelants passent 0,
+// sauf 0x00487ECB : EBX) : avancement du chantier en pour cent. Pour chaque partie, la somme des
+// poids (+0x40) des étapes 1 à étapes − 1, et celle des étapes déjà faites ; 100 si rien à faire.
+// Elle n'écrit que le bâtiment en +4 des objets (FUN_0053c200, partie par partie).
+std::optional<uint32_t> site_progress(Cpu& cpu) {
+    if (cpu.arg(1) != 0) return std::nullopt;
+    const uint32_t self = cpu.reg(Cpu::Reg::ECX);
+    const int32_t building = static_cast<int32_t>(cpu.arg(0));
+    const int32_t first = building - s16(cpu, at(kBuildings, building, 0x118) + 2);
+    const int32_t count = parts_count(cpu, self, s16(cpu, at(kBuildings, first, 0x118)));
+    int32_t total = 0, done = 0;
+    for (const bool write : {false, true}) {
+        Methods m;
+        total = done = 0;
+        for (int32_t i = first; i < first + count; ++i) {
+            const uint32_t object = part_object(cpu, self, i, write);
+            if (object == 0) continue;
+            const int32_t steps = m.steps(cpu, object, i), progress = m.progress(cpu, object, i);
+            for (int32_t step = 1; step < steps; ++step) {
+                m.weight(cpu, object, 0x3C);
+                const int32_t w = m.weight(cpu, object, 0x40);
+                total += w;
+                if (progress >= step) done += w;
+            }
+        }
+        if (!m.known) return std::nullopt;
+    }
+    if (total == 0) return 100u;
+    return static_cast<uint32_t>(static_cast<int32_t>(static_cast<uint32_t>(done) * 100u) / total);
+}
+
+// FUN_0053e740(this, bâtiment, x) : cherche, par plusieurs passes sur les parties du chantier
+// dans un ordre de priorité, une partie que la méthode +0x50 accepte, et rend son numéro. Seul le
+// cas où aucune passe n'appelle +0x50 est fait ici (la réponse est alors 0) : chantier marqué
+// (bit 0x100 du champ +0x54 de la fiche), ou toutes les parties finies et aucune à servir. Les
+// passes ne lisent que la fiche ; les objets reçoivent le bâtiment en +4 partie par partie, dans
+// le même ordre à chaque passe. Vrai quand le cas est le bon, après les écritures si `write`.
+bool site_idle(Cpu& cpu, uint32_t self, int32_t first, bool write) {
+    const uint32_t r = at(kBuildings, first, 0x118);
+    if (u32(cpu, r + 0x54) & 0x100) return true;
+    const int32_t type = s16(cpu, r);
+    const int32_t end = first + parts_count(cpu, self, type);
+    Methods m;
+    const auto each = [&](auto served) {
+        for (int32_t i = first; i < end; ++i) {
+            const uint32_t object = part_object(cpu, self, i, false);
+            if (object != 0 && served(object, i)) return false;
+        }
+        return true;
+    };
+    bool any = true, upper = true, lower = true;  // 0x0053E792, 0x0053E797, 0x0053E79C
+    each([&](uint32_t o, int32_t i) {
+        if (m.finished(cpu, o, i)) return false;
+        if (m.flag(cpu, o, 0xA0)) any = false;
+        if (m.flag(cpu, o, 0xB0) || m.flag(cpu, o, 0xB4)) upper = false;
+        if (m.flag(cpu, o, 0xA4) || m.flag(cpu, o, 0xA8)) lower = false;
+        return false;
+    });
+    const bool full = type == 0x62 && any && upper && lower;  // 0x0053E84F
+    bool idle = true;
+    if (full || (type >= 100 && type <= 0x72))  // 0x0053E872 : passe triée
+        idle = each([&](uint32_t o, int32_t i) {
+            return !m.flag(cpu, o, 0x0C) || (m.flag(cpu, o, 0xBC) && !m.finished(cpu, o, i));
+        });
+    idle = idle && each([&](uint32_t o, int32_t i) { return m.flag(cpu, o, 0xA0) && !m.finished(cpu, o, i); }) &&
+           each([&](uint32_t o, int32_t i) {
+               return (m.flag(cpu, o, 0xB0) || m.flag(cpu, o, 0xB4)) && !m.finished(cpu, o, i);
+           }) &&
+           each([&](uint32_t o, int32_t i) {
+               return (m.flag(cpu, o, 0xA4) || m.flag(cpu, o, 0xA8)) && !m.finished(cpu, o, i);
+           }) &&
+           (!full || each([&](uint32_t o, int32_t i) { return !m.flag(cpu, o, 0xC8) && !m.finished(cpu, o, i); })) &&
+           each([&](uint32_t o, int32_t i) { return !m.finished(cpu, o, i); });
+    if (!idle || !m.known) return false;
+    if (write)
+        for (int32_t i = first; i < end; ++i) part_object(cpu, self, i, true);
+    return true;
+}
+
+std::optional<uint32_t> site_need(Cpu& cpu) {
+    const uint32_t self = cpu.reg(Cpu::Reg::ECX);
+    const int32_t first = static_cast<int32_t>(cpu.arg(0));
+    if (!site_idle(cpu, self, first, true)) return std::nullopt;
+    return 0u;
+}
+
+// FUN_0053ec10(this, …, x) : premier chantier de bâtiment composé, parmi les fiches 1 à 3 999, où
+// FUN_0053e740 trouve une partie à servir. Faite ici quand aucun n'en a (réponse 0) ; sinon, ou si
+// le nombre de parties d'un chantier est nul (l'original repasserait sur la même fiche), laissée
+// à l'original avant toute écriture.
+std::optional<uint32_t> site_search(Cpu& cpu) {
+    const uint32_t self = cpu.reg(Cpu::Reg::ECX);
+    for (const bool write : {false, true})
+        for (int32_t i = 1; i < 4000; ++i) {
+            const uint32_t r = at(kBuildings, i, 0x118);
+            if (u8(cpu, r - 0x10) != 1) continue;
+            const int32_t type = s16(cpu, r);
+            if (!composite_type(type) && (type < 100 || type > 0x72)) continue;
+            if (type != 0x75 && !site_idle(cpu, self, i, write)) return std::nullopt;
+            const int32_t parts = parts_count(cpu, self, type);
+            if (parts < 1) return std::nullopt;
+            i += parts - 1;
+        }
+    return 0u;
+}
+
+constexpr uint32_t kSites[][2] = {
+    {kSiteProgress, kSiteProgressEnd}, {kSiteNeed, kSiteNeedEnd},   {kSiteSearch, kSiteSearchEnd},
+    {kPartObject, kPartObjectEnd},     {0x005358E0, 0x0053598E},   {0x0053E210, 0x0053E22E},
+    {0x005504B0, 0x005504C9},          {0x00536E40, 0x00536E47},   {0x0055DB50, 0x0055DB68},
+    {0x0053B7B0, 0x0053B7C8},          {0x0053E520, 0x0053E528},   {0x00541670, 0x0054168B},
+    {0x00565930, 0x00565933},          {0x00565940, 0x00565943},
+};
+constexpr uint64_t kSitesHash = 0xA00965C6181D064Dull;
+
 // Code lu par ces deux-là (FUN_005344a0 et FUN_00540020 sont dans kRewritten).
 constexpr uint32_t kScanned[][2] = {{kMultiTileUpdate, kMultiTileUpdateEnd}, {kSpawnClear, kSpawnClearEnd}};
 constexpr uint64_t kScannedHash = 0x2341B3AF6DBF6C4Dull;
@@ -443,6 +636,7 @@ int install_native_buildings(Process& p) {
     Cpu& cpu = p.cpu();
     if (fingerprint(cpu, kRewritten) != kRewrittenHash) return 0;
     const bool scanned = fingerprint(cpu, kScanned) == kScannedHash;
+    const bool sites = fingerprint(cpu, kSites) == kSitesHash;
     cpu.replace_function(kTypeComposite, 4, [](Cpu& c) { return type_composite(static_cast<int32_t>(c.arg(0))); });
     cpu.replace_function(kPartClass, 4, [](Cpu& c) { return part_class(c, static_cast<int32_t>(c.arg(0))); });
     cpu.replace_function(kCompositeParts, 4, [](Cpu& c) {
@@ -472,7 +666,13 @@ int install_native_buildings(Process& p) {
     // « MOV EAX,[0x0091EBF8] » et « MOV ECX,0x1A5E0 ; MOV EDI,0x00A3FDC4 » déplacés.
     cpu.add_fast_path(kMultiTileUpdate, 0, 5, multi_tile_update);
     cpu.add_code_jump(kSpawnClear, 10, spawn_clear);
-    return 13;
+    if (!sites) return 13;
+    // « PUSH EBP ; MOV EBP,ESP ; AND ESP,-8 », « MOV EAX,0x7D14 »,
+    // « PUSH EBX ; PUSH EBP ; PUSH ESI ; PUSH EDI ; MOV EBX,ECX » déplacés.
+    cpu.add_fast_path(kSiteProgress, 8, 6, site_progress);
+    cpu.add_fast_path(kSiteNeed, 8, 5, site_need);
+    cpu.add_fast_path(kSiteSearch, 0x0C, 6, site_search);
+    return 16;
 }
 
 }  // namespace zeus::win32

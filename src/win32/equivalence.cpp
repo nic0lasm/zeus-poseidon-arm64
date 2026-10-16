@@ -210,6 +210,7 @@ constexpr Known kKnown[] = {
     {kCompositeFindPart, 0, kEcx | kEdx, 0x18},   // bool FUN_0053cc30(type, x, y, orientation, &x, &y)
     {kCompositeBounds, 0, kEcx | kEdx, 0x24},     // FUN_0053cd80(type, x, y, orientation, 4 bornes, drapeau)
     {kCompositeRoadEntry, 0, kEcx | kEdx, 0x18},  // bool FUN_0053f810(type, x, y, orientation, &x, &y)
+    {kSiteProgress, 0, kEcx | kEdx, 8},  // FUN_0053eca0(bâtiment, compte rendu) : la première pièce en 0x0053ECCE
     // native.cpp, search_key : EAX, ECX et les indicateurs sont réécrits avant d'être relus.
     {kKeySearch, kKeySearchEnd, kEax | kEcx, 0},
     // void FUN_0044fef0(personnage, x, y, cherché, plans) : l'original se sert des cinq cases

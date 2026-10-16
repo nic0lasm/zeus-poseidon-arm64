@@ -199,6 +199,8 @@ checked). `0x00534F60` (`multi_tile_buildings_update`): 15,533 passes over the t
 all compared, all identical. `0x0040EAD0`, which holds the native clear at `0x0040EB09`: called
 only in `working-city`, 8 passes, all compared, identical.
 
+**Building sites of composite buildings** (`src/win32/native_buildings.cpp`, 2026-10-16, every call checked). Only `working-city` calls them. `0x0053ECA0` (progress of a site): 152 passes, all identical; `0x0053EC10` (search of a site to serve): 12 passes, all identical; `0x0053E740`, which the native `0x0053EC10` no longer calls, checked with that fast path turned off: 24 passes, all identical. `0x0053ECA0` reuses its first argument slot (`0x0053ECCE`), which the bench does not compare.
+
 **Routes** (`src/win32/native_routes.cpp`, 2026-10-16, same bench, every call checked). Each
 target was checked in the scenarios that call it (counted with `zeus-run --count`); none is
 called in `editor`.

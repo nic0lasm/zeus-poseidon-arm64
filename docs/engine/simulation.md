@@ -293,7 +293,7 @@ By measured cost, and by what can be checked one call at a time (`--verify`,
    and does nothing else: 0.12 ms per tick of 5,000 records and as many hooked calls of
    `0x005344A0`; a fast path makes the scan, and leaves a city with a monument to the original.
    Tick of `working-city`: median 1.77 → 1.59 ms; `buildings_spawn_walkers`: median 8.9 → 8.0 ms
-   (six runs of each, alternating). Next: `0x0053EC10` and `0x0053E740`.
+   (six runs of each, alternating). **Second lot done**, the building sites of composite buildings (`native_buildings.cpp`): `0x0053EC10` scans the 4,000 records for a site where `0x0053E740` finds a part to serve, and `0x0053ECA0` (152 calls over the run, from step 25c, `0x004E94C0` and four others, always without a report) gives the progress of a site in percent. All three call the virtual methods of the part classes (`+0x04` steps done, `+0x08` steps, `+0x18`, `+0x3C`/`+0x40` weight of a step, `+0x60` finished, the flags `+0xA0` to `+0xC8`); all are read in their code, and in the scenarios all are constants or read only the record. `0x0053E740` is done natively only when none of its passes reaches the method `+0x50` (every part finished, or the site marked by bit `0x100` of `+0x54`), decided before any write; then only the building written at `+4` of each class object remains. Real time over `working-city` before: `0x0053ECA0` 27.8 ms, `0x0053EC10` 13 to 16 ms, 12 of them in `0x0053E740`. `buildings_spawn_walkers`: median 8.5 → 5.9 ms; tick 1.69 → 1.60 ms (six runs of each, alternating). Next in the spawn: `0x0040A4C0` beyond its clear, `0x005B4B40`, `0x0048CDB0`.
 
 ## 9. Open questions
 
