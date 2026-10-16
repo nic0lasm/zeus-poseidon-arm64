@@ -5,6 +5,8 @@ pull request.
 
 ## Unreleased
 
+- **Plan after 1.3.** `docs/roadmap.md` gets the review of 16 October in the evening: what a player still feels is outside the emulated game, so the next steps are a lighter display (#125, the frame is copied through the emulator, 9 % of the CPU on the cloud machine) and loading a game, measured first (#126), in milestone 1.4. Releases are checked in the cloud; the measure on a Mac moves to #127, open to anyone; the Steam edition may need only a checksum (#128). README and README.fr point to the new plan.
+
 ## 1.3 — 2026-10-16
 
 - **Saves without a pause.** Every save (by hand, or the monthly autosave) froze the game while the PKWARE DCL implode of its compressed blocks ran in the emulator: 3.8 s for the large city of the last tutorial. `0x005C6300`, which compresses one block of a saved game or a map, is replaced whole in `src/win32/native_save.cpp`: implode (`0x005C96C0` and its helpers), the read and write callbacks and their CRC 32 run on the host, in the game's memory, on the work structure that the original keeps on the stack, which is left byte for byte as the original leaves it (at the end of a stream, implode reads past the data into what the previous block left there). Writing the save of the large city now takes 0.2 to 0.3 s. The 14 test saves of `tools/savefile.py samples`, with two and three saves in a row, are identical with and without `--no-native`; `--verify 0x005C6300`, with the whole stack frame compared, finds every call identical, blocks too random to compress (written raw) included. Fixes [#116](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/116).

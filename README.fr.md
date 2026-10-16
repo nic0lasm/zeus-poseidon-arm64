@@ -98,7 +98,7 @@ main, chaque partie prouvée identique à l'original.
 
 | Mesure | 1.0.1 | 1.1 | 1.2 | 1.3 |
 |---|---:|---:|---:|---:|
-| Petite ville, temps réel sur Mac (part d'un cœur) | 51–60 % | environ 35 % | environ 23 % | mesurée sur le Mac à la sortie ([#117](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/117)) |
+| Petite ville, temps réel sur Mac (part d'un cœur) | 51–60 % | environ 35 % | environ 23 % | pas encore mesurée ([#127](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/127), avis aux possesseurs de Mac) |
 | Tour de simulation d'une grande ville (banc, `working-city`) | | 5,3–5,8 ms | 1,6 ms | **1,6 ms** |
 | Dessin de la ville resté en natif (second passage, grande ville) | | | 97 % des cases | **97 %** des cases |
 | Jeu figé par une sauvegarde (grande ville, temps réel) | | | 3,85 s | **0,33 s** |
@@ -115,15 +115,13 @@ partie. [Carte du code et compteurs](docs/engine/README.md) (en anglais).
 
 ## La suite
 
-Les gains de vitesse qu'un joueur pouvait sentir sont faits ; chaque morceau de code émulé qui
-reste pèse environ 1 % du temps ou moins. Les prochaines étapes visent ce que les joueurs
-remarquent ([plan complet](docs/roadmap.md#after-12-review-of-16-october-2026) en anglais, [jalon 1.3](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/11)) :
+Les gains de vitesse qu'un joueur pouvait sentir dans le code émulé sont faits ; chaque morceau
+qui reste pèse environ 1 % du temps ou moins. Les prochaines étapes visent ce que les joueurs
+remarquent ([plan complet](docs/roadmap.md#after-13-review-of-16-october-2026-evening) en anglais, [jalon 1.4](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/12)) :
 
-Fait dans la 1.3 : **des sauvegardes sans pause** ([#116](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/116), 3,85 s → 0,33 s),
-**les Mac Intel** ([#41](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/41)) et **Linux** ([#40](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/40), AppImage).
-Ensuite :
-
-1. **La version 1.3 jouée de bout en bout sur un Mac** ([#117](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/117)), avec une mesure du coût de l'affichage.
+1. **Un affichage plus léger** ([#125](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/125)) : chaque image passe encore par l'émulateur pour être copiée, jusqu'à 9 % du processeur.
+2. **Le chargement d'une partie**, mesuré, et sans pause s'il en a une ([#126](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/126)).
+3. **D'autres éditions** : les packs de langue ([#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24)) et l'édition Steam ([#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128)). Si vous en possédez une, votre retour aide plus que toute nouveauté.
 
 À plus long terme, le but ne change pas : que *Zeus* et *Poséidon* restent jouables aussi
 longtemps qu'on aura envie d'y jouer. Un moteur entièrement natif (2.0, sans émulateur, comme

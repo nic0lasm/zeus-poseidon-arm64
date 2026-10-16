@@ -95,7 +95,7 @@ each part proven identical to the original.
 
 | Measure | 1.0.1 | 1.1 | 1.2 | 1.3 |
 |---|---:|---:|---:|---:|
-| Small city, real time on a Mac (share of one core) | 51–60 % | about 35 % | about 23 % | measured on the Mac at release ([#117](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/117)) |
+| Small city, real time on a Mac (share of one core) | 51–60 % | about 35 % | about 23 % | not measured yet ([#127](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/127), anyone with a Mac) |
 | Simulation tick of a large city (bench, `working-city`) | | 5.3–5.8 ms | 1.6 ms | **1.6 ms** |
 | City drawing kept in native code (second pass, large city) | | | 97 % of the tiles | **97 %** of the tiles |
 | Game frozen by a save (large city, real time) | | | 3.85 s | **0.33 s** |
@@ -111,15 +111,13 @@ game's computation on `working-city`, plus 17.1 % in functions that are partly n
 
 ## What's next
 
-The speed lots that a player could feel are done; what is left of the emulated code weighs about
-1 % of the run per piece. The next steps go to what players notice
-([full plan](docs/roadmap.md#after-12-review-of-16-october-2026), [1.3 milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/11)):
+The speed lots that a player could feel in the emulated code are done; what is left there weighs
+about 1 % of the run per piece. The next steps go to what players notice
+([full plan](docs/roadmap.md#after-13-review-of-16-october-2026-evening), [1.4 milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/12)):
 
-Done in 1.3: **saves without a pause** ([#116](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/116), 3.85 s → 0.33 s),
-**Intel Macs** ([#41](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/41)) and **Linux** ([#40](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/40), AppImage).
-Next:
-
-1. **Version 1.3 played through on a Mac** ([#117](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/117)), with a measure of the display's cost there.
+1. **A lighter display** ([#125](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/125)): each frame is still copied through the emulator, up to 9 % of the CPU.
+2. **Loading a game**, measured, and without a pause if it has one ([#126](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/126)).
+3. **More editions**: language packs ([#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24)) and the Steam edition ([#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128)). If you own one, your report helps more than any new feature.
 
 Longer term, the aim stays the same: keep *Zeus* and *Poseidon* playable for as long as people
 want to play them. A fully native engine (2.0, no emulator, the way Julius did for
