@@ -77,7 +77,7 @@ Steps 2, 4 and 5 can run side by side: each touches its own files.
 
 | # | Step | Why now | Done when |
 |---|---|---|---|
-| 1 | Finish the rendering in progress: bases of 2 to 6 tiles (#91), walker sort, walkers ([rendering §13](engine/rendering.md#13-order-of-the-rewrite), steps 10, 12 to 14) | already written, verification under way | merged; frames, state and call-by-call checks identical. **Mostly done (16 October):** bases (#91), sprite sort and dispatcher groundwork (#95, #96) merged; building extras (#99) and walker loops (#101) being merged |
+| 1 | Finish the rendering in progress: bases of 2 to 6 tiles (#91), walker sort, walkers ([rendering §13](engine/rendering.md#13-order-of-the-rewrite), steps 10, 12 to 14) | already written, verification under way | merged; frames, state and call-by-call checks identical. **Done (16 October), except rendering steps 5 to 7, which wait for step 4:** bases (#91), sprite sort and dispatcher groundwork (#95, #96) merged; building extras (#99) and walker loops (#101) merged; only the rendering steps 5 to 7 remain (step 4) |
 | 2 | A fast, repeatable bench on Linux: Unicorn 2.1 or later, references of the pure original recorded once per change of the Windows layer and reused | every later step runs the bench several times | the nine scenarios recorded and replayed on a fresh Linux machine with one command. **Done (#93)** |
 | 3 | Release 1.2 | players get the native drawing (a small city from about 35 % to about 23 % of a core) | played through on a Mac, as for 1.0 |
 | 4 | A tenth scenario for the rare drawing cases (a building marked red, glyph masks, the rare blends, a 6 × 6 base), then rendering steps 5 to 7 | no proof is possible without it, and 2.0 needs them | the scenario reaches each of those functions; steps 5 to 7 native and checked call by call |
@@ -88,10 +88,10 @@ Steps 2, 4 and 5 can run side by side: each touches its own files.
 ### Progress since the review (16 October 2026)
 
 Merged: #91 (bases of 2 to 6 tiles), #93 (fast bench), #94 (simulation map), #95 and #96 (walker
-drawing, aquatic life, walker sort), #97 (terrain), #98 (composite-building helpers), #100 (road
-search), #102 (walker loop of the simulation). Being merged, in this order: #99 (building extras
-of the drawing), then #101 (walker loops of the drawing); then the soldiers batch of the
-simulation walkers.
+drawing, aquatic life, walker sort), #97 (terrain), #98 (composite-building helpers), #99
+(building extras of the drawing), #100 (road search), #101 (walker loops of the drawing), #102
+(walker loop of the simulation). Next in the merge queue: the soldiers batch of the simulation
+walkers.
 
 Measured, as the pull requests give it (`working-city`, deterministic clock, `main` and branch
 side by side on one cloud machine):
