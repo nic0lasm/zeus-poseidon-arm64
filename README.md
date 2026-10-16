@@ -107,14 +107,14 @@ game's computation on `working-city`, plus 17.1 % in functions that are partly n
 
 The speed lots that a player could feel are done; what is left of the emulated code weighs about
 1 % of the run per piece. The next steps go to what players notice
-([full plan](docs/roadmap.md#after-12-review-of-16-october-2026)):
+([full plan](docs/roadmap.md#after-12-review-of-16-october-2026), [1.3 milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/11)):
 
-1. **Saves without a pause.** A save freezes the game for about 3.6 s while emulated code
+1. **Saves without a pause** ([#116](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/116)). A save freezes the game for about 3.6 s while emulated code
    compresses it; the compressor rewritten by hand already gives the game's files byte for byte.
 2. **Intel Macs** ([#41](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/41)), a second
    archive built by the CI.
 3. **Linux** ([#40](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/40)), an AppImage.
-4. **Version 1.3**, played through on a Mac, with a measure of the display's cost there.
+4. **Version 1.3** ([#117](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/117)), played through on a Mac, with a measure of the display's cost there.
 
 Longer term, the aim stays the same: keep *Zeus* and *Poseidon* playable for as long as people
 want to play them. A fully native engine (2.0, no emulator, the way Julius did for

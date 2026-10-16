@@ -110,15 +110,15 @@ partie. [Carte du code et compteurs](docs/engine/README.md) (en anglais).
 
 Les gains de vitesse qu'un joueur pouvait sentir sont faits ; chaque morceau de code émulé qui
 reste pèse environ 1 % du temps ou moins. Les prochaines étapes visent ce que les joueurs
-remarquent ([plan complet](docs/roadmap.md#after-12-review-of-16-october-2026), en anglais) :
+remarquent ([plan complet](docs/roadmap.md#after-12-review-of-16-october-2026) en anglais, [jalon 1.3](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/11)) :
 
-1. **Des sauvegardes sans pause.** Une sauvegarde fige le jeu environ 3,6 s pendant que le code
+1. **Des sauvegardes sans pause** ([#116](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/116)). Une sauvegarde fige le jeu environ 3,6 s pendant que le code
    émulé la compresse ; le compresseur réécrit à la main redonne déjà les fichiers du jeu octet
    pour octet.
 2. **Les Mac Intel** ([#41](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/41)), une
    seconde archive fabriquée par la CI.
 3. **Linux** ([#40](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/40)), une AppImage.
-4. **La version 1.3**, jouée de bout en bout sur un Mac, avec une mesure du coût de l'affichage.
+4. **La version 1.3** ([#117](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/117)), jouée de bout en bout sur un Mac, avec une mesure du coût de l'affichage.
 
 À plus long terme, le but ne change pas : que *Zeus* et *Poséidon* restent jouables aussi
 longtemps qu'on aura envie d'y jouer. Un moteur entièrement natif (2.0, sans émulateur, comme
