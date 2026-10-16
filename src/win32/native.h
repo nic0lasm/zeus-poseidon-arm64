@@ -40,5 +40,7 @@ int install_native_walkers(Process& process);
 
 // Aides des bâtiments composés (native_buildings.cpp) ; renvoie le nombre de remplacements installés.
 int install_native_buildings(Process& process);
+// Recherche de routes de la simulation (native_routes.cpp) ; renvoie le nombre de remplacements installés.
+int install_native_routes(Process& process);
 
 }  // namespace zeus::win32

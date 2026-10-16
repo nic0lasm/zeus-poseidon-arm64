@@ -75,6 +75,7 @@ add_library(zeus_win32 STATIC
     src/win32/mss.cpp
     src/win32/native.cpp
     src/win32/native_buildings.cpp
+    src/win32/native_routes.cpp
     src/win32/native_draw.cpp
     src/win32/native_walkers.cpp
     src/win32/pe_image.cpp

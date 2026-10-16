@@ -187,5 +187,30 @@ counted only for their callers that are still emulated.
 The first run found one difference, in the native code: `0x00546620` returns the address of its
 second output in `EAX` for orientation 0 too, which the rewrite had taken for 0.
 
-Every native replacement of `src/win32/native.cpp`, `native_draw.cpp`, `native_walkers.cpp` and `native_buildings.cpp` is covered: the ground
+**Routes** (`src/win32/native_routes.cpp`, 2026-10-16, same bench, every call checked). Each
+target was checked in the scenarios that call it (counted with `zeus-run --count`); none is
+called in `editor`.
+
+| Target | What | Passes | Compared | Left to the original | Scenarios with calls | Result |
+|---|---|---|---|---|---|---|
+| `0x00502EE0` | `route_search`: cache, weighted search or owner's search | 86 | 86 | 0 | 2 | identical |
+| `0x00503A60` | search on tiles of positive kind (water: hypothesis) | 276 | 276 | 0 | 8 | identical |
+| `0x00587FB0` | search on bare land | 63 | 63 | 0 | 1 | identical |
+| `0x005883E0` | search to a tile, mask `0x17D` | 262 | 262 | 0 | 8 | identical |
+| `0x00588920` | search to a tile, mask `0x11D` | 30 | 30 | 0 | 2 | identical |
+| `0x00588B20` | search to a listed tile, mask `0x11D` | 13 | 13 | 0 | 1 | identical |
+| `0x00588D30` | search to a tile, mask `0x13D`, three building types passable | 12 | 12 | 0 | 1 | identical |
+| `0x005894F0` | search to a tile, mask `0x11C` | 287 | 287 | 0 | 2 | identical |
+| `0x005896F0` | search to a tile, mask `0x15C` | 10 | 10 | 0 | 1 | identical |
+| `0x00589ED0` | search to a tile, mask `0x13C` | 10 | 10 | 0 | 1 | identical |
+| `0x0058A0D0` | search to a tile, mask `0x12C` | 10 | 10 | 0 | 1 | identical |
+| `0x0058A2D0` | search to a tile, mask `0x19C` | 2 | 2 | 0 | 1 | identical |
+| `0x0058A4D0` | search to a tile of a list (last match), mask `0x19C` | 8 | 8 | 0 | 1 | identical |
+| `0x0058A6C0` | search to a tile, mask `0x10C` | 69 | 69 | 0 | 7 | identical |
+| `0x0058A8C0` | search to a tile of a list (first match), mask `0x10C` | 128 | 128 | 0 | 1 | identical |
+
+`route_search` writes the tile it searches to into the slot of its second argument; the rewrite
+does the same, so the slot is compared.
+
+Every native replacement of `src/win32/native.cpp`, `native_draw.cpp`, `native_walkers.cpp`, `native_buildings.cpp` and `native_routes.cpp` is covered: the ground
 loop jump (`0x0045829D`) and the diamond tile (`0x00435070`) run inside `0x00458170`.

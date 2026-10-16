@@ -219,7 +219,20 @@ By measured cost, and by what can be checked one call at a time (`--verify`,
    **Done** (`src/win32/native_buildings.cpp`, [equivalence](../equivalence.md#results-for-todays-replacements)):
    the tick of `working-city` falls from 5.3–5.8 ms to 3.1–3.3 ms under the deterministic clock.
 2. **Routes**: `route_search` and its variants. Larger, with their own grids and cache, also
-   checkable call by call.
+   checkable call by call. **Done** for the 15 that the scenarios call (`src/win32/native_routes.cpp`,
+   [equivalence](../equivalence.md#results-for-todays-replacements)): every one clears the whole
+   distance grid (52,000 entries) and walks the map, so a call costs hundreds of thousands of
+   emulated instructions. Eleven of them are one function copied with a different mask on the
+   route grid (`0x00588920` and seven copies, `0x0058A4D0`, `0x0058A8C0`); the others are
+   `0x00587FB0` (bare land), `0x00588B20` (towards a listed tile), `0x00588D30` (buildings of three
+   types passable), `0x00503A60` (water: hypothesis) and `route_search` itself (a cache of the last
+   route, then a search weighted by the kind of each tile, or a plain one where only the owner may
+   cross its building). Three copies no scenario calls (`0x005898F0`, `0x00589AE0`,
+   `0x00589CE0`) and `0x005034E0`, `0x00588FD0`, `0x00503C40` stay with the original. The tick of
+   `working-city` falls from 2.68–2.74 ms to 2.38–2.52 ms under the deterministic clock, about
+   10 % less. The share measured under the recorder (about a quarter of the tick's own time) was
+   inflated: it sees the clearing instruction (`rep stos`) as one block per entry, 6.65 million of
+   them for the 128 calls of `0x0058A8C0`, each charged more than the correction removes.
 3. **Terrain** (step 6 of the plan, [terrain §10](terrain.md#10-order-of-the-rewrite)): 15.8 % of
    the tick's time, already documented; its first steps are where the state is written, the first
    test of the tick-by-tick comparison.

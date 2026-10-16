@@ -150,6 +150,29 @@ constexpr uint32_t kMapOrigin = 0x00DA2F80;        // carte : numéro de la case
 constexpr uint32_t kTileRoadNetwork = 0x00C4F288;  // par case : réseau de routes (8 bits)
 constexpr uint32_t kRoadNetworks = 0x00FEB0FC;     // grands réseaux de routes : 10 entrées de 8 octets
 
+// --- Code : recherche de routes de la simulation (native_routes.cpp) --------------------------
+
+// Fonctions réécrites ([début, fin[ de chacune, pour l'empreinte du code). Les parcours en
+// largeur « à masque » sont une même fonction recopiée, qui ne diffère que par le masque.
+constexpr uint32_t kRouteSearch = 0x00502EE0, kRouteSearchEnd = 0x005034D2;    // FUN_00502ee0
+constexpr uint32_t kRouteSearchShip = 0x00503A60, kRouteSearchShipEnd = 0x00503C34;  // FUN_00503a60
+constexpr uint32_t kRouteOnLand = 0x00587FB0, kRouteOnLandEnd = 0x005881C3;    // FUN_00587fb0
+constexpr uint32_t kRouteListed = 0x00588B20, kRouteListedEnd = 0x00588D29;    // FUN_00588b20
+constexpr uint32_t kRouteBuildings = 0x00588D30, kRouteBuildingsEnd = 0x00588FC8;  // FUN_00588d30
+constexpr uint32_t kRouteListForward = 0x0058A8C0, kRouteListForwardEnd = 0x0058AAA2;  // FUN_0058a8c0
+// Variables lues ou écrites par ces fonctions.
+constexpr uint32_t kRouteDistances = 0x01079460;  // par case : distance depuis le départ + 1 (32 bits, 0 non atteinte)
+constexpr uint32_t kRouteQueue = 0x010AC0A0;      // file circulaire de 0xCB10 cases
+constexpr uint32_t kRouteQueueTail = 0x0102D1F8, kRouteQueueHead = 0x0102D1FC;
+constexpr uint32_t kRouteStart = 0x0102D1F4;      // case de départ du dernier parcours
+constexpr uint32_t kRouteSearches = 0x0102D1C4, kRouteSearchesWeighted = 0x0102D1C8;  // compteurs
+constexpr uint32_t kRouteStale = 0x010DF2C0;      // 1 : les distances ne sont plus celles de FUN_00502ee0
+constexpr uint32_t kRouteCache = 0x010DF2C4;      // cache de FUN_00502ee0 : mode, x0, y0, x1, y1, octet
+constexpr uint32_t kRouteMask = 0x0105FE40;       // par case : cases praticables (16 bits)
+constexpr uint32_t kRouteKind = 0x01046820;       // par case : nature pour les trajets (8 bits signés)
+constexpr uint32_t kRouteListMarks = 0x00FFA580;  // par case : rang + 1 dans la liste de FUN_00588b20
+constexpr uint32_t kRouteRowStep = 0x005D9414;    // 228, lu par FUN_00502ee0 pour la case du dessous
+
 // --- Code : texte des packs de langue (language.cpp) ------------------------------------------
 
 constexpr uint32_t kDrawGlyph = 0x00508B50;             // FUN_00508b50 : glyphe d'un texte d'une ligne
