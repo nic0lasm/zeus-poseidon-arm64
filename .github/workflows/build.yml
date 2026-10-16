@@ -9,7 +9,7 @@ jobs:
   linux-x86-64:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Dependencies
         run: sudo apt-get update && sudo apt-get install -y cmake ninja-build pkg-config libsdl2-dev libunicorn-dev libavformat-dev libavcodec-dev libswscale-dev libswresample-dev libavutil-dev zlib1g-dev
       - name: Build
@@ -24,7 +24,7 @@ jobs:
   macos-arm64:
     runs-on: macos-14
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Dependencies
         run: brew install cmake ninja pkgconf sdl2 unicorn ffmpeg
       - name: Build
@@ -43,7 +43,7 @@ jobs:
   macos-intel:
     runs-on: macos-15-intel
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Dependencies
         run: brew install cmake ninja pkgconf sdl2 unicorn ffmpeg
       - name: Build
