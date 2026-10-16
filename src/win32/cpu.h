@@ -84,6 +84,9 @@ public:
         uint32_t bytes = 0;  // taille du bloc, en octets de code
     };
     const std::map<uint32_t, BlockTime>& profile() const { return profile_; }
+    // Appelle `fn` au début de chaque bloc de code exécuté, avec son adresse et sa taille en
+    // octets (arbre d'appels, call_graph.cpp). Ralentit nettement l'émulation.
+    void add_block_hook(std::function<void(Cpu&, uint32_t address, uint32_t size)> fn);
 
     // Adresse hôte d'un octet de la mémoire émulée : toute la mémoire du programme est un seul
     // bloc de 4 Go réservé par l'hôte, dont seules les zones déclarées par map() sont utilisables.
@@ -161,6 +164,8 @@ private:
     void map_region(uint32_t start, size_t size, uint32_t permissions, const char* what);
     uint8_t* memory_ = nullptr;
     static void on_block(uc_struct* uc, uint64_t address, uint32_t size, void* user);
+    static void on_block_hook(uc_struct* uc, uint64_t address, uint32_t size, void* user);
+    std::vector<std::function<void(Cpu&, uint32_t, uint32_t)>> block_hooks_;
     std::map<uint32_t, BlockTime> profile_;  // par adresse de bloc
     uint32_t profile_block_ = 0, profile_size_ = 0;
     uint64_t profile_since_ = 0;

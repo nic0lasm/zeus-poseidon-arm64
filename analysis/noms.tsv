@@ -1,7 +1,10 @@
 adresse	nom	module	statut	preuve	type
+00401000	empty_function	scénario	documenté	un seul « ret » : étape 46 du cycle, et appelée d'ailleurs ; simulation.md §3	fonction
 00404cd0	build_tool_click	interface	documenté	clic de l'outil de construction, switch sur 0x00665DCC ; docs/engine/terrain.md §5	fonction
+00408c90	city_totals_refresh	économie	documenté	étape 1 du cycle (et un autre appelant) : dix calculs sur la fiche de la ville (rang 4), dont 0x0048B0D0 et 0x00487BA0 ; hypothèse ; simulation.md §3	fonction
 0040df00	image_id_from_group	rendu	nommé	renvoie table[groupe-1].premiere_image + collection*0x4000 ; 648 appelants	fonction
 0040e5d0	map_elevation_at	terrain	nommé	renvoie *(u8*)(this + case + 2)	fonction
+0040f630	building_fields_test	bâtiments	nommé	67 octets, quatre champs des bâtiments ; appelée par un bâtiment et un personnage ; simulation.md §5	fonction
 0040fcf0	font_group_entry	texte	documenté	entrée de groupe de la banque 0 (+4 : première image) ; 101 appelants ; interface.md §5.2	fonction
 0040fd10	image_id_from_packed_group	rendu	documenté	identifiant packé collection*512+groupe+1 vers première image ; 107 appelants ; interface.md §5.2	fonction
 00413dc0	copy_rectangle	rendu	natif	copie d'un rectangle opaque ; remplacée par native.cpp	fonction
@@ -17,6 +20,7 @@ adresse	nom	module	statut	preuve	type
 004165d0	draw_runs_right	rendu	natif	image par suites rognée à droite ; remplacée par native.cpp ; rendering.md §8	fonction
 004170b0	runs_skip_rows	rendu	documenté	saute les lignes masquées d'une image par suites (octet bas d'EAX seul) ; rendering.md §8	fonction
 00418a00	convert_555_to_bgra	rendu	nommé	R, V, B = composante << 3, alpha 0xff	fonction
+00418b00	tile_step_to_anchor	terrain	nommé	hors route, avance d'une case vers la case d'ancrage selon les bits 0x07 et 0x38 de la grille 0x00D404B8 (±1, ±228) ; simulation.md §5	fonction
 0041dfc0	blit_alpha_runs	rendu	nommé	mélange (a*src + (31-a)*dst) >> 5 par composante de 5 bits	fonction
 00420020	fullscreen_background_a	interface	documenté	fond plein écran centré (menus)	fonction
 00422270	fullscreen_background_b	interface	documenté	fond plein écran centré (menus)	fonction
@@ -29,10 +33,16 @@ adresse	nom	module	statut	preuve	type
 004316f0	widget_table_draw	interface	documenté	dessine la table de 40 octets (état, sélection, survol, clignotement) ; 6 208 appels	fonction
 004321e0	widget_click_dispatch	interface	documenté	clic sur la table de 28 octets : relâché à gauche (+8), droit (+0xC) ; 4 518 appels	fonction
 00432300	widget_hit_test	interface	documenté	premier rectangle de la table de 28 octets sous la souris ; 12 610 appels	fonction
+00432810	month_table_update	scénario	nommé	appelée seulement depuis month_advance : table 0x005F00C8, fiche de la ville ; simulation.md §5	fonction
+00432850	month_table_a	scénario	nommé	appelée par 0x00432810 et 0x00432950 : table 0x005F00C8 ; simulation.md §5	fonction
+004328d0	month_table_b	scénario	nommé	appelée par 0x00432810 : table 0x005F00C8 ; simulation.md §5	fonction
+00432950	month_table_call	scénario	nommé	10 octets, saute vers 0x00432850 ; appelée par city_totals_refresh ; simulation.md §5	fonction
 00433d50	model_building_value	bâtiments	documenté	valeur k de la ligne t du modèle (0x00782F70) ; docs/engine/terrain.md §7.1	fonction
 00435070	ground_diamond_draw	rendu	nommé	sol en losange (empreinte vérifiée par native_draw.cpp)	fonction
 004377b0	ground_diamond_left	rendu	nommé	losange rogné à gauche (moitié fixe) ; natif partiel : chemin rapide dans native_draw.cpp (sauf surimpression)	fonction
 00438a90	ground_diamond_right	rendu	nommé	losange rogné à droite (moitié fixe) ; natif partiel : chemin rapide dans native_draw.cpp (sauf surimpression)	fonction
+00446a70	terrain_events_update	terrain	documenté	tour : les 8 objets du rang 115 (0x0078C578, 28 octets) ; ceux en cours recalculent le sol (0x00521520, 0x0049BBB0) ; rôle hypothèse ; simulation.md §2	fonction
+004483f0	buildings_timer_countdown	bâtiments	documenté	étape 6 : pour les maisons (+0x05 non nul), décompte +0x100 tant que +0x85 est levé, puis baisse +0x85 ; nombre en cours dans 0x00FEB524 ; simulation.md §3	fonction
 004488c0	random_next	terrain	documenté	deux registres de 31 bits, 31 pas par tirage ; docs/engine/terrain.md §5	fonction
 00449b30	tile_walkers_sort	rendu	nommé	trie la liste des personnages d'une case (écrit l'état) ; rendering.md §11.2	fonction
 00449e50	map_view_set_size	interface	documenté	reçoit colonnes et rangées de la vue de la carte	fonction
@@ -45,8 +55,14 @@ adresse	nom	module	statut	preuve	type
 0045a690	sloped_top_draw	rendu	documenté	partie haute d'un morceau en pente, décalée selon sa taille ; rendering.md §11.2	fonction
 0045daf0	figure_type_on_tile	rendu	documenté	un personnage visible de certains types se tient sur la case ; rendering.md §11.2	fonction
 0045ed20	map_elevation_project	terrain	documenté	altitude projetée selon l'orientation, règles des falaises ; docs/engine/terrain.md §4	fonction
+00461520	treasury_debt_check	économie	documenté	étape 4 : remet 0x00FEB27C et 0x00FEB280 à zéro quand le trésor (+0x0C du rang 4) est positif ; simulation.md §3	fonction
+0046dfd0	month_events_dispatch	scénario	documenté	appelée par month_advance : 203 octets, saute vers l'un de 33 traitements d'événement (0x00470800, 0x00473680, 0x00481430…) ; simulation.md §3	fonction
+00470800	events_random_month	scénario	documenté	saut depuis 0x0046DFD0 (événements du mois, appelé par month_advance) : fiche de la ville, événements programmés (rang 13), année, mois, tirages ; hypothèse ; simulation.md §3	fonction
+00471f00	events_date_check	scénario	nommé	scénario (rang 9), année, mois ; appelée par deux traitements d'événement ; simulation.md §5	fonction
+00473680	events_cities_month	scénario	documenté	saut depuis 0x0046DFD0 (événements du mois) : cités (rang 7), événements programmés ; hypothèse ; simulation.md §3	fonction
 004743ea	city_draw_tile_footprint	rendu	nommé	dessine le socle d'une case ; anime l'eau (SPR_BEACH_COAST, SPR_WATER_ANIMS)	fonction
 0047499f	city_draw_tiles	rendu	nommé	boucle de dessin : y - altitude*0x1e, passes socles puis parties hautes	fonction
+00474a80	events_cities_random	scénario	documenté	saut depuis 0x0046DFD0 (événements du mois) : cités, année, mois, tirages ; hypothèse ; simulation.md §3	fonction
 00476240	image_draw_footprint_sized	rendu	nommé	décale de +30(n-1), -15(n-1) selon la taille puis appelle image_draw	fonction
 00476b90	image_is_backfacing_cliff	rendu	nommé	vrai si l'image de la case est la première d'un des 40 groupes de la table 0x00692F38	fonction
 0047a600	tile_behind_elevation_compare	rendu	nommé	compare l'altitude de la case située 2 rangs plus haut à l'écran : 1 plus haute, -1 plus basse	fonction
@@ -59,11 +75,43 @@ adresse	nom	module	statut	preuve	type
 0047fdb0	map_elevation_project_tile	terrain	nommé	reporte l'altitude e d'une case sur la case située e rangs derrière	fonction
 0047ff50	map_projected_elevation_at	terrain	nommé	renvoie *(u8*)(this + case + 0xcb12)	fonction
 00483840	simulation_cycle_step	scénario	documenté	une étape du cycle de 51 (0x0091EC14) ; docs/engine/terrain.md §6	fonction
+00483c10	month_advance	scénario	documenté	fin du cycle (après l'étape 50) : mois (rangs 6, 38, 39), année, last.sav si l'option est active ; formats/sav.md, simulation.md §3	fonction
+00484030	cycle_buildings_pass_40	bâtiments	documenté	étape 40 : bâtiments, 300 octets du rang 122, grille des pièces ; rôle inconnu ; simulation.md §3	fonction
 004842a0	buildings_update_desirability	terrain	documenté	attrait maximal sur l'emprise, +10 selon +0xD0 ; docs/engine/terrain.md §7.4	fonction
+00484d20	cycle_buildings_pass_35	bâtiments	documenté	étape 35 : bâtiments (19 champs) ; rôle inconnu ; simulation.md §3	fonction
+00484de0	cycle_buildings_pass_36	bâtiments	documenté	étape 36 : bâtiments et fiche de la ville ; rôle inconnu ; simulation.md §3	fonction
+00484ed0	houses_water_flags	bâtiments	documenté	étape 28 : pour les maisons (+0x05 non nul), remet +0x35 et +0x3F à zéro puis +0x35 à 1 si +0x77 est levé ; hypothèse (eau) ; simulation.md §3	fonction
+00484fe0	cycle_buildings_pass_12	bâtiments	documenté	étape 12 : parcourt les bâtiments (24 champs cités) et le terrain ; rôle inconnu ; simulation.md §3	fonction
+00485360	cycle_buildings_pass_20	bâtiments	documenté	étape 20, avant terrain_regrow : bâtiments (19 champs) ; rôle inconnu ; simulation.md §3	fonction
+004856a0	buildings_road_access	bâtiments	documenté	étape 21 : bâtiments (31 champs), terrain et grille de trajets (0x0105FE40) ; hypothèse (accès par la route) ; simulation.md §3	fonction
+004860a0	cycle_houses_pass_22	bâtiments	documenté	étape 22 : liste des maisons (rang 73) ; hypothèse ; simulation.md §3	fonction
+00486190	cycle_city_pass_23	économie	documenté	étape 23 : fiche de la ville et 10 octets du rang 58 ; hypothèse (population) ; simulation.md §3	fonction
+004871b0	cycle_houses_pass_24	bâtiments	documenté	étape 24 : liste des maisons (rang 73) ; hypothèse ; simulation.md §3	fonction
+00487240	cycle_labor_25a	économie	documenté	étape 25 (1 de 3) : fiche de la ville et bâtiments ; hypothèse (main-d'œuvre) ; simulation.md §3	fonction
+00487630	cycle_labor_25b	économie	documenté	étape 25 (2 de 3) : fiche de la ville, année, 20 entiers du rang 60 ; hypothèse ; simulation.md §3	fonction
+00487ba0	cycle_labor_25c	économie	documenté	étape 25 (3 de 3) et city_totals_refresh : bâtiments et fiche de la ville ; hypothèse ; simulation.md §3	fonction
+00488220	cycle_buildings_pass_48	bâtiments	documenté	étape 48 : un champ des bâtiments ; rôle inconnu ; simulation.md §3	fonction
+004889f0	buildings_update_highest	bâtiments	documenté	étape 10 : recalcule buildings_high et buildings_last (rangs 40, 68) ; formats/sav.md, simulation.md §3	fonction
+00488a80	storage_goods_take	économie	nommé	bâtiments et fiche de la ville, appelle 0x00488BC0 ; appelée par l'étape 16 et un personnage ; hypothèse ; simulation.md §5	fonction
+00488b20	storage_goods_give	économie	nommé	même forme que 0x00488A80 ; hypothèse ; simulation.md §5	fonction
+00488bc0	storage_find	économie	nommé	réserves (rang 81) et bâtiments ; appelée par 0x00488A80 et 0x00488B20 ; hypothèse ; simulation.md §5	fonction
+00488c30	cycle_storages_pass_16	économie	documenté	étape 16 : réserves (rang 81), bâtiments et fiche de la ville ; hypothèse ; simulation.md §3	fonction
+004894e0	storage_find_goods	économie	nommé	réserves (rang 81) et bâtiments ; appelée par des bâtiments et des personnages ; hypothèse ; simulation.md §5	fonction
+00489cc0	storage_select	économie	nommé	bâtiments, appelle 0x00488B20 ; appelée par des bâtiments et des personnages ; hypothèse ; simulation.md §5	fonction
+0048b0d0	cycle_city_buildings_17	économie	documenté	étape 17 et city_totals_refresh : bâtiments (31 champs) et fiche de la ville ; hypothèse ; simulation.md §3	fonction
+0048b570	cycle_storages_pass	économie	documenté	étape 8 : réserves (rang 81) et leurs bâtiments ; rôle hypothèse (stocks) ; simulation.md §3	fonction
+0048cfb0	buildings_spawn_walkers	bâtiments	documenté	étape 31 : 16 ko, bâtiments (78 champs), personnages ; même place que building_figure_generate de Julius (hypothèse) ; simulation.md §3	fonction
+00491820	buildings_count_by_type	bâtiments	documenté	étape 33 : bâtiments et deux tables de 36 entiers (rangs 51, 52) ; hypothèse (compte par type) ; simulation.md §3	fonction
+00491eb0	cycle_totals_33	bâtiments	documenté	étape 33 et city_totals_refresh : huit valeurs de 0x0091EA70 ; rôle inconnu ; simulation.md §3	fonction
+00491fe0	road_networks_update	terrain	documenté	étape 7 : numérote par remplissage les réseaux de routes (terrain & 0x44 = 0x40), garde les dix plus grands (0x00FEB0FC) ; simulation.md §3	fonction
+00492260	buildings_random_pass_44	bâtiments	documenté	étape 44 : bâtiments, tirages, grille aléatoire, messages ; hypothèse (incendies, effondrements) ; simulation.md §3	fonction
+00493140	buildings_random_pass_43	bâtiments	documenté	étape 43 : bâtiments, tirages aléatoires, grille des bâtiments ; hypothèse (ruines) ; simulation.md §3	fonction
+004936a0	houses_counters_reset	bâtiments	documenté	étape 47 : remet à zéro quatre compteurs (0x0091EA48 à 0x0091EA60) lus aussi par 0x00494D40, que houses_evolve appelle ; simulation.md §3	fonction
 00493700	desirability_add_rect_border	terrain	documenté	ajoute une valeur sur le bord d'un rectangle ; docs/engine/terrain.md §7.1	fonction
 004937b0	desirability_spread_rect	terrain	documenté	attrait autour d'un rectangle ; docs/engine/terrain.md §7.1	fonction
 00493830	desirability_from_buildings	terrain	documenté	efface la grille puis répand l'attrait de chaque bâtiment ; docs/engine/terrain.md §7.2	fonction
 00493c80	desirability_from_terrain	terrain	documenté	jardins, gravats, avenues et boulevards ; docs/engine/terrain.md §7.3	fonction
+00495860	cycle_buildings_pass_32	bâtiments	documenté	étape 32, après 0x005B9EE0 : bâtiments, année, mois ; rôle inconnu ; simulation.md §3	fonction
 00496010	map_in_play_area	terrain	documenté	case dans le losange jouable (0x00DA2F90…A4) ; docs/engine/terrain.md §2	fonction
 00496080	map_near_play_edge	terrain	documenté	dans le losange, à moins de m cases du bord ; docs/engine/terrain.md §2	fonction
 00496b50	map_area_has_marker	terrain	documenté	rectangle contenant un point réservé de la carte ; docs/engine/terrain.md §9	fonction
@@ -77,21 +125,35 @@ adresse	nom	module	statut	preuve	type
 004a2510	terrain_neighbours_match	terrain	documenté	les 8 voisines vérifient (drapeaux & masque) == valeur ; docs/engine/terrain.md §5	fonction
 004a2590	terrain_blocks_match_3x3	terrain	documenté	motifs de voisinage par direction ; docs/engine/terrain.md §5	fonction
 004a2ac0	terrain_block_match	terrain	documenté	bloc de cases vérifiant (drapeaux & masque) == valeur ; docs/engine/terrain.md §5	fonction
+004a3140	grid_b1e8f8_decay	terrain	documenté	étape 45 : tous les 8 appels, baisse d'un cran les champs de 2 bits de la grille du rang 105 ; simulation.md §3	fonction
 004a4840	trees_ring_full	terrain	documenté	anneau r fait seulement d'arbres ; docs/engine/terrain.md §8.2	fonction
 004a4bf0	desirability_spread	terrain	documenté	attrait anneau par anneau autour d'une emprise carrée ; docs/engine/terrain.md §7.1	fonction
 004a4c60	desirability_add_ring	terrain	documenté	ajoute une valeur sur un anneau, bornée à ±100 ; docs/engine/terrain.md §7.1	fonction
 004a4e70	ring_tile_off_map	terrain	documenté	case k d'un anneau hors de la carte ; docs/engine/terrain.md §7.1	fonction
+004a7a50	undo_expire	interface	documenté	tour : vide la mémoire d'annulation (0x00D7FC08, 0x00D7FFF0) quand son délai 0x00DA2368 est écoulé ou qu'un bâtiment noté a changé ; rôle hypothèse ; simulation.md §2	fonction
 004a7d30	terrain_regrow	terrain	documenté	repousse des arbres, roseaux et prés ; docs/engine/terrain.md §8.1	fonction
 004a81f0	terrain_resource_image	terrain	documenté	image d'une case d'arbre, de roseaux ou de pré ; docs/engine/terrain.md §8.2	fonction
+004a85b0	resource_tile_search_call	terrain	nommé	61 octets : appelle resource_tile_search ; appelée par un bâtiment et un personnage ; simulation.md §5	fonction
+004a86e0	resource_tile_search	terrain	nommé	cherche une case de ressource (terrain, grille 0x00CC1618, indicateurs de la repousse 0x00B1E8F0) par 0x0058A4D0 ; hypothèse (arbres, scieries : terrain.md §8.3) ; simulation.md §5	fonction
 004a8c90	terrain_ring_distance	terrain	documenté	distance en anneaux à une case sans le masque ; docs/engine/terrain.md §8.4	fonction
 004a8e10	trees_update_depth	terrain	documenté	profondeur de forêt (0x00C29158) sur un rectangle ; docs/engine/terrain.md §8.4	fonction
 004aa190	meadows_update_rect	terrain	documenté	valeur et image des prés d'un rectangle ; docs/engine/terrain.md §3	fonction
+004ab100	building_field_check	bâtiments	nommé	59 octets, un champ des bâtiments ; simulation.md §5	fonction
 004c7710	map_grids_clear	terrain	nommé	18 memset successifs sur les grilles de 228x228	fonction
 004cc730	profile_timer_start	scénario	documenté	minuterie de profilage du jeu (GetTickCount)	fonction
 004cc760	profile_timer_stop	scénario	documenté	minuterie de profilage du jeu (GetTickCount)	fonction
 004cc8c0	walkers_update	marcheurs	documenté	boucle sur 2000 figures, chacune entourée des minuteries 004cc730/004cc760	fonction
+004d2c60	route_tile_check	marcheurs	nommé	lit la grille de trajets 0x0105FE40, le terrain et la grille des bâtiments autour d'une case ; hypothèse ; simulation.md §5	fonction
 004d3d28	map_tiles_set_cracks	terrain	nommé	pose le bit de terrain 2 et choisit l'image dans SPR_CRACKS (table 0x006D1220)	fonction
+004d6c90	figure_wander	marcheurs	nommé	personnages (8 champs cités) et tirages : appelée par les bâtiments et les personnages ; hypothèse ; simulation.md §5	fonction
 004d9cc1	terrain_context_fill	terrain	nommé	remplit les 8 voisins avec (terrain & masque) != 0	fonction
+004d9fd0	figure_create	marcheurs	nommé	crée un personnage (premier numéro libre, figures_created recopié à +0x86) ; formats/sav.md rangs 28 et 63	fonction
+004dc860	figure_tile_list	marcheurs	nommé	parcourt les personnages d'une case, chaînés par +0x08 depuis la grille 0x00D0D878 ; formats/sav.md rang 19	fonction
+004ddd30	formations_update	armée	documenté	étapes 5 et 29 (argument 0 puis 1) ; ses appelées lisent les groupes de personnages (rang 31) ; même forme que formation_update_all de Julius (hypothèse) ; simulation.md §3	fonction
+004de210	formations_refresh	armée	nommé	appelée par formations_update (étape 5) et city_totals_refresh : groupes de personnages (rang 31, 39 champs cités), personnages, événements programmés ; hypothèse ; simulation.md §3	fonction
+004df3c0	figures_type39_count	marcheurs	documenté	étape 9 : compte les personnages de type 0x39 (+0x0A) en vie (0x00FEB0B8) et parmi eux ceux dont +0x132 est négatif (0x00FEB0B9) ; simulation.md §3	fonction
+004df570	formations_pass	armée	nommé	dernier appel de formations_update : groupes de personnages (rang 31, 21 champs cités), personnages, terrain ; hypothèse ; simulation.md §3	fonction
+004e1b20	figure_type_value	marcheurs	nommé	valeur d'un personnage selon son type (+0x0A) et un indice, table 0x00786068 ; lit son groupe (rang 31) ; 61 appelants ; simulation.md §5	fonction
 004e3616	terrain_context_lookup	terrain	nommé	cherche le motif de voisinage dans une table de 20 octets par entrée	fonction
 004f2600	message_window_open	interface	documenté	ouvre l'écran 0x05 : mémorise l'écran précédent (0x00EF8CB0) ; 3 appelants	fonction
 004f2d80	help_page_draw	interface	documenté	page d'aide / message : 5 appels de text_layout ; 5 467 octets	fonction
@@ -102,6 +164,10 @@ adresse	nom	module	statut	preuve	type
 004f59b0	text_draw_panel	texte	documenté	texte de panneau ; soustrait une constante en 004f5a33	fonction
 004f6e40	tooltip_draw	interface	documenté	écran 0x23 : info-bulle, mise en page en deux passes (190 puis 270 pixels)	fonction
 004f8770	figure_graze	marcheurs	documenté	un animal broute le pré de sa case ; docs/engine/terrain.md §8.5	fonction
+004f8e30	animals_spawn	marcheurs	documenté	étape 49 : crée des personnages de type 0x31, 0x32 ou 0x4C (0x004D9FD0) une fois sur 100 tirages selon trois comptes ; simulation.md §3	fonction
+004fe290	houses_evolve	bâtiments	documenté	étape 39 : pour chaque bâtiment de type 2 à 14 (maisons), fonction de la table 0x0063B91C par type ; simulation.md §3	fonction
+00502ee0	route_search	marcheurs	nommé	parcours en largeur sur la grille des distances 0x01079460 (file 0x010AC0A0) d'une case à une autre, avec un cache du dernier trajet (0x010DF2C8…) ; simulation.md §5	fonction
+00503a60	route_search_ship	marcheurs	nommé	parcours en largeur avec la file 0x010AC0A0 sur une seconde grille (0x01046820…) ; hypothèse (eau) ; simulation.md §5	fonction
 00504fa0	backdrop_jpeg_load	rendu	documenté	fonds JPEG ; surfaces de tailles égales	fonction
 00505770	event_messages_load	texte	nommé	lit « Zeus eventmsg.txt » (boucle de recherche de clé hôte)	fonction
 00507bf0	text_string_find	texte	documenté	chaîne (groupe, rang) du fichier de textes ; 73 appelants, 64 286 appels	fonction
@@ -120,6 +186,7 @@ adresse	nom	module	statut	preuve	type
 00508f00	number_text_draw	texte	documenté	nombre suivi d'un texte ; 1 401 appels	fonction
 005090a0	paragraph_draw	texte	documenté	paragraphe coupé en lignes par word_width_line ; 466 appels	fonction
 005091b0	word_width_line	texte	documenté	largeur du mot suivant d'une ligne ; 11 184 appels	fonction
+00509dc0	tick_period_counters	scénario	documenté	tour : avance dix compteurs de période (4 à 768 tours, 0x00F1386C à 0x00F13890) ; simulation.md §2	fonction
 0050b410	clear_frame	rendu	natif	efface le tampon d'affichage ; remplacée par native.cpp	fonction
 0050b450	mouse_edges_clear	interface	documenté	remet à zéro 0x00F2A700, 0x00F2A706 et 0x00F2A6FA en fin de tour	fonction
 0050b470	mouse_poll	interface	documenté	position à l'échelle du tampon et fronts de bouton, une fois par tour	fonction
@@ -157,12 +224,36 @@ adresse	nom	module	statut	preuve	type
 00525630	sidebar_draw_48	interface	documenté	panneau de l'écran 0x48 : tables 0x006402A0 et 0x0063DF80	fonction
 00525c10	sidebar_draw_20	interface	documenté	panneau de l'écran 0x20 : tables 0x00640390 et 0x0063DF80	fonction
 0052c070	objectives_screen_draw	interface	documenté	écrans 0x42 et 0x43 : 17 types d'objectifs, 2 279 mises en page sur working-city	fonction
+005344a0	building_type_composite	bâtiments	nommé	vrai pour les types 0x54 à 0x62 et 0x75 ; avec les types 100 à 114, ce sont les types dont les fonctions 0x0053C2C0… donnent les pièces ; 71 appelants ; simulation.md §5	fonction
+00534f60	multi_tile_buildings_update	bâtiments	documenté	tour : bâtiments en service dont le type passe 0x005344A0 ou vaut 100 à 114 (pièces de pyramide) ; simulation.md §2	fonction
+0053c1b0	composite_part_class	bâtiments	nommé	objet de classe d'une pièce : table 0x00640E08 (164 classes) ou 0x00641098 (7, numéros 1000 et plus) ; simulation.md §5	fonction
+0053c2c0	composite_parts	bâtiments	nommé	liste des pièces d'un type de bâtiment composé (this + 0x270 + type × 4), pièces de 0x48 octets ; simulation.md §5	fonction
+0053c330	composite_extras	bâtiments	nommé	seconde liste de pièces d'un type composé (this + 0x5E4 + type × 4) ; simulation.md §5	fonction
+0053cc30	composite_find_part	bâtiments	nommé	case de la première pièce dont la méthode +0xC0 de la classe est vraie ; simulation.md §5	fonction
+0053cd80	composite_bounds	bâtiments	nommé	rectangle couvert par les pièces d'un bâtiment composé placé en (x, y) avec une orientation ; simulation.md §5	fonction
+0053d900	composite_part_size	bâtiments	nommé	taille d'une pièce, par la méthode 0 de sa classe (0x0053C1B0) ; simulation.md §5	fonction
+0053f810	composite_road_entry	bâtiments	nommé	case de route (terrain & 0x44 = 0x40) la plus proche autour d'un bâtiment composé, en préférant les grands réseaux (0x00FEB0FC, road_networks_update) ; simulation.md §5	fonction
+0053fb60	building_road_entry	bâtiments	nommé	composite_road_entry pour un bâtiment numéroté (type +0x10, orientation +0x9C) ; 14 appelants ; simulation.md §5	fonction
+00540020	composite_parts_count	bâtiments	nommé	nombre de pièces d'un type composé (this + 0x958 + type × 4) ; simulation.md §5	fonction
+00540090	composite_extras_count	bâtiments	nommé	taille de la seconde liste (this + 0xCCC + type × 4) ; simulation.md §5	fonction
+00546620	composite_offset_rotate	bâtiments	nommé	tourne le décalage (x, y) d'une pièce selon l'orientation 0 à 3 ; simulation.md §5	fonction
+005466a0	composite_offset_rotate_b	bâtiments	nommé	135 octets, bâtiments ; appelée par building_road_entry ; même famille que composite_offset_rotate ; simulation.md §5	fonction
 0055f3d0	view_mode0_always_true	interface	nommé	méthode +0x18 du mode de vue 0, renvoie vrai	fonction
+00565760	tile_ground_image_test	terrain	nommé	compare l'image du sol de la case (0x00D4CFC8) à celles de plusieurs groupes ; simulation.md §5	fonction
+00566930	population_record	économie	documenté	étape 11 : garde le maximum de la population (+0x24 du rang 4) dans 0x00FEB0EC ; simulation.md §3	fonction
+00567910	houses_capacity_totals	bâtiments	documenté	étape 13 : parcourt la liste des maisons (0x0091F5B8, rang 73) et somme des champs de leur modèle (0x00433D80, champs 5, 6, 13) ; hypothèse ; simulation.md §3	fonction
+00567c70	cycle_formations_pass_14	armée	documenté	étape 14 : groupes de personnages (rang 31, 32 champs cités), personnages et bâtiments ; hypothèse ; simulation.md §3	fonction
+00568c20	cities_relations_update	scénario	documenté	étape 13 : parcourt les 22 cités (rang 7) et appelle 0x00482200 ou 0x00481E80 selon un rapport de valeurs ; hypothèse ; simulation.md §3	fonction
 005715a0	info_window_open	interface	documenté	fenêtre d'information : en bas si l'ordonnée du clic ≤ 396	fonction
 00571ee0	info_window_class	interface	documenté	classe de la fenêtre d'information (hauteur en cases)	fonction
 005724e0	info_window_draw	interface	documenté	écran 0x09 : fenêtre d'information	fonction
 005726e0	info_window_click	interface	documenté	clics de la fenêtre d'information ; 9 tests de survol	fonction
+00588920	route_distance	marcheurs	nommé	parcours en largeur de case à case sur la grille de trajets 0x0105FE40 (masque 0x11D) ; 10 appelants ; simulation.md §5	fonction
 00588b20	route_find_listed_tile	terrain	documenté	parcours en largeur sur la grille de trajets ; docs/engine/terrain.md §8.3	fonction
+00588d30	route_distance_buildings	marcheurs	nommé	comme route_distance avec le masque 0x13D, les cases de bâtiment (terrain 0x10000000) passant par 0x004A96E0 ; simulation.md §5	fonction
+0058a4d0	route_search_area	marcheurs	nommé	parcours en largeur sur la grille de trajets 0x0105FE40 (distances 0x01079460, file 0x010AC0A0), comme route_search ; simulation.md §5	fonction
+0058bbe0	route_search_call	marcheurs	nommé	39 octets, appelée par des personnages et des événements ; même famille que 0x0058BC40 ; hypothèse ; simulation.md §5	fonction
+0058bc40	route_search_ship_call	marcheurs	nommé	29 octets : appelle 0x00503A60 ; appelée par trois branches du tour ; simulation.md §5	fonction
 0058e280	control_panel_position	interface	documenté	abscisse du panneau de contrôle : 478, 598 ou 838	fonction
 0058e2e0	frame_redraw	interface	documenté	redessine tout le cadre : liseré du bas, fond du panneau, 0x0058EB20 ; 3 appels	fonction
 0058e3e0	bottom_strip_fill	interface	documenté	liseré de 9 pixels en bas de l'écran	fonction
@@ -184,6 +275,8 @@ adresse	nom	module	statut	preuve	type
 005a7200	ambient_building_class	rendu	documenté	classe d'un type de bâtiment pour les compteurs d'ambiance (0 à 4) ; rendering.md §11.2	fonction
 005acf50	sprite_dispatch	rendu	nommé	répartiteur de sprites ; natif partiel : chemin rapide dans native.cpp	fonction
 005adf00	building_top_draw	rendu	nommé	partie haute d'un bâtiment ; natif partiel : chemin rapide dans native.cpp (sauf surimpression)	fonction
+005b9ee0	cities_trade_update	économie	documenté	étape 32 : cités (rang 7, 13 champs), personnages ; hypothèse (commerce) ; simulation.md §3	fonction
+005bfde0	buildings_random_pass_45	bâtiments	documenté	étape 45 : pour les maisons de type 2 à 8, un tirage par seuil franchi de +0xF4 (table 0x0065E89C) ; 0x005BFF90 une fois sur 200 ; simulation.md §3	fonction
 005c35e0	mouse_wheel_init	interface	documenté	cherche la molette pré-Windows 98 au démarrage	fonction
 005c37c0	main_loop	interface	documenté	boucle principale ; ne joue un tour que si le drapeau « actif » est levé	fonction
 005c4a30	display_mode_change	interface	documenté	change de mode d'affichage et refait la mise en page (F6, F7)	fonction

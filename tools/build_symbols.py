@@ -11,8 +11,14 @@ chaque autre fonction est cherché dans cet ordre, du plus sûr au plus fragile 
   1. chaîne citée par la fonction (mots-clés de RÈGLES_CHAÎNES) ;
   2. import appelé directement (MSS32 : son, DDRAW : rendu...) ;
   3. zone de la bibliothèque C (adresses après la première fonction qui cite les messages du VC++) ;
-  4. hypothèse : vote des appelants et appelés déjà classés.
-Les classements des étapes 3 et 4 portent « hypothèse » dans la colonne preuve. Le voisinage dans
+  4. tour de simulation (analysis/simulation.tsv, produit par tools/simulation_map.py) : une
+     fonction exécutée pendant le tour prend le module des racines du tour dont elle descend
+     (appelées du tour et étapes du cycle, classées à la main dans noms.tsv) quand elles ont
+     toutes le même module, ou celui de la grande majorité d'entre elles ; sinon celui de ses
+     appelantes pendant le tour, si elles s'accordent de même ; seulement pour les fonctions dont la moitié au moins des blocs
+     exécutés le sont pendant le tour ;
+  5. hypothèse : vote des appelants et appelés déjà classés.
+Les classements des étapes 3 à 5 portent « hypothèse » dans la colonne preuve. Le voisinage dans
 l'exécutable a été essayé et écarté : plus de la moitié des cas connus étaient faux.
 """
 import collections
@@ -68,6 +74,40 @@ def classer_chaines(chaines):
     return module, f"chaîne ({exemples[module]})"
 
 
+def lire_tour(chemin):
+    """analysis/simulation.tsv : fonctions exécutées pendant le tour, racines dont elles descendent
+    et appelantes directes pendant le tour. Celles dont moins de la moitié des blocs exécutés le
+    sont pendant le tour sont des outils d'autres modules (textes, images, géométrie de la carte) :
+    leur place dans le tour ne dit rien de leur module, elles sont laissées de côté."""
+    tour = {}
+    try:
+        with open(chemin, encoding="utf-8") as f:
+            for ligne in f.read().splitlines()[1:]:
+                a, racines, appelants, part = (ligne.split("\t") + ["", "", "1"])[:4]
+                if float(part) < 0.5:
+                    continue
+                tour[int(a, 16)] = ([int(x, 16) for x in racines.split(",") if x],
+                                    [int(x, 16) for x in appelants.split(",") if x])
+    except FileNotFoundError:
+        pass
+    return tour
+
+
+def classer_tour(racines, module):
+    """Module des racines du tour dont descend une fonction : unanime, ou au moins 3 sur 4."""
+    votes = collections.Counter(module[r] for r in racines if module.get(r, "inconnu") != "inconnu")
+    if not votes or sum(votes.values()) < len(racines):
+        return None
+    m, n = votes.most_common(1)[0]
+    if n == len(racines):
+        if n == 1:
+            return m, f"hypothèse : tour de simulation, atteinte seulement depuis {racines[0]:08x} ({m})"
+        return m, f"hypothèse : tour de simulation, atteinte depuis {n} racines, toutes en {m}"
+    if n * 4 >= len(racines) * 3:
+        return m, f"hypothèse : tour de simulation, {n} racines sur {len(racines)} en {m}"
+    return None
+
+
 def main(argv):
     if len(argv) < 2:
         raise SystemExit(__doc__)
@@ -117,7 +157,34 @@ def main(argv):
             if a >= debut_crt and a not in module:
                 module[a] = "bibliothèque C"
                 preuve[a] = f"hypothèse : zone de la bibliothèque C (après {debut_crt:08x})"
-    # 4a. vote des appelants (poids 2, si la fonction a peu d'appelants) et des appelés (poids 1,
+    # 4. tour de simulation : racines classées à la main (noms.tsv), puis, pour les fonctions
+    # partagées entre racines de modules différents, appelantes directes pendant le tour
+    tour = lire_tour("analysis/simulation.tsv")
+    for a in ordre:
+        if a not in module and a in tour and tour[a][0]:
+            r = classer_tour(tour[a][0], module)
+            if r:
+                module[a], preuve[a] = r
+    # Puis appelantes directes pendant le tour, 3 sur 4 au moins dans un module. Le module le plus
+    # fréquent parmi les appelantes a été essayé pour les fonctions partagées et écarté : sur les
+    # fonctions nommées cachées, il se trompait deux fois sur trois (docs/engine/simulation.md §7).
+    for ronde in range(8):
+        nouveaux = {}
+        for a in ordre:
+            if a in module or a not in tour:
+                continue
+            votes = collections.Counter(module[c] for c in tour[a][1] if module.get(c, "inconnu") != "inconnu")
+            total = len(tour[a][1])
+            if not votes:
+                continue
+            m, n = votes.most_common(1)[0]
+            if sum(votes.values()) == total and n * 4 >= total * 3:
+                nouveaux[a] = (m, f"hypothèse : tour de simulation, appelée par {n} fonctions sur {total} en {m}")
+        if not nouveaux:
+            break
+        for a, (m, t) in nouveaux.items():
+            module[a], preuve[a] = m, t
+    # 5. vote des appelants (poids 2, si la fonction a peu d'appelants) et des appelés (poids 1,
     # hors fonctions utilitaires appelées de partout)
     forts = set(module)
     for ronde in range(4):

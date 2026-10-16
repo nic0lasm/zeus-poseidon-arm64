@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "tools/zeus_run/zeus_run.h"
+#include "win32/call_graph.h"
 #include "win32/cpu.h"
 #include "win32/equivalence.h"
 #include "win32/game_gog.h"
@@ -101,6 +102,10 @@ int run(const RunOptions& o) {
         std::chrono::steady_clock::time_point last;
     };
     std::shared_ptr<zeus::win32::StateLog> state_log;
+    std::shared_ptr<zeus::win32::CallGraph> call_graph;
+    if (!o.call_graph.empty()) call_graph = zeus::win32::install_call_graph(process, o.call_graph);
+    std::shared_ptr<zeus::win32::TimeSpans> time_spans;
+    if (!o.time_span.empty()) time_spans = zeus::win32::install_time_spans(process, o.time_span);
     if (!o.state_log.empty()) state_log = zeus::win32::install_state_log(process, o.state_log);
     auto ticks = std::make_shared<Ticks>();
     if (o.ticks)
@@ -122,6 +127,8 @@ int run(const RunOptions& o) {
     }
     desktop.save_screenshot();
     if (state_log) zeus::win32::finish_state_log(*state_log);
+    if (call_graph) zeus::win32::finish_call_graph(*call_graph);
+    if (time_spans) zeus::win32::report_time_spans(*time_spans);
     const bool verified = !verifier || zeus::win32::report_verifier(*verifier);
     uint64_t total = 0;
     for (const auto& [name, count] : process.call_counts) total += count;

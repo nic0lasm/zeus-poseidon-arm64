@@ -120,6 +120,8 @@ needs *System Settings → Privacy & Security → Open Anyway* (on macOS 15 and 
 | `--ticks` | print, on exit, the simulation ticks per second (passes on `0x00513A30`), measured in real time over the active play (gaps longer than one second, such as a pause or an open message, are left out); meaningless with `--deterministic` |
 | `--dump-data FILE.bin` | write the game's variables at exit |
 | `--profile FILE.tsv` | time spent per block of game code (slow); summarise with `tools/profile_report.py` |
+| `--call-graph FILE.tsv` | every call between game functions and the time of every block, inside the simulation tick or outside it (slow); summarise with `tools/simulation_map.py` ([simulation](engine/simulation.md)) |
+| `--time-span START:RETURN[,…]` | print, on exit, the real time spent from a game address to another (a function's entry and the return address after its call), per pass and as a share of the run |
 | `--no-native` | emulate everything, without the host rewrites of some game functions |
 | `--check-audio FOLDER` | (alone, instead of `--run`) decode every sound file of a folder the way the mixer does |
 | `--state-log FILE` | write a fingerprint of every memory zone of the game state at each simulation tick (`docs/equivalence.md`) |

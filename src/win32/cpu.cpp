@@ -309,6 +309,19 @@ void Cpu::on_block(uc_struct*, uint64_t address, uint32_t size, void* user) {
     cpu.profile_since_ = now;
 }
 
+void Cpu::add_block_hook(std::function<void(Cpu&, uint32_t, uint32_t)> fn) {
+    if (block_hooks_.empty()) {
+        uc_hook hook;
+        check(uc_hook_add(uc_, &hook, UC_HOOK_BLOCK, reinterpret_cast<void*>(&Cpu::on_block_hook), this, 1, 0), "blocs");
+    }
+    block_hooks_.push_back(std::move(fn));
+}
+
+void Cpu::on_block_hook(uc_struct*, uint64_t address, uint32_t size, void* user) {
+    Cpu& cpu = *static_cast<Cpu*>(user);
+    for (auto& fn : cpu.block_hooks_) fn(cpu, static_cast<uint32_t>(address), size);
+}
+
 void Cpu::replace_function(uint32_t address, uint32_t arg_bytes, std::function<uint32_t(Cpu&)> fn) {
     // « ret » ou « ret n » à la place du premier octet de la fonction.
     const uint8_t code[3] = {static_cast<uint8_t>(arg_bytes ? 0xC2 : 0xC3), static_cast<uint8_t>(arg_bytes),

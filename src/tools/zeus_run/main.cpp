@@ -38,6 +38,8 @@
 //     --dump-data SORTIE.bin   écrit à la fin la section .data du programme (variables du jeu)
 //     --frame-log SORTIE.txt   empreinte de chaque image affichée
 //     --profile SORTIE.tsv     profil d'exécution du code du jeu, par bloc (ralentit beaucoup)
+//     --call-graph SORTIE.tsv  arbre d'appels et temps par bloc, pendant le tour de simulation ou non
+//     --time-span A:R,…        temps passé de l'entrée A d'une fonction à son retour R (hexadécimal)
 //     --counts                 affiche à la fin le nombre d'appels et le temps passé dans chaque fonction
 //     --headless               fenêtre cachée, son coupé
 //     --mute                   son coupé
@@ -81,6 +83,8 @@ int main(int argc, char** argv) {
                 else if (a == "--write-dir") o.write_dir = value();
                 else if (a == "--language") o.language = value();
                 else if (a == "--profile") o.profile = value();
+                else if (a == "--call-graph") o.call_graph = value();
+                else if (a == "--time-span") o.time_span = value();
                 else if (a == "--frame-log") o.frame_log = value();
                 else if (a == "--dump-data") o.memory_dump = value();
                 else if (a == "--wide") o.wide = value();

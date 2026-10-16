@@ -62,6 +62,7 @@ target_link_libraries(zeus-map PRIVATE zeus_game zeus_platform ZLIB::ZLIB)
 add_library(zeus_win32 STATIC
     src/win32/audio.cpp
     src/win32/bink.cpp
+    src/win32/call_graph.cpp
     src/win32/cpu.cpp
     src/win32/ddraw.cpp
     src/win32/desktop.cpp
