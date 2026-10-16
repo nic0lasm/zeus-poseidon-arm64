@@ -39,8 +39,11 @@ jobs:
         run: cmake -S . -B build/diffusion -G Ninja -DCMAKE_BUILD_TYPE=Release -DZEUS_FFMPEG=build/deps/ffmpeg
       - name: Package
         run: python3 tools/publish.py release "$VERSION"
-      - name: Minimum macOS
-        run: otool -l "build/diffusion/Zeus Poseidon.app/Contents/MacOS/zeus-poseidon" | grep -A3 LC_BUILD_VERSION
+      - name: Summary
+        run: |
+          cd build/diffusion
+          minos=$(find "Zeus Poseidon.app" -type f \( -perm -u+x -o -name '*.dylib' \) -exec otool -l {} \; 2>/dev/null | awk '/minos/ {print $2}' | sort -V | tail -1)
+          echo "::notice::macOS $minos minimum; $(ls -l Zeus-Poseidon-$VERSION-macos-arm64.zip | awk '{print $5}') octets; SHA-256 $(shasum -a 256 Zeus-Poseidon-$VERSION-macos-arm64.zip | cut -d' ' -f1)"
       - uses: actions/upload-artifact@v4
         with:
           name: Zeus-Poseidon-${{ env.VERSION }}-macos-arm64
