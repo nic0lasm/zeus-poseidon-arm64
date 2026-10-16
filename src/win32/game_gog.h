@@ -567,4 +567,24 @@ constexpr uint32_t kLineBuffer = 0x00F27694;  // ligne en cours, 200 octets
 constexpr uint32_t kWordBytes = 0x00F13A58;   // octets pris par le dernier mot mesuré
 constexpr uint32_t kPanelFont = 0x00EF8C9C;   // police des textes des panneaux
 
+// Dessin d'une chaîne d'une ligne (native_strings.cpp ; docs/engine/interface.md §7.4).
+constexpr uint32_t kDrawString = 0x00508800, kDrawStringEnd = 0x00508D33;  // FUN_00508800, FUN_00508b50, FUN_00508d10
+constexpr uint64_t kDrawStringHash = 0x6AB5B8B394FFCD5Cull;
+constexpr uint32_t kTextColour = 0x00F1397C;     // couleur du glyphe en cours, 16 bits
+constexpr uint32_t kTextPlain = 0x00F13970;      // non nul : un seul dessin par glyphe
+constexpr uint32_t kTextShadow = 0x00F13974;     // non nul : ombre en couleur 0
+constexpr uint32_t kTextOutline = 0x00F13978;    // non nul : contour en couleur 0 dessus et dessous
+constexpr uint32_t kTextEndFlag = 0x00F13964;    // remis à 0 à la fin de chaque chaîne (rôle non établi)
+constexpr uint32_t kTextCursor = 0x00F13A70;     // x du caractère suivant
+constexpr uint32_t kTextLine = 0x00F13A6C;       // y de la ligne, recopié avec le curseur de saisie
+constexpr uint32_t kTextCount = 0x00F13A7C;      // caractères parcourus
+constexpr uint32_t kPreparedActive = 0x00F13A78;  // 1 : « # » prend le texte préparé
+constexpr uint32_t kPreparedIndex = 0x00F13A74;  // caractère suivant du texte préparé (0 : aucun en cours)
+constexpr uint32_t kPreparedText = 0x00F27630;   // texte préparé
+constexpr uint32_t kTextCollapse = 0x00F13A90, kTextNoCollapse = 0x00F13A91;  // octets : deux espaces en une
+constexpr uint32_t kTextField = 0x00F13C88;      // champ de saisie actif
+constexpr uint32_t kTextMarks = 0x00F13AE4;      // position du curseur de chaque champ, 32 bits
+constexpr uint32_t kTextMarkFound = 0x00F13A80;  // 1 : curseur de saisie placé
+constexpr uint32_t kTextMarkWidth = 0x00F13A84, kTextMarkCursor = 0x00F13A88, kTextMarkLine = 0x00F13A8C;
+
 }  // namespace zeus::win32::gog

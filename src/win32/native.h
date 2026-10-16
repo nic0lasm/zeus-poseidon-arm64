@@ -72,6 +72,8 @@ int install_native_terrain(Process& process);
 // Recherche des chaînes et mise en page des textes des panneaux (native_text.cpp) ; renvoie le
 // nombre de remplacements installés.
 int install_native_text(Process& process);
+// Dessin des chaînes d'une ligne (native_strings.cpp) ; renvoie le nombre de remplacements installés.
+int install_native_strings(Process& process);
 
 // FUN_004170b0 : saute les lignes masquées en haut d'une image par suites (native.cpp) ; renvoie
 // l'adresse de la première ligne visible.
