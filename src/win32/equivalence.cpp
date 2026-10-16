@@ -211,6 +211,9 @@ constexpr Known kKnown[] = {
     // d'arguments comme de variables (0x0044FF4D, 0x004504C9, 0x00450528, 0x00451247…).
     {kWalker, 0, kEax | kEcx | kEdx, 20},
     {kWaterLife, 0, kEcx | kEdx | kEax, 0},  // void FUN_0041d3d0 (thiscall, dépile ses arguments)
+    // void FUN_00449b30(case) : ses trois appelants (0x00459DCD, 0x00459EE0, 0x0045A5A9) relisent
+    // la liste de la case sans lire EAX.
+    {kWalkerSort, 0, kEax | kEcx | kEdx, 0},
 };
 
 struct Range {

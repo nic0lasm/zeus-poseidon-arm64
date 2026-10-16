@@ -115,6 +115,11 @@ constexpr uint32_t kWalkerHelpers[][2] = {
     {0x00411870, 0x00411894}};
 constexpr uint64_t kWalkerHelpersHash = 0xA21938BB203C4AA2ull;
 constexpr uint32_t kViewFalse = 0x005656F0;   // méthode +0x14 du mode de vue 0 : « XOR AL,AL ; RET 4 »
+// FUN_00449b30(case) : trie les personnages d'une case ; empreinte avec son comparateur
+// FUN_00449b10, qui la précède, et ses deux tables de sauts.
+constexpr uint32_t kWalkerSort = 0x00449B30;
+constexpr uint32_t kWalkerSortCode = 0x00449B10, kWalkerSortEnd = 0x00449E44;
+constexpr uint64_t kWalkerSortHash = 0xB9E1215F78D8A20Full;
 
 // --- Code : cadencement (user32.cpp) ----------------------------------------------------------
 
@@ -226,6 +231,9 @@ constexpr uint32_t kFigureImage = 0x00DBD78C;       // image du corps (32 bits)
 constexpr uint32_t kFigureType = 0x00DBD792;        // type (8 bits)
 constexpr uint32_t kFigureState = 0x00DBD793;       // état (8 bits, FUN_004d7210)
 constexpr uint32_t kFigureMoving = 0x00DBD794;      // non nul : position fine (+0x42, +0x44)
+// FUN_00449b30 : seul un personnage dont l'octet +6 vaut 1 et l'octet +0x30 n'est pas 4 est
+// rangé selon sa position ; les autres passent en tête (sens des deux octets : hypothèse).
+constexpr uint32_t kFigurePlaced = 0x00DBD796, kFigureAction = 0x00DBD7C0;
 constexpr uint32_t kFigureDirection = 0x00DBD799;   // direction, puis direction de repli (+0x0A)
 constexpr uint32_t kFigureAltitude = 0x00DBD7A4;    // retranchée à y en position fine
 constexpr uint32_t kFigureLayer = 0x00DBD7A5;       // plan : 0 bit 1 des plans dessinés, sinon bit 2

@@ -718,7 +718,7 @@ adresse	taille	nom	module	statut	preuve	type
 00448880	54	FUN_00448880	bâtiments	inconnu	hypothèse : tour de simulation, appelée par 2 fonctions sur 2 en bâtiments	fonction
 004488c0	196	random_next	terrain	documenté	deux registres de 31 bits, 31 pas par tirage ; docs/engine/terrain.md §5	fonction
 00448990	4424	FUN_00448990	inconnu	inconnu	aucun indice	fonction
-00449b30	730	tile_walkers_sort	rendu	nommé	trie la liste des personnages d'une case (écrit l'état) ; rendering.md §11.2	fonction
+00449b30	730	tile_walkers_sort	rendu	natif	trie la liste des personnages d'une case (écrit l'état) ; remplacée par native_walkers.cpp ; rendering.md §11.3	fonction
 00449e50	224	map_view_set_size	interface	documenté	reçoit colonnes et rangées de la vue de la carte	fonction
 00449f30	76	FUN_00449f30	inconnu	inconnu	aucun indice	fonction
 00449f80	97	FUN_00449f80	bâtiments	inconnu	hypothèse : tour de simulation, atteinte seulement depuis 004856a0 (bâtiments)	fonction

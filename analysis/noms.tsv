@@ -53,7 +53,7 @@ adresse	nom	module	statut	preuve	type
 00446a70	terrain_events_update	terrain	documenté	tour : les 8 objets du rang 115 (0x0078C578, 28 octets) ; ceux en cours recalculent le sol (0x00521520, 0x0049BBB0) ; rôle hypothèse ; simulation.md §2	fonction
 004483f0	buildings_timer_countdown	bâtiments	documenté	étape 6 : pour les maisons (+0x05 non nul), décompte +0x100 tant que +0x85 est levé, puis baisse +0x85 ; nombre en cours dans 0x00FEB524 ; simulation.md §3	fonction
 004488c0	random_next	terrain	documenté	deux registres de 31 bits, 31 pas par tirage ; docs/engine/terrain.md §5	fonction
-00449b30	tile_walkers_sort	rendu	nommé	trie la liste des personnages d'une case (écrit l'état) ; rendering.md §11.2	fonction
+00449b30	tile_walkers_sort	rendu	natif	trie la liste des personnages d'une case (écrit l'état) ; remplacée par native_walkers.cpp ; rendering.md §11.3	fonction
 00449e50	map_view_set_size	interface	documenté	reçoit colonnes et rangées de la vue de la carte	fonction
 0044f320	building_extra_draw	rendu	documenté	dessin d'appoint d'un bâtiment selon son type (21 types) ; rendering.md §11.2	fonction
 0044fef0	walker_draw	rendu	documenté	natif partiel : chemin rapide dans native_walkers.cpp ; un personnage (plan, position, sprites, cases à redessiner) ; rendering.md §11.3	fonction

@@ -316,6 +316,7 @@ exit), and a function can get a native fast path that falls back to the original
 | `0x00457900` | the ground of one city tile, for its common cases: flat or sloped land in the normal view, animated water included |
 | `0x0044FEF0` | one walker: its place in the tile, its one to three sprites in the right order, and the higher neighbouring tiles marked to be drawn again over it (`src/win32/native_walkers.cpp`); the C++ objects of sanctuaries and the trader's text fall back to the original |
 | `0x0041D3D0` | the water life of a tile, when there is none to draw (always outside a Poseidon game) |
+| `0x00449B30` | sorts the walkers of a tile from the back to the front before they are drawn |
 | `0x00458170` | the city drawing loop: its first pass over the visible tiles (the ground), and its second pass (what stands on each tile) for 81 % of the cells of a large city, through host jumps that hand back to the original, mid-cell if needed, for any other case |
 
 All nine scenarios (43,159 frames, 13,073 simulation ticks) give the same frames and the same game state, tick by tick, with and without them, and each of them passes the call-by-call check of [equivalence.md](equivalence.md).

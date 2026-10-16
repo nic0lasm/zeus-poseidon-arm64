@@ -147,6 +147,7 @@ the 13,073 ticks, in all nine scenarios.
 | `0x00416010` | rectangle copy, magenta transparent | 1 in 1 | 45,591 | 45,591 | 0 | 9 | identical |
 | `0x004161B0` | run-length image, optionally a shadow | 1 in 100 | 1,997,500 | 19,979 | 0 | 9 | identical |
 | `0x0041D3D0` | water life of a tile, when there is none to draw | 1 in 100 | 598,355 | 5,987 | 0 | 9 | identical |
+| `0x00449B30` | sort of the walkers of a tile | 1 in 25 | 590,271 | 23,616 | 0 | 8 | identical |
 | `0x0044FEF0` | one walker | 1 in 5 | 91,648 | 18,333 | 0 | 8 | identical |
 | `0x00457900` | ground of one city tile | 1 in 100 | 6,043,020 | 60,435 | 0 | 9 | identical |
 | `0x00458170` | the whole city drawing loop, with every native piece it reaches (ground loop jump, ground tile, sprite dispatcher, diamond tile) | 1 in 1 | 20,391 | 20,391 | 0 | 9 | identical |
@@ -160,7 +161,8 @@ natively, whose original code calls the host. The first runs found three kinds o
 all outside the result and now excluded with their evidence: the argument slots reused by
 `0x00413E30`, `0x004161B0` and `0x00457900`, and the `EAX` of `0x00457900`, which its callers
 never read. `0x0044FEF0` also uses its five argument slots as variables and returns nothing; it is
-not called in `poseidon`. The rows of `0x00413DC0`, `0x00416010`, `0x0050B410`, `0x005CC640`, `0x00458170`
+not called in `poseidon`. `0x00449B30` returns nothing either and is not called in `poseidon`; most of its calls
+find an empty list (`working-city`, original alone: 30,396 calls with a walker, 1,680 that sort). The rows of `0x00413DC0`, `0x00416010`, `0x0050B410`, `0x005CC640`, `0x00458170`
 and the key lookup loop come from an earlier run of the same bench, which also compared argument
 slots and covered 137 zones.
 

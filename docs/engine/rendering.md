@@ -585,6 +585,29 @@ record of walker 0 (`0x00DBD788` + n × `0x184`); all **verified** by the listin
    lose the bit, for the nine-neighbour types. The third pass draws these tiles again over the
    walker (*hypothesis* on the purpose).
 
+**The sort of a tile's walkers, `0x00449B30(tile)`** (cdecl), called before the walkers of a
+tile are drawn (11.2 step 7, three call sites: `0x00459DCD`, `0x00459EE0`, `0x0045A5A9`).
+**verified** by the listing and by `zeus-run --verify 0x00449B30` (section 13). It copies the
+list of the tile (first walker in `0x00D0D878`, next one in `+0` of each record) into a local
+array of (walker, rank) pairs, sorts it with the C runtime `qsort` (`0x005CC22F`) and the
+comparator `0x00449B10` (rank, then walker number, both ascending), and writes the list back in
+that order. A list of one walker is left as it is, and so is a list of more than 50 (the
+function returns as soon as it meets the 51st, without writing anything). The rank is:
+
+- −100 when byte `0x00DBD796` of the record is not 1 or byte `0x00DBD7C0` is 4 (*hypothesis*:
+  walkers not standing on the map, or in some special state), so they come first;
+- −50 for type 6 of kind `0x0D` (a boat, *hypothesis*);
+- otherwise the vertical offset of step 4 of `0x0044FEF0` without its corrections: by direction
+  and step (`0x005F06D8`), or by fine position (`0x005F0358` for orientations 0 and 4, reversed
+  in 4; `0x005F0558` for 2 and 6, reversed in 2); 0 for any other orientation.
+
+So the walkers of a tile are drawn from the back to the front. Since the comparator never
+returns 0 for two distinct walkers, the order does not depend on how `qsort` works: the native
+version (`native_walkers.cpp`, fast path) sorts with `std::sort` and gives the same list. It
+leaves to the original a list holding a number outside 1–1,999, which the nine scenarios never
+meet. In `working-city` (300 s, original alone, `--count`), 30,396 of its 1,411,706 calls find a
+walker and 1,680 sort two or more; with native code on, the second pass calls it only 198,260 times.
+
 ### 11.4 Third pass
 
 For anchor tiles with flag `0x08` and a building, in modes other than `0x10`, the view object
@@ -628,8 +651,8 @@ steps before it, and the most frequent come first within a step. Counts: origina
 | 9 | `0x005ADF00`, `0x005AE1B0`, `0x0045A690`, `0x0045A790` | building tops | 433,862 / 0 / 45,747 / 0 | 937 / 0 / 99 / 0 | `0x005ADF00` fast path (all but the overlay) |
 | 10 | `0x0043FF10`, `0x00440170`, `0x004406B0`, `0x00440FE0`, `0x00441E50` | bases of 2–6 tiles | 23,888 / 2,410 / 3,627 / 1,389 / 0 | 52 / 5 / 8 / 3 / 0 | **native** (in the dispatcher; overlay: original) |
 | 11 | `0x00457900` | ground of a tile, remaining cases | 593,891 | 1,283 | fast path (flat, sloped, flags `0x4020`), 5,941 still emulated (42,500 before the bases were native) |
-| 12 | `0x00449B30` | sort the walkers of a tile | 1,411,706 | 3,049 | original |
-| 13 | `0x0045A5A0`, `0x0041D3D0`, `0x0041D150` | walkers and water life of a tile | 606,993 / 620,704 / 0 | 1,311 / 1,341 / 0 | `0x0041D3D0` fast path (when it draws nothing: every call outside a Poseidon game); `0x0045A5A0` waits for the sort (12) |
+| 12 | `0x00449B30` | sort the walkers of a tile | 1,411,706 | 3,049 | **native** (11.3) |
+| 13 | `0x0045A5A0`, `0x0041D3D0`, `0x0041D150` | walkers and water life of a tile | 606,993 / 620,704 / 0 | 1,311 / 1,341 / 0 | `0x0041D3D0` fast path (when it draws nothing: every call outside a Poseidon game); `0x0045A5A0` original, now possible since the sort (12) is native |
 | 14 | `0x0044FEF0` | one walker | 27,178 | 59 | fast path (11.3): all but the C++ objects of sanctuaries, the trader's text and tinted walkers whose image the dispatcher refuses; in `working-city` no drawn walker is left to the original (`--count 0x0044FF29`: 0) |
 | 15 | `0x0044F320`, `0x0045D140`, `0x0053E5F0`, `0x0045DC10`, building-type functions of 11.2 step 5 | building extras and animations | 433,862 / 4,488 / — / 553,374 / — | 937 / 10 / — / 1,195 / — | original |
 | 16 | `0x00458170` | second and third passes | 463 | 1 | first pass native, second pass native for 81 % of the cells (11.2) |
@@ -643,15 +666,13 @@ Already native: `0x00413DC0` (5,319,977 calls), `0x004161B0` (2,384,169), `0x004
 (95,842), `0x00416010` (467), `0x00413E30` (4,317), `0x0050B410` (1,459), `0x00435070` (163,764),
 `0x004377B0` and `0x00438A90` (8,682 and 8,691), the clip functions (8,562,614 each) inside the dispatcher and the
 building tops, `0x005ADF00` except with an overlay, the first pass of `0x00458170`, `0x0044FEF0` for its
-common walkers and `0x0041D3D0` when it draws nothing.
+common walkers, `0x0041D3D0` when it draws nothing and the walker sort `0x00449B30`.
 
 Where the list stands: steps 1 to 4 are native; 5 to 7 are never called in the nine scenarios,
 so no call-by-call proof is possible yet and they wait for a scenario that draws glyph masks,
 overlays (a building marked red) and the rare cases; the second pass (16) is native for its
-common cells. Next, in this order: the bases of 2 to 6 tiles (10, rewritten and identical on
-the large city, not yet published), the walker sort `0x00449B30` (12: its comparator never
-returns 0 for two distinct walkers, so any correct sort gives the original order), then the
-walker loops that call it (`0x0045A5A0` and the two loops inlined in the second pass, which
+common cells; the bases of 2 to 6 tiles (10) and the walker sort `0x00449B30` (12) are native.
+Next, in this order: the walker loops that call the sort (`0x0045A5A0` and the two loops inlined in the second pass, which
 could then run natively with `0x0044FEF0`) and the extras of sanctuaries and monuments (15,
 `0x0053E5F0`, the largest remaining fallback of the second pass).
 

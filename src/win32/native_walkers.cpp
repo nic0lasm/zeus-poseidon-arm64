@@ -1,5 +1,6 @@
-// Personnages de la ville réécrits pour l'hôte : FUN_0044fef0, qui dessine un personnage, et
-// FUN_0041d3d0, l'animal ou le bateau sur l'eau d'une case.
+// Personnages de la ville réécrits pour l'hôte : FUN_0044fef0, qui dessine un personnage,
+// FUN_0041d3d0, l'animal ou le bateau sur l'eau d'une case, et FUN_00449b30, qui trie les
+// personnages d'une case avant leur dessin.
 //
 // Le second parcours de la boucle de dessin (native_draw.cpp) rend la main à l'original pour toute
 // case où se tient un personnage : l'original trie les personnages de la case (FUN_00449b30) puis
@@ -7,7 +8,7 @@
 // appelée 27 178 fois, dont 13 711 pour un personnage à dessiner (--count 0x0044FF29) ; les autres
 // ne sont pas du plan dessiné (octet +0x15 de la fiche contre le dernier argument).
 //
-// Les deux fonctions ont un chemin rapide (Cpu::add_fast_path). Celui de FUN_0044fef0 décide dès
+// Les trois fonctions ont un chemin rapide (Cpu::add_fast_path). Celui de FUN_0044fef0 décide dès
 // l'entrée, sans rien écrire, si l'appel est un cas traité : tous les sprites à dessiner sont des
 // cas du répartiteur natif (sprite_handled), aucune fonction du jeu non réécrite n'est appelée
 // (objets C++ des sanctuaires, texte des marchands) ; sinon l'original fait
@@ -17,6 +18,7 @@
 // Adresses : win32/game_gog.h. Le code n'est modifié que si ses octets sont ceux attendus
 // (empreinte FNV-1a, comparée avant toute modification).
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -48,6 +50,10 @@ int32_t s16(Cpu& cpu, uint32_t address) {
 int32_t s8(Cpu& cpu, uint32_t address) { return static_cast<int8_t>(*cpu.host(address)); }
 uint8_t u8(Cpu& cpu, uint32_t address) { return *cpu.host(address); }
 void put32(Cpu& cpu, uint32_t address, uint32_t value) { std::memcpy(cpu.host(address), &value, 4); }
+void put16(Cpu& cpu, uint32_t address, int32_t value) {
+    const int16_t word = static_cast<int16_t>(value);
+    std::memcpy(cpu.host(address), &word, 2);
+}
 
 uint32_t at(uint32_t base, int32_t index, uint32_t size) { return base + static_cast<uint32_t>(index) * size; }
 
@@ -413,6 +419,61 @@ std::optional<uint32_t> walker_call(Cpu& cpu) {
     return cpu.reg(Cpu::Reg::EAX);
 }
 
+// Rang d'un personnage dans le tri de FUN_00449b30 (0x00449B4E à 0x00449C43) : -100 pour un
+// personnage hors du tri par position, -50 pour un bateau de sorte 0x0D, sinon le décalage
+// vertical de FUN_0044fef0 dans la case (tables de pas ou de position fine selon l'orientation,
+// 0 pour une orientation impaire ou hors de 0 à 6).
+int32_t sort_rank(Cpu& cpu, int32_t figure) {
+    if (u8(cpu, field(kFigurePlaced, figure)) != 1 || u8(cpu, field(kFigureAction, figure)) == 4) return -100;
+    if (u8(cpu, field(kFigureType, figure)) == 0x06 && u8(cpu, field(kFigureKind, figure)) == 0x0D) return -50;
+    const int32_t orientation = i32(cpu, kViewOrientation);
+    if (u8(cpu, field(kFigureMoving, figure)) == 0) {
+        int32_t direction = s8(cpu, field(kFigureDirection, figure));
+        if (direction >= 8) {
+            direction = s8(cpu, field(kFigureDirection + 1, figure));
+            if (direction >= 8) direction = 0;
+        }
+        direction -= orientation;
+        if (direction < 0) direction += 8;
+        return s8(cpu, at(kStepY, direction * 16 + s8(cpu, field(kFigureStep, figure)), 1));
+    }
+    const int32_t index = s16(cpu, field(kFigureFineX, figure)) % 15 + s16(cpu, field(kFigureFineY, figure)) % 15 * 16;
+    switch (orientation) {
+        case 0: return s8(cpu, at(kFineY, index, 1));
+        case 2: return -s8(cpu, at(kFineYTurned, index, 1));
+        case 4: return -s8(cpu, at(kFineY, index, 1));
+        case 6: return s8(cpu, at(kFineYTurned, index, 1));
+        default: return 0;
+    }
+}
+
+// FUN_00449b30(case) : range la liste des personnages d'une case (premier dans kTileFigure, suivant
+// en +0 de la fiche) par rang croissant, puis par numéro croissant (comparateur FUN_00449b10 passé
+// à qsort). Deux personnages distincts ne sont jamais égaux pour ce comparateur : tout tri
+// correct donne l'ordre de l'original. Une liste d'un seul personnage, ou de plus de 50, n'est
+// pas touchée. Un numéro hors de 1 à 1 999 (fiche hors de la table) laisse faire l'original.
+std::optional<uint32_t> walker_sort_call(Cpu& cpu) {
+    struct Entry {
+        int32_t figure, rank;
+    } list[50];
+    const uint32_t head = at(kTileFigure, static_cast<int32_t>(cpu.arg(0)), 2);
+    int count = 0;
+    for (int32_t figure = s16(cpu, head); figure != 0; figure = s16(cpu, field(kFigures, figure))) {
+        if (count == 50) return cpu.reg(Cpu::Reg::EAX);  // 0x00449C64
+        if (figure < 1 || figure >= 2000) return std::nullopt;
+        list[count] = {figure, sort_rank(cpu, figure)};
+        ++count;
+    }
+    if (count < 2) return cpu.reg(Cpu::Reg::EAX);
+    std::sort(list, list + count, [](const Entry& a, const Entry& b) {
+        return a.rank != b.rank ? a.rank < b.rank : a.figure < b.figure;
+    });
+    put16(cpu, head, list[0].figure);
+    for (int i = 0; i + 1 < count; ++i) put16(cpu, field(kFigures, list[i].figure), list[i + 1].figure);
+    put16(cpu, field(kFigures, list[count - 1].figure), 0);
+    return cpu.reg(Cpu::Reg::EAX);
+}
+
 // FUN_0041d3d0 (thiscall, 4 arguments) : seuls les appels sans effet sont traités.
 std::optional<uint32_t> water_life_call(Cpu& cpu) {
     if (water_life(cpu, static_cast<int32_t>(cpu.arg(0)))) return std::nullopt;
@@ -443,6 +504,10 @@ int install_native_walkers(Process& p) {
     if (fingerprint(cpu, kWalker, kWalkerEnd) == kWalkerHash && fingerprint(cpu, kOnWater, kOnWaterEnd) == kOnWaterHash &&
         matches(cpu, kViewFalse, {0x32, 0xC0, 0xC2, 0x04, 0x00})) {
         cpu.add_fast_path(kWalker, 0, 7, walker_call);  // « MOV ECX,[ESP+4] ; SUB ESP,0x64 » déplacés
+        ++installed;
+    }
+    if (fingerprint(cpu, kWalkerSortCode, kWalkerSortEnd) == kWalkerSortHash) {
+        cpu.add_fast_path(kWalkerSort, 0, 7, walker_sort_call);  // « MOV EAX,[ESP+4] ; SUB ESP,0x194 » déplacés
         ++installed;
     }
     return installed;
