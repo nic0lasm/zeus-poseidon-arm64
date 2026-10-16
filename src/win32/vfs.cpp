@@ -182,12 +182,18 @@ std::optional<fs::path> Vfs::writable(const std::string& windows_path, bool keep
     const auto parts = relative_parts(windows_path);
     if (!parts || parts->empty()) return std::nullopt;
     if (auto written = lookup(write_dir_, *parts)) return written;
-    // Reprend la casse des dossiers déjà présents dans l'installation.
+    // Reprend la casse des dossiers déjà présents dans le dossier d'écriture, sinon dans
+    // l'installation : le jeu crée « Save » puis écrit « save\N.dat », et sur un système de
+    // fichiers sensible à la casse il ne faut pas en faire deux dossiers.
     fs::path target = write_dir_;
     std::vector<std::string> walked;
     const std::vector<std::string> real = split(absolute(windows_path).substr(guest_dir_.size()));
     for (size_t i = 0; i < parts->size(); ++i) {
         walked.push_back((*parts)[i]);
+        if (const auto written = lookup(write_dir_, walked)) {
+            target = *written;
+            continue;
+        }
         const auto existing = lookup_base(walked);
         target /= existing ? existing->filename().string() : to_utf8(real[i]);
     }

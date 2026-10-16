@@ -234,6 +234,17 @@ void test_vfs(const fs::path& root) {
     CHECK(!vfs.find("C:\\Zeus\\Data\\Zeus_Text.eng"));
     CHECK(fs::exists(game / "Data" / "Zeus_Text.ENG"));
     CHECK(vfs.make_directory("C:\\Zeus\\Save\\Nouveau") && vfs.find("c:\\zeus\\save\\NOUVEAU").has_value());
+
+    // Dossier créé par le programme, absent de l'installation, puis écrit avec une autre casse :
+    // un seul dossier sur l'hôte, même sensible à la casse (le jeu crée « Save » et écrit
+    // « save\N.dat » ; deux dossiers donnaient « No Leader » sous Linux).
+    CHECK(vfs.make_directory("C:\\Zeus\\Audio"));
+    const auto voice = vfs.writable("C:\\Zeus\\audio\\VOICE\\a.wav", false);
+    CHECK(voice && voice->parent_path().parent_path() == saves / "Audio");
+    const auto profile = vfs.writable("c:\\zeus\\SAVE\\N.dat", false);
+    CHECK(profile && profile->parent_path() == saves / "Save");
+    if (profile) write_file(*profile, "profil");
+    CHECK(vfs.list("C:\\Zeus\\Save\\*.dat").size() == 1);
 }
 
 // --- rognage du répartiteur de sprites ----------------------------------------------------------
