@@ -93,7 +93,7 @@ an engine written by hand and documented** — the way Julius did for *Caesar II
 original stays the reference and the judge: each rewritten part must prove, turn by turn, that it
 gives exactly the same game state. Nothing is translated mechanically. No dates are promised.
 
-**Engine progress:** 195 of the 4,872 functions of the GOG executable are understood (named, documented or native) and 8 are replaced whole by hand-written native code; native code does 48.7 % of the game's computation time on the `working-city` scenario, plus 14.7 % in functions that are partly native (emulated x86 code only, host work excluded). [Code map and counters](docs/engine/README.md).
+**Engine progress:** 322 of the 4,872 functions of the GOG executable are understood (named, documented or native) and 24 are replaced whole by hand-written native code; native code does 53.2 % of the game's computation time on the `working-city` scenario, plus 17.1 % in functions that are partly native (emulated x86 code only, host work excluded). [Code map and counters](docs/engine/README.md).
 
 - **1.x Playable** — keep it light and in every edition: first launch ([#55](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/55)), language packs
   ([#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24), **testers wanted**), processor use ([#22](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/22)). [Milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/2)

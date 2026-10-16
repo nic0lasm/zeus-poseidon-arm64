@@ -21,20 +21,21 @@ the game.
 
 ## Counters
 
-- **Native functions: 8 of 4,872** (0.2 %; figures of 2026-10-15, after #86). A function is *native* when the host replaces the
-  whole of it. Four more are replaced only in their common cases (a fast path or a rewritten
+- **Native functions: 24 of 4,872** (0.5 %; figures of 2026-10-16, version 1.2, after #111). A function is *native* when the host replaces the
+  whole of it. Seven more are replaced only in their common cases (a fast path or a rewritten
   loop, the original code still running for the rest): they stay *named* and say so in their
   evidence column.
-- **Functions understood: 294 of 4,872** (6.0 %): named, documented or native (figures of
-  2026-10-16, after the map of the simulation).
-- **Computation done natively: 48.7 %, plus 14.7 % partly native.** Scenario `working-city` (the last tutorial, a large city)
+- **Functions understood: 322 of 4,872** (6.6 %): named, documented or native (figures of
+  2026-10-16, version 1.2).
+- **Computation done natively: 53.2 %, plus 17.1 % partly native.** Scenario `working-city` (the last tutorial, a large city)
   for its full 300 s, deterministic clock, run with `--no-native` so that the whole game is
   emulated and profiled. The profile times every block of x86 code the game executes (corrected
-  for the cost of the measure, as in `tools/profile_report.py`). **48.7 %** of that time is spent
-  in the 8 native functions, plus **14.7 %** in functions that are only partly native; the rest is
+  for the cost of the measure, as in `tools/profile_report.py`). **53.2 %** of that time is spent
+  in the 24 native functions, plus **17.1 %** in functions that are only partly native; the rest is
   original code that is still emulated. The share of executed code bytes gives the same answer
-  (56.1 % + 13.0 %). It is a share of the *game's own code*: the time the host spends in Win32
-  calls, blits and sound (blocks outside the game's `.text`, 8.7 % of the time measured) is
+  (57.8 % + 15.0 %). It is a share of the *game's own code*: the time the host spends in Win32
+  calls, blits and sound (blocks outside the game's `.text`, 32.0 % of the time measured on a
+  Linux cloud machine for version 1.2, 8.7 % in the earlier measure) is
   excluded. Caveats: the profiler itself slows the run down and its cost is estimated, a byte
   count is not an instruction count (a repeated string instruction counts once), and one
   scenario is not the whole game.
@@ -61,21 +62,21 @@ python3 tools/coverage.py --profile build/essais/profil.tsv
 
 | Module | Fonctions | Inconnu | Nommé | Documenté | Natif |
 |---|---:|---:|---:|---:|---:|
-| rendu | 147 | 102 | 24 | 10 | 11 |
-| interface | 231 | 157 | 1 | 73 | 0 |
-| texte | 32 | 10 | 1 | 21 | 0 |
-| terrain | 92 | 42 | 15 | 35 | 0 |
-| marcheurs | 242 | 226 | 12 | 4 | 0 |
-| bâtiments | 178 | 139 | 15 | 24 | 0 |
+| rendu | 155 | 90 | 26 | 21 | 18 |
+| interface | 236 | 157 | 1 | 78 | 0 |
+| texte | 32 | 10 | 1 | 20 | 1 |
+| terrain | 92 | 42 | 15 | 31 | 4 |
+| marcheurs | 243 | 226 | 13 | 4 | 0 |
+| bâtiments | 179 | 139 | 16 | 24 | 0 |
 | économie | 33 | 17 | 5 | 11 | 0 |
 | dieux et héros | 27 | 27 | 0 | 0 | 0 |
 | armée | 18 | 14 | 2 | 2 | 0 |
-| scénario | 257 | 237 | 5 | 15 | 0 |
+| scénario | 258 | 237 | 6 | 15 | 0 |
 | sauvegarde | 22 | 22 | 0 | 0 | 0 |
 | son | 122 | 117 | 0 | 5 | 0 |
 | bibliothèque C | 278 | 276 | 1 | 0 | 1 |
-| inconnu | 3193 | 3192 | 1 | 0 | 0 |
-| **Total** | **4872** | **4578** | **82** | **200** | **12** |
+| inconnu | 3177 | 3176 | 1 | 0 | 0 |
+| **Total** | **4872** | **4550** | **87** | **211** | **24** |
 
 The *module* column says where a function sits in the game, not who wrote it. A function is
 placed from the strongest evidence available; the evidence is in the `preuve` column of
