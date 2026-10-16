@@ -150,6 +150,27 @@ constexpr uint32_t kMapOrigin = 0x00DA2F80;        // carte : numéro de la case
 constexpr uint32_t kTileRoadNetwork = 0x00C4F288;  // par case : réseau de routes (8 bits)
 constexpr uint32_t kRoadNetworks = 0x00FEB0FC;     // grands réseaux de routes : 10 entrées de 8 octets
 
+// --- Code : personnages de la simulation (native_figures.cpp) ---------------------------------
+
+// walkers_update, dernière partie du tour (on y entre par un saut), et ses deux minuteries.
+constexpr uint32_t kWalkersUpdate = 0x004CC8C0, kWalkersUpdateFunctionEnd = 0x004CCA47;  // FUN_004cc8c0
+constexpr uint32_t kWalkersUpdateLoop = 0x004CC8D5;       // haut de la boucle, EDX = numéro de fiche
+constexpr uint32_t kWalkersUpdateOther = 0x004CC96C;      // « CALL 0x004CC160 » au lieu du gestionnaire
+constexpr uint32_t kWalkersUpdateHandler = 0x004CC973;    // appel du gestionnaire du type (EAX = fiche × 0x184)
+constexpr uint32_t kWalkersUpdateAfterTimer = 0x004CC98C; // retour de FUN_004cc760 : fiche à retirer ?
+constexpr uint32_t kWalkersUpdateEnd = 0x004CCA24;        // après la boucle
+constexpr uint32_t kTimerStartFunction = 0x004CC730, kTimerStartFunctionEnd = 0x004CC759;  // FUN_004cc730
+constexpr uint32_t kTimerStopFunction = 0x004CC760, kTimerStopFunctionEnd = 0x004CC81F;    // FUN_004cc760
+// Variables de walkers_update et des minuteries ; champs d'une fiche à leur adresse pour la fiche 0.
+constexpr uint32_t kFigureCurrent = 0x00EF57EC;     // fiche en cours (32 bits)
+constexpr uint32_t kFiguresUpdated = 0x00EF57E8;    // personnages passés dans ce tour (32 bits)
+constexpr uint32_t kFigureLinkedTo = 0x00DBD80C;    // fiche liée (16 bits), effacée si le lien est rompu
+constexpr uint32_t kFigureLinkedBack = 0x00DBD80A;  // fiche liée en retour (16 bits)
+constexpr uint32_t kFigureUpdateFlags = 0x00DBD894; // 0x80000 : FUN_004cc160 au lieu du gestionnaire
+constexpr uint32_t kTimerType = 0x00DB78A0, kTimerStart = 0x00DB78A4, kTimerStop = 0x00DB78A8;
+constexpr uint32_t kTimerPrecise = 0x00EF57FC;      // non nul : QueryPerformanceCounter en plus
+constexpr uint32_t kTimerTotals = 0x00DB6EE0;       // par type, 32 octets : passages, durées, la plus longue
+
 // --- Code : recherche de routes de la simulation (native_routes.cpp) --------------------------
 
 // Fonctions réécrites ([début, fin[ de chacune, pour l'empreinte du code). Les parcours en

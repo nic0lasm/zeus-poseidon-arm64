@@ -237,7 +237,27 @@ By measured cost, and by what can be checked one call at a time (`--verify`,
    the tick's time, already documented; its first steps are where the state is written, the first
    test of the tick-by-tick comparison.
 4. **The walkers**: 41.5 % of the time but 191 functions, most not named; the handler table of
-   `walkers_update` splits them by figure type, which is the natural unit of work.
+   `walkers_update` splits them by figure type, which is the natural unit of work. Measured again
+   with composites and routes native (`working-city`, real time, deterministic clock):
+   `walkers_update` takes 1.77 ms of a 2.38 ms tick, three quarters of it, and its own loop was
+   the costliest function of the tick, 11 % of the code bytes executed, skipping the free records
+   among the 2,000 (308 are in use per tick), plus two calls of the host (`GetTickCount`) per walker
+   in its timers `0x004CC730` and `0x004CC760`. In order:
+   1. **The loop. Done** (`src/win32/native_figures.cpp`): two host jumps do everything between
+      two handlers (free records, the link `+0x7C`, the count `0x00EF57E8`, both timers and their
+      table `0x00DB6EE0`); the removal of a record (`+6` = 2) and `0x004CC160` stay with the
+      original. The tick of `working-city` falls from 2.49–2.73 ms to 1.85–2.12 ms (three runs of
+      each, one after the other, on one cloud machine).
+   2. **Soldiers**: types `0x0B`, `0x0C`, `0x0D` (hoplite, horseman, standard bearer in the name
+      table `0x0063969C` + 36: hypothesis), handlers `0x004B31F0`, `0x004B26B0`, `0x004B1840`, with
+      their shared `0x004B1630` (place in the formation, rank 31), `0x004B17F0` and
+      `building_road_entry` `0x0053FB60`: about 0.57 ms per tick, a quarter of the tick
+      (`--time-span` from each handler to its return, `0x004CC987`).
+   3. **Growers** (type 4, `0x004AE160`): 0.19 ms per tick.
+   4. `figure_type_value` (`0x004E1B20`, 300 calls per tick from most handlers): only inside a
+      native caller, since a hook costs about as much as its emulated code.
+   5. The other handlers, each under 3 % of the tick: warehousemen (`0x004AF930`), peddlers
+      (`0x004B5F10`), noblemen (`0x004B8D90`), goats (`0x004BC380`)…
 5. **The cycle**: 17 % of the tick, step by step; 31 (`buildings_spawn_walkers`, 16 KB) is the
    largest.
 

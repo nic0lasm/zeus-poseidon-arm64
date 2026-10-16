@@ -214,3 +214,13 @@ does the same, so the slot is compared.
 
 Every native replacement of `src/win32/native.cpp`, `native_draw.cpp`, `native_walkers.cpp`, `native_buildings.cpp` and `native_routes.cpp` is covered: the ground
 loop jump (`0x0045829D`) and the diamond tile (`0x00435070`) run inside `0x00458170`.
+
+**Walkers loop** (`src/win32/native_figures.cpp`, 2026-10-16). Not checkable call by call: every
+pass of `walkers_update` calls `GetTickCount`, and the bench leaves a call that reaches the host
+to the original without comparing it. It is covered by the state log of the nine scenarios
+(identical, new references `b9e9fa5a423c8d23`), which includes the 2,000 walker records, and by
+the whole `.data` section at the end of `working-city` (`zeus-run --dump-data`, native against
+`--no-native`): identical, with the timer table `0x00DB6EE0`, the last timer values
+`0x00DB78A0` … `0x00DB78A8`, the count `0x00EF57E8` and the current record `0x00EF57EC`, which
+the state log does not cover. Under the deterministic clock each `GetTickCount` advances the
+clock, so equal timer values also show that the clock is read as many times, in the same order.

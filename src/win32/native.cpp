@@ -843,6 +843,7 @@ void install_native_functions(Process& p) {
     installed += install_native_walkers(p);
     installed += install_native_buildings(p);
     installed += install_native_routes(p);
+    installed += install_native_figures(p);
     if (p.trace) std::fprintf(stderr, "[hôte] %d fonctions du jeu remplacées par des fonctions natives\n", installed);
 }
 
