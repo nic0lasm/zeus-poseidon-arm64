@@ -77,13 +77,35 @@ Steps 2, 4 and 5 can run side by side: each touches its own files.
 
 | # | Step | Why now | Done when |
 |---|---|---|---|
-| 1 | Finish the rendering in progress: bases of 2 to 6 tiles (#91), walker sort, walkers ([rendering §13](engine/rendering.md#13-order-of-the-rewrite), steps 10, 12 to 14) | already written, verification under way | merged; frames, state and call-by-call checks identical |
-| 2 | A fast, repeatable bench on Linux: Unicorn 2.1 or later, references of the pure original recorded once per change of the Windows layer and reused | every later step runs the bench several times | the nine scenarios recorded and replayed on a fresh Linux machine with one command |
+| 1 | Finish the rendering in progress: bases of 2 to 6 tiles (#91), walker sort, walkers ([rendering §13](engine/rendering.md#13-order-of-the-rewrite), steps 10, 12 to 14) | already written, verification under way | merged; frames, state and call-by-call checks identical. **Mostly done (16 October):** bases (#91), sprite sort and dispatcher groundwork (#95, #96) merged; building extras (#99) and walker loops (#101) being merged |
+| 2 | A fast, repeatable bench on Linux: Unicorn 2.1 or later, references of the pure original recorded once per change of the Windows layer and reused | every later step runs the bench several times | the nine scenarios recorded and replayed on a fresh Linux machine with one command. **Done (#93)** |
 | 3 | Release 1.2 | players get the native drawing (a small city from about 35 % to about 23 % of a core) | played through on a Mac, as for 1.0 |
 | 4 | A tenth scenario for the rare drawing cases (a building marked red, glyph masks, the rare blends, a 6 × 6 base), then rendering steps 5 to 7 | no proof is possible without it, and 2.0 needs them | the scenario reaches each of those functions; steps 5 to 7 native and checked call by call |
-| 5 | Map the simulation: a profile of the large city in real time with native code on, and the call tree of the simulation tick placing functions in modules | sizes 2.0 and orders the rest of Phase C by measured cost | every function the simulation tick reaches in the nine scenarios has a module; a page `docs/engine/simulation.md` gives the order of a tick and what each module costs |
-| 6 | Terrain in native code, steps 1 to 4 of [terrain §10](engine/terrain.md#10-order-of-the-rewrite) (random draw, diamond tests, neighbour counts, free building area) | documented and self-contained; the first native code of the simulation, whose results are the game state itself, so the first real test of the tick-by-tick comparison | steps 1 to 4 native; state identical at every tick of every scenario |
-| 7 | The other subsystems in the order step 5 gives; interface and texts once the sprite dispatcher is native whole | their value is fidelity more than speed ([interface §10](engine/interface.md#10-cost-in-real-time)) | — |
+| 5 | Map the simulation: a profile of the large city in real time with native code on, and the call tree of the simulation tick placing functions in modules | sizes 2.0 and orders the rest of Phase C by measured cost | every function the simulation tick reaches in the nine scenarios has a module; a page `docs/engine/simulation.md` gives the order of a tick and what each module costs. **Done (#94)**: 537 of the 601 functions specific to the tick have a module |
+| 6 | Terrain in native code, steps 1 to 4 of [terrain §10](engine/terrain.md#10-order-of-the-rewrite) (random draw, diamond tests, neighbour counts, free building area) | documented and self-contained; the first native code of the simulation, whose results are the game state itself, so the first real test of the tick-by-tick comparison | steps 1 to 4 native; state identical at every tick of every scenario. **Done (#97)** |
+| 7 | The other subsystems in the order step 5 gives; interface and texts once the sprite dispatcher is native whole | their value is fidelity more than speed ([interface §10](engine/interface.md#10-cost-in-real-time)) | — **In progress:** composite-building helpers (#98), road search (#100), walker loop of the tick (#102) merged; next batches in [simulation §8](engine/simulation.md) |
+
+### Progress since the review (16 October 2026)
+
+Merged: #91 (bases of 2 to 6 tiles), #93 (fast bench), #94 (simulation map), #95 and #96 (walker
+drawing, aquatic life, walker sort), #97 (terrain), #98 (composite-building helpers), #100 (road
+search), #102 (walker loop of the simulation). Being merged, in this order: #99 (building extras
+of the drawing), then #101 (walker loops of the drawing); then the soldiers batch of the
+simulation walkers.
+
+Measured, as the pull requests give it (`working-city`, deterministic clock, `main` and branch
+side by side on one cloud machine):
+
+- Drawing: second pass 84 % of tiles fully native (81 % before) with #91; 92 % (84 % before) with #99.
+- Bench: Unicorn 2.1.4 replays the `options` scenario in 174 s against 865 s with 2.0.1; a fresh
+  clone records 9 references and replays 9 scenarios in 14 min 26 s, then 2 min 54 s per replay.
+- Simulation tick of the large city: 4.36 ms, 81 % in the walkers (#94). Composite-building
+  helpers: 5.3–5.8 ms to 3.1–3.3 ms (about 40 % less, #98). Road search: 2.68–2.74 ms to
+  2.38–2.52 ms (about 10 %, #100). Walker loop: 2.49–2.73 ms to 1.85–2.12 ms (#102).
+- Terrain (#97): no speed gain, by design. Intercepting the two diamond tests alone made `poseidon`
+  12 % slower (35.5 s against 31.3 s) because a native call from the emulator costs about 140 ns;
+  they are native only inside `0x004A0DC0`.
+- #95 and #96 give little speed (0.2–0.3 % of the profile each); their value is to open the walker loops.
 
 How the work is checked, from now on:
 
