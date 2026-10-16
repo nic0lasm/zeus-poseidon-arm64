@@ -58,7 +58,7 @@ jobs:
           cd build/diffusion
           minos=$(find "Zeus Poseidon.app" -type f \( -perm -u+x -o -name '*.dylib' \) -exec otool -l {} \; 2>/dev/null | awk '/minos/ {print $2}' | sort -V | tail -1)
           echo "::notice::macOS $minos minimum; $(ls -l Zeus-Poseidon-$VERSION-${{ matrix.suffix }}.zip | awk '{print $5}') octets; SHA-256 $(shasum -a 256 Zeus-Poseidon-$VERSION-${{ matrix.suffix }}.zip | cut -d' ' -f1)"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: Zeus-Poseidon-${{ env.VERSION }}-${{ matrix.suffix }}
           path: build/diffusion/Zeus-Poseidon-${{ env.VERSION }}-${{ matrix.suffix }}.zip
