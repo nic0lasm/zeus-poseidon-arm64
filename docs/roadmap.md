@@ -53,11 +53,11 @@ of it is active play in the large city, 43.7 ticks a second. The process used 32
 | — of which the city map | `0x00514090` | 2.7 ms (3,457 frames) | 9.4 s | 29 % |
 | — of which the side panel | `0x00514095` | 0.36 ms | 1.2 s | 4 % |
 | input pass | `0x005137D6` | 0.38 ms | 2.7 s | 8 % |
-| presentation (almost all in the host's copies) | `0x00513825` | 0.40 ms | 2.9 s | 9 % |
+| presentation (almost all in the host's copies, [interface §10](engine/interface.md#10-cost-in-real-time)) | `0x00513825` | 0.40 ms | 2.9 s | 9 % |
 | **one save: 32 blocks compressed** | `0x005C5FB3` | 113 ms per block | **3.6 s in one go** | 11 % |
 
-The save is the `autosave_history.sav` the game writes when the tutorial starts (second run of
-the same script; the other rows vary by a few percent between runs). A profile of the same run
+The save is the `autosave_history.sav` the game wrote on its own during the run (second run of
+the same script; the other rows vary by a few percent between runs). A profile of the same script
 (`--profile`, real time) agrees: among the game's own functions, none weighs more than about 1 %
 of the run, except the city drawing loop (whose time includes its native passes) and
 `0x005C9BE0`, the match search of the save compressor: 318 million blocks, 5.7 s under the
@@ -66,29 +66,29 @@ profiler.
 ### What the review shows
 
 1. **Rewriting emulated code piece by piece no longer pays in speed.** The large lots are done:
-   the last ones that showed in real play gave 10–12 % (#109) and 7–9 % (#113) of the CPU. What is left in the tick, the drawing
-   and the interface weighs about 1 % of the run or less per piece
-   ([simulation §8](engine/simulation.md#8-order-of-the-rewrite),
+   the last ones that showed in real play gave 10–12 % (#109) and 7–9 % (#113) of the CPU.
+   What is left in the tick, the drawing and the interface weighs about 1 % of the run or less
+   per piece ([simulation §8](engine/simulation.md#8-order-of-the-rewrite),
    [rendering §13](engine/rendering.md#13-order-of-the-rewrite),
    [interface §10](engine/interface.md#10-cost-in-real-time)): below what a player notices, and
    close to the noise of a measure.
 2. **Saves freeze the game.** A save compresses its 32 blocks in emulated code, PKWARE DCL
    `implode` (`0x005C96C0`, [formats/sav.md](../formats/sav.md)): 3.6 s of a cloud core in one
-   go, while the game stands still. It happens on every save made by hand, at the autosave the game
-   writes when a tutorial starts (`autosave_history.sav`), and at each month change when the game's autosave option is on
-   (`last.sav`, call at `0x00483DE1`; the meaning of the flag `0x00F2A7CA` is a hypothesis). The project
-   already has a compressor written by hand that gives the game's streams byte for byte
-   (`tools/savefile.py`, 7,008 blocks rewritten identical; it keeps the working structure those
-   streams depend on): the
-   largest gain a player would notice, and a bounded one.
+   go, while the game stands still. It happens on every save made by hand, at the autosaves the
+   game writes on its own (`autosave_history.sav` in this run), and at each month change when
+   the game's autosave option is on (`last.sav`, call at `0x00483DE1`; the meaning of the flag
+   `0x00F2A7CA` is a hypothesis). The project already has a compressor written by hand that
+   gives the game's streams byte for byte (`tools/savefile.py`, 7,008 blocks rewritten
+   identical; it keeps the working structure those streams depend on): the largest gain a
+   player would notice, and a bounded one.
 3. **The cloud does not see the Mac's own costs.** Every figure above comes from a headless
    Linux machine. In the application, each presented frame is also handed to SDL as RGB 555,
    which SDL 2's Metal renderer does not take as is (it converts every frame in software:
    hypothesis, not measured), then scaled for the Retina screen and synchronised with it. One
    run on a Mac tells whether the presentation deserves a lot.
 4. **2.0 is out of reach at this pace, and Linux and Intel no longer wait for it.** 24 functions
-   are native and 322 understood out of 4,872; the simulation alone is 76 % of the code, and its
-   pieces now give no speed. The host itself is portable already: it builds and plays the ten
+   are native and 322 understood out of 4,872; most of the code left is the simulation's, and
+   its pieces now give no speed. The host itself is portable already: it builds and plays the ten
    scenarios on Linux (the bench runs there), its dialogs (`dialogs_sdl.cpp`) and its JPEG
    decoding (FFmpeg, #38) have portable versions, and no file of `src/` is specific to arm64.
    Linux (#40) and Intel Macs (#41) are packaging, not engine work.
@@ -109,8 +109,8 @@ workflow, so one after the other.
 ### Stopped, and why
 
 - **Simulation** (16 October): the lots left (`0x0040A4C0`, `0x0048CDB0`, `0x005B4B40`,
-  `0x005B5620`, `0x004AB210`: 3 to 9 ms each over the `working-city` run) weigh under 1.4 % of the run
-  each; walker movement in native code was tried without gain.
+  `0x005B5620`, `0x004AB210`: 3 to 9 ms each over the `working-city` run) weigh under 1.4 % of
+  the run each; walker movement in native code was tried without gain.
 - **Rendering**: what is left of [rendering §13](engine/rendering.md#13-order-of-the-rewrite)
   weighs under 0.1 % each; it would matter only for 2.0.
 - **Interface**: after #113 every piece is under 4 % of the run; the drawing of panel lines
