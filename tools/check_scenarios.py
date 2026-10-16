@@ -26,14 +26,15 @@ résultats sont affichés dans l'ordre alphabétique.
 
 Références partagées (--references) : une référence ne dépend que de ce que l'original émulé
 exécute, pas des fonctions réécrites. Elle est rangée dans DOSSIER/<clé>/, où la clé résume
-l'exécutable du jeu, le code de l'hôte hors fonctions natives (src/win32/native*, et
-src/win32/game_gog.h, qui n'en contient que les adresses), les versions d'Unicorn et de FFmpeg
-et le système ; le nom de chaque fichier porte l'empreinte du script du scénario. Une branche qui
-ne touche qu'aux fonctions natives retrouve donc les références de main, et une machine neuve
-celles d'une autre machine identique. Celles qui manquent sont enregistrées avant la comparaison
-(--no-native, puis renommées d'un coup : deux machines peuvent le faire en même temps).
-« record » les réenregistre. DOSSIER/<clé>/cle.txt détaille la clé. Une référence périmée par un
-changement de l'hôte que la clé ignore ne peut que signaler une différence, jamais en cacher une.
+l'exécutable du jeu, le code de l'hôte hors fonctions natives (src/win32/native*, leurs lignes
+de CMakeLists.txt, et src/win32/game_gog.h, qui n'en contient que les adresses), les versions
+d'Unicorn et de FFmpeg et le système ; le nom de chaque fichier porte l'empreinte du script du
+scénario. Une branche qui ne touche qu'aux fonctions natives retrouve donc les références de
+main, et une machine neuve celles d'une autre machine identique. Celles qui manquent sont
+enregistrées avant la comparaison (--no-native, puis renommées d'un coup : deux machines peuvent
+le faire en même temps). « record » les réenregistre. DOSSIER/<clé>/cle.txt détaille la clé. Une
+référence périmée par un changement de l'hôte que la clé ignore ne peut que signaler une
+différence, jamais en cacher une.
 """
 import concurrent.futures
 import glob
@@ -86,7 +87,13 @@ def host_key(exe):
         name = os.path.relpath(path, ROOT).replace(os.sep, "/")
         if name.startswith("src/win32/native") or name == "src/win32/game_gog.h":
             continue
-        host.update(name.encode() + b"\0" + bytes.fromhex(file_hash(path)))
+        if name == "CMakeLists.txt":  # un fichier natif ajouté n'y change qu'une ligne
+            with open(path, "rb") as f:
+                kept = b"".join(line for line in f if b"src/win32/native" not in line)
+            digest = hashlib.sha256(kept).digest()
+        else:
+            digest = bytes.fromhex(file_hash(path))
+        host.update(name.encode() + b"\0" + digest)
     lines.append(f"hôte {host.hexdigest()}")
     return hashlib.sha256("\n".join(lines).encode()).hexdigest()[:16], lines
 

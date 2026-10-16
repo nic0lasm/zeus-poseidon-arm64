@@ -67,8 +67,8 @@ seconds) in `build/deps/unicorn` and builds the project against it.
 `--references DIR` keeps the references in a folder shared between machines instead of
 `build/scenarios/`, and records those that are missing before comparing. They are filed under
 `DIR/<key>/`: the key sums up what a run of the pure original depends on (the game executable,
-the host code except the rewritten functions in `src/win32/native*` and their addresses in
-`src/win32/game_gog.h`, the Unicorn and FFmpeg versions, the system), described in
+the host code except the rewritten functions in `src/win32/native*`, their lines in
+`CMakeLists.txt` and their addresses in `src/win32/game_gog.h`, the Unicorn and FFmpeg versions, the system), described in
 `DIR/<key>/cle.txt`. A branch that only changes native functions finds the references of `main`;
 a change to the rest of the host records new ones once. `record --references DIR` records them
 again. The references are derived from the game: keep them out of the repository and out of

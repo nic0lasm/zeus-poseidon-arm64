@@ -121,6 +121,15 @@ constexpr uint32_t kWalkerSort = 0x00449B30;
 constexpr uint32_t kWalkerSortCode = 0x00449B10, kWalkerSortEnd = 0x00449E44;
 constexpr uint64_t kWalkerSortHash = 0xB9E1215F78D8A20Full;
 
+// --- Code : terrain (native_terrain.cpp), fonctions entières, de leur début à la fin du « ret » ---
+
+constexpr uint32_t kRandomNext = 0x004488C0, kRandomNextEnd = 0x00448984;      // FUN_004488c0 : tirage aléatoire
+constexpr uint32_t kInPlayArea = 0x00496010, kInPlayAreaEnd = 0x0049607B;      // FUN_00496010 : case dans le losange
+constexpr uint32_t kNearPlayEdge = 0x00496080, kNearPlayEdgeEnd = 0x00496118;  // FUN_00496080 : près du bord
+constexpr uint32_t kAreaHasMarker = 0x00496B50, kAreaHasMarkerEnd = 0x00496BFF;  // FUN_00496b50 : point réservé
+constexpr uint32_t kCountNeighbours = 0x0049CAE0, kCountNeighboursEnd = 0x0049CB3F;  // FUN_0049cae0 : voisines
+constexpr uint32_t kAreaBuildable = 0x004A0DC0, kAreaBuildableEnd = 0x004A0FCE;  // FUN_004a0dc0 : libre pour bâtir
+
 // --- Code : cadencement (user32.cpp) ----------------------------------------------------------
 
 constexpr uint32_t kSimulationDue = 0x005168A0;  // FUN_005168a0 : un tour de simulation est-il dû ?
@@ -352,6 +361,24 @@ constexpr uint32_t kTerrainGroups = 0x012EF940, kTerrainGroupCount = 0x012FC574;
 // Images de sol que la boucle ne dessine pas : intervalle et bits, préparés au premier passage.
 constexpr uint32_t kSkipReady = 0x00847D28, kSkipFirst = 0x0160C248, kSkipLast = 0x0160C24C,
                    kSkipBits = 0x0160C260;
+
+// Terrain (docs/engine/terrain.md §2, §5, §9 ; native_terrain.cpp).
+constexpr uint32_t kMapWidth = 0x00DA2F78, kMapHeight = 0x00DA2F7C;  // taille de la carte en cases
+constexpr uint32_t kMapOffset = 0x00DA2F80;  // case (x, y) : [kMapOffset] + 228 y + x
+// Bornes du losange jouable lues par FUN_00496010 : une colonne et une rangée qui séparent ses
+// côtés, et trois constantes de ses demi-plans (noms d'après leur place dans les tests).
+constexpr uint32_t kDiamondX = 0x00DA2FA0, kDiamondY = 0x00DA2FA4;
+constexpr uint32_t kDiamondLeft = 0x00DA2F90, kDiamondRight = 0x00DA2F98, kDiamondTop = 0x00DA2F9C;
+constexpr uint32_t kTileObject = 0x00666930;  // par case : objet (adresse, 0 aucun) ; +0x18 nul, on ne bâtit pas
+constexpr uint32_t kBuildOrigin = 0x00DA2418;   // FUN_004a0dc0 : case de départ du rectangle
+constexpr uint32_t kBuildOffsets = 0x005F1560;  // FUN_004a0dc0 : décalage de chaque case, 6 par rangée de 0x30 octets
+// FUN_00496b50 : trois listes de 4 points réservés, les x puis les y (16, 32 puis 16 bits).
+constexpr uint32_t kMarkersA = 0x00902BB4, kMarkersB = 0x00902D10, kMarkersC = 0x00902C54;
+// Générateur aléatoire (FUN_004488c0, formats/sav.md) : deux registres de 31 bits et leurs tirages.
+constexpr uint32_t kRandomA = 0x00F137E4, kRandomB = 0x00F137E0;
+constexpr uint32_t kRandom15 = 0x00F137D0, kRandom7 = 0x00F137D4, kRandom3 = 0x00F137D8;  // de kRandomA
+constexpr uint32_t kRandomB15 = 0x00F137C4, kRandomB7 = 0x00F137C8, kRandomB3 = 0x00F137CC;  // de kRandomB
+constexpr uint32_t kRandomRingIndex = 0x00F13624, kRandomRing = 0x00F13628;  // anneau des 100 derniers kRandom7
 
 // Bibliothèque C : paramètres régionaux (nul tant que setlocale n'est pas appelé, jamais par le jeu).
 constexpr uint32_t kLocale = 0x0160BFA4;

@@ -52,7 +52,7 @@ adresse	nom	module	statut	preuve	type
 00441e50	base_draw_6	rendu	natif	socle de 6 x 6 cases ; réécrit dans le répartiteur natif (native.cpp) ; rendering.md §8	fonction
 00446a70	terrain_events_update	terrain	documenté	tour : les 8 objets du rang 115 (0x0078C578, 28 octets) ; ceux en cours recalculent le sol (0x00521520, 0x0049BBB0) ; rôle hypothèse ; simulation.md §2	fonction
 004483f0	buildings_timer_countdown	bâtiments	documenté	étape 6 : pour les maisons (+0x05 non nul), décompte +0x100 tant que +0x85 est levé, puis baisse +0x85 ; nombre en cours dans 0x00FEB524 ; simulation.md §3	fonction
-004488c0	random_next	terrain	documenté	deux registres de 31 bits, 31 pas par tirage ; docs/engine/terrain.md §5	fonction
+004488c0	random_next	terrain	natif	deux registres de 31 bits, 31 pas par tirage ; docs/engine/terrain.md §5 ; remplacée par native_terrain.cpp	fonction
 00449b30	tile_walkers_sort	rendu	natif	trie la liste des personnages d'une case (écrit l'état) ; remplacée par native_walkers.cpp ; rendering.md §11.3	fonction
 00449e50	map_view_set_size	interface	documenté	reçoit colonnes et rangées de la vue de la carte	fonction
 0044f320	building_extra_draw	rendu	documenté	dessin d'appoint d'un bâtiment selon son type (21 types) ; rendering.md §11.2	fonction
@@ -122,15 +122,15 @@ adresse	nom	module	statut	preuve	type
 00493830	desirability_from_buildings	terrain	documenté	efface la grille puis répand l'attrait de chaque bâtiment ; docs/engine/terrain.md §7.2	fonction
 00493c80	desirability_from_terrain	terrain	documenté	jardins, gravats, avenues et boulevards ; docs/engine/terrain.md §7.3	fonction
 00495860	cycle_buildings_pass_32	bâtiments	documenté	étape 32, après 0x005B9EE0 : bâtiments, année, mois ; rôle inconnu ; simulation.md §3	fonction
-00496010	map_in_play_area	terrain	documenté	case dans le losange jouable (0x00DA2F90…A4) ; docs/engine/terrain.md §2	fonction
-00496080	map_near_play_edge	terrain	documenté	dans le losange, à moins de m cases du bord ; docs/engine/terrain.md §2	fonction
-00496b50	map_area_has_marker	terrain	documenté	rectangle contenant un point réservé de la carte ; docs/engine/terrain.md §9	fonction
+00496010	map_in_play_area	terrain	natif	case dans le losange jouable (0x00DA2F90…A4) ; docs/engine/terrain.md §2 ; remplacée par native_terrain.cpp	fonction
+00496080	map_near_play_edge	terrain	natif	dans le losange, à moins de m cases du bord ; docs/engine/terrain.md §2 ; remplacée par native_terrain.cpp	fonction
+00496b50	map_area_has_marker	terrain	natif	rectangle contenant un point réservé de la carte ; docs/engine/terrain.md §9 ; remplacée par native_terrain.cpp	fonction
 0049af50	walls_drag	terrain	documenté	tracé de murs en glissant ; docs/engine/terrain.md §9	fonction
-0049cae0	terrain_count_neighbours	terrain	documenté	nombre des 8 voisines portant un masque ; docs/engine/terrain.md §5	fonction
+0049cae0	terrain_count_neighbours	terrain	natif	nombre des 8 voisines portant un masque ; docs/engine/terrain.md §5 ; remplacée par native_terrain.cpp	fonction
 0049f120	regrowth_neighbours_below	terrain	documenté	voisines dont la repousse est sous un seuil ; docs/engine/terrain.md §5	fonction
 0049f950	wall_set_tile	terrain	documenté	pose ou retire le mur d'une case (0x4000) ; docs/engine/terrain.md §4	fonction
 0049ff10	road_set_tile	terrain	documenté	pose ou retire la route d'une case (0x40) ; docs/engine/terrain.md §5	fonction
-004a0dc0	map_area_buildable	terrain	documenté	rectangle libre pour bâtir, masque 0x3DFFD66F ; docs/engine/terrain.md §9	fonction
+004a0dc0	map_area_buildable	terrain	natif	rectangle libre pour bâtir, masque 0x3DFFD66F ; docs/engine/terrain.md §9 ; remplacée par native_terrain.cpp	fonction
 004a2180	terrain_blocks_match_2x2	terrain	documenté	motifs de voisinage par direction ; docs/engine/terrain.md §5	fonction
 004a2510	terrain_neighbours_match	terrain	documenté	les 8 voisines vérifient (drapeaux & masque) == valeur ; docs/engine/terrain.md §5	fonction
 004a2590	terrain_blocks_match_3x3	terrain	documenté	motifs de voisinage par direction ; docs/engine/terrain.md §5	fonction

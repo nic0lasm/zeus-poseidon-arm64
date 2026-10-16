@@ -716,7 +716,7 @@ adresse	taille	nom	module	statut	preuve	type
 00448450	57	FUN_00448450	inconnu	inconnu	aucun indice	fonction
 00448490	986	FUN_00448490	inconnu	inconnu	aucun indice	fonction
 00448880	54	FUN_00448880	bâtiments	inconnu	hypothèse : tour de simulation, appelée par 2 fonctions sur 2 en bâtiments	fonction
-004488c0	196	random_next	terrain	documenté	deux registres de 31 bits, 31 pas par tirage ; docs/engine/terrain.md §5	fonction
+004488c0	196	random_next	terrain	natif	deux registres de 31 bits, 31 pas par tirage ; docs/engine/terrain.md §5 ; remplacée par native_terrain.cpp	fonction
 00448990	4424	FUN_00448990	inconnu	inconnu	aucun indice	fonction
 00449b30	730	tile_walkers_sort	rendu	natif	trie la liste des personnages d'une case (écrit l'état) ; remplacée par native_walkers.cpp ; rendering.md §11.3	fonction
 00449e50	224	map_view_set_size	interface	documenté	reçoit colonnes et rangées de la vue de la carte	fonction
@@ -1303,15 +1303,15 @@ adresse	taille	nom	module	statut	preuve	type
 00495dd0	178	FUN_00495dd0	inconnu	inconnu	aucun indice	fonction
 00495e90	273	FUN_00495e90	inconnu	inconnu	aucun indice	fonction
 00495fb0	81	FUN_00495fb0	inconnu	inconnu	aucun indice	fonction
-00496010	107	map_in_play_area	terrain	documenté	case dans le losange jouable (0x00DA2F90…A4) ; docs/engine/terrain.md §2	fonction
-00496080	152	map_near_play_edge	terrain	documenté	dans le losange, à moins de m cases du bord ; docs/engine/terrain.md §2	fonction
+00496010	107	map_in_play_area	terrain	natif	case dans le losange jouable (0x00DA2F90…A4) ; docs/engine/terrain.md §2 ; remplacée par native_terrain.cpp	fonction
+00496080	152	map_near_play_edge	terrain	natif	dans le losange, à moins de m cases du bord ; docs/engine/terrain.md §2 ; remplacée par native_terrain.cpp	fonction
 00496120	433	FUN_00496120	inconnu	inconnu	aucun indice	fonction
 004962e0	67	FUN_004962e0	inconnu	inconnu	aucun indice	fonction
 00496330	284	FUN_00496330	inconnu	inconnu	aucun indice	fonction
 00496450	63	FUN_00496450	inconnu	inconnu	aucun indice	fonction
 00496490	25	FUN_00496490	inconnu	inconnu	aucun indice	fonction
 004964b0	1330	FUN_004964b0	inconnu	inconnu	aucun indice	fonction
-00496b50	175	map_area_has_marker	terrain	documenté	rectangle contenant un point réservé de la carte ; docs/engine/terrain.md §9	fonction
+00496b50	175	map_area_has_marker	terrain	natif	rectangle contenant un point réservé de la carte ; docs/engine/terrain.md §9 ; remplacée par native_terrain.cpp	fonction
 00496c00	97	FUN_00496c00	inconnu	inconnu	aucun indice	fonction
 00496ca0	6734	FUN_00496ca0	bâtiments	inconnu	hypothèse : appelants/appelés (poids 3 sur 3 en bâtiments)	fonction
 00498910	5330	FUN_00498910	inconnu	inconnu	aucun indice	fonction
@@ -1333,7 +1333,7 @@ adresse	taille	nom	module	statut	preuve	type
 0049c890	202	FUN_0049c890	inconnu	inconnu	aucun indice	fonction
 0049c960	209	FUN_0049c960	inconnu	inconnu	aucun indice	fonction
 0049ca40	151	FUN_0049ca40	inconnu	inconnu	aucun indice	fonction
-0049cae0	95	terrain_count_neighbours	terrain	documenté	nombre des 8 voisines portant un masque ; docs/engine/terrain.md §5	fonction
+0049cae0	95	terrain_count_neighbours	terrain	natif	nombre des 8 voisines portant un masque ; docs/engine/terrain.md §5 ; remplacée par native_terrain.cpp	fonction
 0049cb40	206	FUN_0049cb40	inconnu	inconnu	aucun indice	fonction
 0049cc10	136	FUN_0049cc10	inconnu	inconnu	aucun indice	fonction
 0049cca0	99	FUN_0049cca0	inconnu	inconnu	aucun indice	fonction
@@ -1386,7 +1386,7 @@ adresse	taille	nom	module	statut	preuve	type
 004a07c0	551	FUN_004a07c0	inconnu	inconnu	aucun indice	fonction
 004a09f0	760	FUN_004a09f0	bâtiments	inconnu	hypothèse : tour de simulation, atteinte seulement depuis 00484030 (bâtiments)	fonction
 004a0cf0	204	FUN_004a0cf0	bâtiments	inconnu	hypothèse : tour de simulation, atteinte seulement depuis 00484030 (bâtiments)	fonction
-004a0dc0	526	map_area_buildable	terrain	documenté	rectangle libre pour bâtir, masque 0x3DFFD66F ; docs/engine/terrain.md §9	fonction
+004a0dc0	526	map_area_buildable	terrain	natif	rectangle libre pour bâtir, masque 0x3DFFD66F ; docs/engine/terrain.md §9 ; remplacée par native_terrain.cpp	fonction
 004a0fd0	226	FUN_004a0fd0	terrain	inconnu	hypothèse : appelants/appelés (poids 4 sur 4 en terrain)	fonction
 004a10c0	648	FUN_004a10c0	inconnu	inconnu	aucun indice	fonction
 004a1350	348	FUN_004a1350	inconnu	inconnu	aucun indice	fonction
