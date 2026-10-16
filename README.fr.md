@@ -45,7 +45,7 @@ l'original. [Détails plus bas](#principe).
 | Votre ordinateur | Téléchargement | |
 |---|---|---|
 | Mac à puce Apple Silicon (M1 ou plus récent), macOS 14+ | **[⬇ Zeus-Poseidon-macos-arm64.zip](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest/download/Zeus-Poseidon-macos-arm64.zip)** | disponible |
-| Mac à processeur Intel | pas encore | en cours ([#41](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/41)) |
+| Mac à processeur Intel, macOS 15+ | **[⬇ Zeus-Poseidon-macos-intel.zip](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest/download/Zeus-Poseidon-macos-intel.zip)** | à partir de la 1.3 ([#41](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/41)) |
 | Linux (AppImage) | pas encore | prévu ([#40](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/40)) |
 
 Toutes les versions et leurs notes : [Releases](https://github.com/nic0lasm/zeus-poseidon-arm64/releases).
