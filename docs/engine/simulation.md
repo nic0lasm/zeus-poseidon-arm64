@@ -216,6 +216,8 @@ By measured cost, and by what can be checked one call at a time (`--verify`,
 1. **The composite helpers** (section 5): 8 small functions, 1,900 bytes, 42 % of the tick's own
    time in the large city. They read static tables and write nothing but their results, so the
    call-by-call check fits them well. The best speed for the least code in the simulation.
+   **Done** (`src/win32/native_buildings.cpp`, [equivalence](../equivalence.md#results-for-todays-replacements)):
+   the tick of `working-city` falls from 5.3–5.8 ms to 3.1–3.3 ms under the deterministic clock.
 2. **Routes**: `route_search` and its variants. Larger, with their own grids and cache, also
    checkable call by call.
 3. **Terrain** (step 6 of the plan, [terrain §10](terrain.md#10-order-of-the-rewrite)): 15.8 % of

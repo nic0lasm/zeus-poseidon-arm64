@@ -38,4 +38,7 @@ int install_native_drawing(Process& process);
 // Personnages de la ville (native_walkers.cpp) ; renvoie le nombre de remplacements installés.
 int install_native_walkers(Process& process);
 
+// Aides des bâtiments composés (native_buildings.cpp) ; renvoie le nombre de remplacements installés.
+int install_native_buildings(Process& process);
+
 }  // namespace zeus::win32

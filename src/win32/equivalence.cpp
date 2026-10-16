@@ -205,6 +205,11 @@ constexpr Known kKnown[] = {
     // FUN_00457900(case, x, y, rangée impaire) : ses deux appelants réécrivent EAX avant de le lire
     // (0x0045864A, puis 0x00458653 ; 0x00458C33, puis 0x00458C48, 0x00458CFF ou 0x00458D8A).
     {kGroundTile, 0, kEax | kEcx | kEdx, 16},
+    // native_buildings.cpp : ces trois fonctions réutilisent des emplacements d'arguments (l'indice
+    // de la pièce, le décalage tourné, le rang et la distance de la meilleure route).
+    {kCompositeFindPart, 0, kEcx | kEdx, 0x18},   // bool FUN_0053cc30(type, x, y, orientation, &x, &y)
+    {kCompositeBounds, 0, kEcx | kEdx, 0x24},     // FUN_0053cd80(type, x, y, orientation, 4 bornes, drapeau)
+    {kCompositeRoadEntry, 0, kEcx | kEdx, 0x18},  // bool FUN_0053f810(type, x, y, orientation, &x, &y)
     // native.cpp, search_key : EAX, ECX et les indicateurs sont réécrits avant d'être relus.
     {kKeySearch, kKeySearchEnd, kEax | kEcx, 0},
     // void FUN_0044fef0(personnage, x, y, cherché, plans) : l'original se sert des cinq cases

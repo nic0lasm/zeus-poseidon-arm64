@@ -126,6 +126,30 @@ constexpr uint64_t kWalkerSortHash = 0xB9E1215F78D8A20Full;
 constexpr uint32_t kSimulationDue = 0x005168A0;  // FUN_005168a0 : un tour de simulation est-il dû ?
 constexpr uint32_t kSimulationTick = 0x00513A30;  // FUN_00513a30 : un tour de simulation (zeus-run --ticks)
 
+// --- Code : aides des bâtiments composés (native_buildings.cpp) -------------------------------
+
+// Fonctions réécrites ([début, fin[ de chacune, pour l'empreinte du code).
+constexpr uint32_t kTileStepToAnchor = 0x00418B00, kTileStepToAnchorEnd = 0x00418B40;  // FUN_00418b00
+constexpr uint32_t kTypeComposite = 0x005344A0, kTypeCompositeEnd = 0x005344BD;        // FUN_005344a0
+constexpr uint32_t kPartClass = 0x0053C1B0, kPartClassEnd = 0x0053C1F9;                // FUN_0053c1b0
+constexpr uint32_t kCompositeParts = 0x0053C2C0, kCompositePartsEnd = 0x0053C2EF;      // FUN_0053c2c0
+constexpr uint32_t kCompositeExtras = 0x0053C330, kCompositeExtrasEnd = 0x0053C35F;    // FUN_0053c330
+constexpr uint32_t kCompositeFindPart = 0x0053CC30, kCompositeFindPartEnd = 0x0053CD75;  // FUN_0053cc30
+constexpr uint32_t kCompositeBounds = 0x0053CD80, kCompositeBoundsEnd = 0x0053CF2D;      // FUN_0053cd80
+constexpr uint32_t kCompositePartSize = 0x0053D900, kCompositePartSizeEnd = 0x0053D914;  // FUN_0053d900
+constexpr uint32_t kCompositeRoadEntry = 0x0053F810, kCompositeRoadEntryEnd = 0x0053FB5A;  // FUN_0053f810
+constexpr uint32_t kCompositePartsCount = 0x00540020, kCompositePartsCountEnd = 0x0054004F;  // FUN_00540020
+constexpr uint32_t kCompositeExtrasCount = 0x00540090, kCompositeExtrasCountEnd = 0x005400BF;  // FUN_00540090
+constexpr uint32_t kOffsetRotate = 0x00546620, kOffsetRotateEnd = 0x0054669D;            // FUN_00546620
+// Variables lues par ces fonctions.
+constexpr uint32_t kCompositeClasses = 0x00640E08;      // objets des classes de pièces 0 à 163
+constexpr uint32_t kCompositeClassesHigh = 0x00641098;  // objets des classes 1000 à 1006
+constexpr uint32_t kCompositeTables = 0x00FE5100;  // objet des listes de pièces (+0x5E4 : secondes listes)
+constexpr uint32_t kMapBounds = 0x00DA2F78;        // carte : largeur, puis hauteur (+4) de la zone jouable
+constexpr uint32_t kMapOrigin = 0x00DA2F80;        // carte : numéro de la case (0, 0) dans les grilles
+constexpr uint32_t kTileRoadNetwork = 0x00C4F288;  // par case : réseau de routes (8 bits)
+constexpr uint32_t kRoadNetworks = 0x00FEB0FC;     // grands réseaux de routes : 10 entrées de 8 octets
+
 // --- Code : texte des packs de langue (language.cpp) ------------------------------------------
 
 constexpr uint32_t kDrawGlyph = 0x00508B50;             // FUN_00508b50 : glyphe d'un texte d'une ligne

@@ -166,5 +166,26 @@ find an empty list (`working-city`, original alone: 30,396 calls with a walker, 
 and the key lookup loop come from an earlier run of the same bench, which also compared argument
 slots and covered 137 zones.
 
-Every native replacement of `src/win32/native.cpp`, `native_draw.cpp` and `native_walkers.cpp` is covered: the ground
+**Composite buildings** (`src/win32/native_buildings.cpp`, 2026-10-16, same bench). A pass is a call
+that reaches the address with the native code on: calls made from inside another native helper
+are not counted, so `0x0053CC30` is reached only through `0x0053F810`, and the leaves are
+counted only for their callers that are still emulated.
+
+| Target | What | Checked | Passes | Compared | Left to the original | Scenarios with calls | Result |
+|---|---|---|---|---|---|---|---|
+| `0x005344A0` | the building type is composite | 1 in 1,000 | 824,620 | 829 | 0 | 9 | identical |
+| `0x0053C1B0` | object of a part's class | 1 in 2,000 | 169,002 | 87 | 0 | 9 | identical |
+| `0x0053C2C0` | list of parts of a type | 1 in 500 | 1,305,759 | 2,615 | 0 | 9 | identical |
+| `0x0053C330` | second list of parts | 1 in 500 | 179 | 2 | 0 | 2 | identical |
+| `0x0053CD80` | rectangle covered by the parts | 1 in 1 | 26 | 26 | 0 | 2 | identical |
+| `0x0053D900` | size of a part | 1 in 500 | 176 | 1 | 0 | 1 | identical |
+| `0x0053F810` | nearest road around a composite building, with the entry part (`0x0053CC30`) and the rectangle | 1 in 30 | 53,312 | 1,778 | 0 | 1 | identical |
+| `0x00540020` | number of parts | 1 in 500 | 192,713 | 387 | 0 | 2 | identical |
+| `0x00540090` | size of the second list | 1 in 500 | 179 | 2 | 0 | 2 | identical |
+| `0x00546620` | a part's offset turned by the orientation | 1 in 2,000 | 53,515 | 27 | 0 | 1 | identical |
+
+The first run found one difference, in the native code: `0x00546620` returns the address of its
+second output in `EAX` for orientation 0 too, which the rewrite had taken for 0.
+
+Every native replacement of `src/win32/native.cpp`, `native_draw.cpp`, `native_walkers.cpp` and `native_buildings.cpp` is covered: the ground
 loop jump (`0x0045829D`) and the diamond tile (`0x00435070`) run inside `0x00458170`.
