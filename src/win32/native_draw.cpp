@@ -292,6 +292,7 @@ std::optional<uint32_t> ground_tile_call(Cpu& cpu) {
 // Variables locales de FUN_00458170 pendant le second parcours (ESP après le prologue).
 constexpr uint32_t kObjectRowCounter = 0x24, kObjectBuilding = 0x30, kRingNow = 0x34, kRingTwo = 0x38,
                    kRingFour = 0x3C, kCentreColumn = 0x40, kCentreRow = 0x44;
+constexpr uint32_t kCityArgument = 0x50;  // argument de FUN_00458170, passé à FUN_0044fef0 (« cherché »)
 
 // Ordinateur de la vue : FUN_004200f0(0), vrai pour une partie de Poséidon (hypothèse : le nom
 // vient des tables qu'il choisit, 0x005E86B0 pour Poséidon).
@@ -602,27 +603,49 @@ bool objects_animation(Cpu& cpu, uint32_t esp, const ObjectCell& c, int32_t& bui
 }
 
 // Étape 7 (0x00459D7A à 0x00459FF0) : personnages des cases r - 4, r - 2 et r, puis la vie sur
-// l'eau. Traitée quand ces trois listes sont vides : il ne reste alors que l'anneau kWalkerRing à
-// tenir à jour. Sinon l'original fait l'étape entière (tri FUN_00449b30, FUN_0044fef0).
+// l'eau. Les trois listes sont triées et dessinées par draw_tile_walkers, qui dit d'abord sans rien
+// écrire si tous leurs personnages sont des cas traités ; sinon l'original fait l'étape entière.
+//   - r - 4, quand l'anneau kWalkerRing a le bit 2 pour cette rangée (0x00459D98) : les
+//     personnages qui ne sont pas sur l'eau, à y - 30 x (hauteur + 2), plan 1 ; puis le bit est effacé ;
+//   - r - 2 (0x00459E56) : tous, ou ceux qui ne sont pas sur l'eau si la case porte une vie sur
+//     l'eau (nature 0x44 et kTileLife), à y - 30 x (hauteur + 1), plan 2, ou 3 quand l'anneau a le
+//     bit 1 pour cette rangée (effacé) ;
+//   - r : kTileHidden de la case s'ajoute à l'anneau de la rangée, puis FUN_0045a5a0 dessine ses
+//     personnages, tous ou ceux sur l'eau si l'octet n'est pas nul, plan 1 ;
+//   - FUN_0041d3d0 sur la case, qui ne dessine rien hors d'une partie de Poséidon.
+// y est la base de la rangée (kBaseY) pour r - 4 et r - 2, celui de la case pour r ; les cases
+// r - 4 et r - 2 sont lues sans contrôle de la rangée, comme l'original (0x00459DA7, 0x00459E56).
 bool objects_walkers(Cpu& cpu, uint32_t esp, const ObjectCell& c) {
     const uint32_t ring = kWalkerRing + static_cast<uint32_t>(c.column);
     const uint32_t four = ring + u32(cpu, esp + kRingFour) * kColumns, two = ring + u32(cpu, esp + kRingTwo) * kColumns,
                    now = ring + u32(cpu, esp + kRingNow) * kColumns;
-    // Cases r - 4 et r - 2, lues sans contrôle de la rangée, comme l'original (0x00459DA7, 0x00459E56).
+    const int32_t base_y = i32(cpu, esp + kBaseY);
+    const uint32_t wanted = u32(cpu, esp + kCityArgument);
+    TileWalkers loops[3];
+    int count = 0;
     const bool deferred = (u8(cpu, four) & 2) != 0;
     if (deferred) {
         const int32_t far = i32(cpu, at(kTileGrid, kColumns * (c.row - 4) + c.column, 4));
-        if (far < 0 || far >= kMark || s16(cpu, at(kTileFigure, far, 2)) != 0) return false;
+        if (far < 0 || far >= kMark) return false;
+        loops[count++] = {far, c.x, base_y - 30 * (s8(cpu, at(kTileHeight, far, 1)) + 2), wanted, 2, 1};
     }
     const int32_t behind = i32(cpu, at(kTileGrid, kColumns * (c.row - 2) + c.column, 4));
-    if (behind < kMark && (behind < 0 || s16(cpu, at(kTileFigure, behind, 2)) != 0)) return false;
-    if (s16(cpu, at(kTileFigure, c.tile, 2)) != 0) return false;  // FUN_0045a5a0
+    const bool behind_drawn = behind < kMark;  // comparaison signée, comme l'original
+    if (behind_drawn) {
+        if (behind < 0) return false;
+        const bool life = (u32(cpu, at(kTileFlags, behind, 4)) & 0x44) == 0x44 && u8(cpu, at(kTileLife, behind, 1)) != 0;
+        loops[count++] = {behind, c.x, base_y - 30 * (s8(cpu, at(kTileHeight, behind, 1)) + 1), wanted, life ? 2 : 0,
+                          (u8(cpu, two) & 1) ? 3u : 2u};
+    }
+    const uint8_t hidden = u8(cpu, at(kTileHidden, c.tile, 1));
+    loops[count++] = {c.tile, c.x, c.y, wanted, hidden != 0 ? 1 : 0, 1};
     // FUN_0041d3d0 : animal ou bateau sur l'eau, partie de Poséidon.
     if (poseidon(cpu) && (u32(cpu, at(kTileFlags, c.tile, 4)) & 0x44) == 0x44 && u8(cpu, at(kTileLife, c.tile, 1)) != 0)
         return false;
+    if (!draw_tile_walkers(cpu, loops, count)) return false;
     if (deferred) put8(cpu, four, u8(cpu, four) ^ 2);
-    if (behind < kMark && (u8(cpu, two) & 1)) put8(cpu, two, u8(cpu, two) ^ 1);
-    if (const uint8_t hidden = u8(cpu, at(kTileHidden, c.tile, 1))) put8(cpu, now, u8(cpu, now) | hidden);
+    if (behind_drawn && (u8(cpu, two) & 1)) put8(cpu, two, u8(cpu, two) ^ 1);
+    if (hidden != 0) put8(cpu, now, u8(cpu, now) | hidden);
     return true;
 }
 

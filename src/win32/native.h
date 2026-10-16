@@ -33,6 +33,19 @@ void draw_ground_half(Cpu& cpu, uint32_t image, uint8_t clip_y, bool left);
 bool ground_halves_known();
 bool bases_known();  // FUN_0043ff10 à FUN_00441e50, socles de 2 à 6 cases (native.cpp)
 
+// Une boucle de dessin des personnages d'une case, celle de FUN_0045a5a0 et des deux boucles du
+// second parcours de FUN_00458170 : tri de la liste (FUN_00449b30), puis FUN_0044fef0(personnage,
+// x, y, cherché, plans) pour chaque personnage non masqué que le filtre retient.
+struct TileWalkers {
+    int32_t tile, x, y;
+    uint32_t wanted;
+    int32_t filter;  // 0 : tous ; 1 : ceux sur l'eau (FUN_004d7210) ; 2 : les autres ; autre : aucun
+    uint32_t layers;
+};
+// Fait les boucles `loops` dans l'ordre (trois au plus) et renvoie vrai, ou renvoie faux sans avoir
+// rien écrit quand l'une d'elles n'est pas un cas traité (native_walkers.cpp).
+bool draw_tile_walkers(Cpu& cpu, const TileWalkers* loops, int count);
+
 // Boucle de dessin de la ville (native_draw.cpp) ; renvoie le nombre de remplacements installés.
 int install_native_drawing(Process& process);
 // Personnages de la ville (native_walkers.cpp) ; renvoie le nombre de remplacements installés.

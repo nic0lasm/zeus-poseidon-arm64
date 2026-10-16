@@ -495,8 +495,8 @@ Facts found while rewriting the extras (**verified**, listing; counts: `working-
 7. **Walkers.** After the object of cell (r, c), in this order:
    - if the ring `0x0084787C` (5 rows of 231 bytes, row index modulo 5) has bit 2 for row
      r − 4, the walkers of cell (r − 4, c) (`0x007D2D7C + c × 4 + r × 0x39C`) are sorted
-     (`0x00449B30`) and drawn with `0x0044FEF0(walker, x, y − 30 × (height + 2), arg, 1)`, and
-     the bit is cleared;
+     (`0x00449B30`) and those for which `0x004D7210` is false are drawn with
+     `0x0044FEF0(walker, x, y − 30 × (height + 2), arg, 1)`, and the bit is cleared;
    - the walkers of cell (r − 2, c) (`0x007D34B4 + c × 4 + r × 0x39C`) are sorted and drawn with
      `0x0044FEF0(walker, x, y − 30 × (height + 1), arg, 2)` — last argument 3 when the ring has
      bit 1 for row r − 2 (then cleared); on a tile with flags `0x44` and `0x00CB4B08` set, only
@@ -573,7 +573,8 @@ native `0x00457900`; the counters; building tops `0x005ADF00` and sloped tops `0
 red, not turned), with `0x0053E5F0` when it draws nothing and the towers when the dispatcher
 draws both images (`native_sanctuaries.cpp`); step 5 when nothing is drawn (no animation, types
 outside the `switch`, or tiles that are not anchors); `0x0044F320` for types it does not draw;
-step 7 when the three lists are empty. Scenario `working-city`, 300 s deterministic, 606,993
+step 7 when every walker of the three lists is a case of the native `0x0044FEF0` (the lists are
+sorted and drawn natively, see `0x0045A5A0` in 11.3). Scenario `working-city`, 300 s deterministic, 606,993
 cells: **490,265 (81 %) were handled entirely in native code** when this pass was first rewritten;
 the original resumed 35,158 times at the start of a cell (mostly bases of 2 to 6 tiles and
 `0x00546530`), 52,802 times after the counters (sanctuaries and monuments, `0x0053E5F0`), 8,123
@@ -597,6 +598,10 @@ counters, 12,308 times after the object, never before `0x0044F320` and 28,186 ti
 walkers: **560,575 cells (92.4 %)** stay native. The original still calls `0x0045D140` and
 `0x00413380` 576 times and `0x0044F320` 11,148 times (cells it resumed), all through their fast
 paths.
+With the walker loops native as well (`0x0045A5A0` and step 7, 11.3): **XXCELLS**; the
+original no longer resumes at the walkers (`--count 0x00459D7A`: XXPASSES passes, exactly the cells it
+took over earlier, against XXBEFORE before), and the calls of `0x0045A5A0` it still makes all take
+the fast path.
 
 ### 11.3 One walker, `0x0044FEF0`
 
@@ -675,6 +680,26 @@ leaves to the original a list holding a number outside 1–1,999, which the nine
 meet. In `working-city` (300 s, original alone, `--count`), 30,396 of its 1,411,706 calls find a
 walker and 1,680 sort two or more; with native code on, the second pass calls it only 198,260 times.
 
+**The walkers of a tile, `0x0045A5A0(tile, x, y, wanted, filter, layers)`** (cdecl, 158 bytes),
+and the two loops of the second pass that do the same for rows r − 4 and r − 2 (11.2 step 7).
+**verified** by the listing and by `zeus-run --verify` on `0x0045A5A0` and on `0x00458170`
+(section 13). It sorts the list of the tile (`0x00449B30`), then follows it while the walker
+number is between 1 and 1,999: a walker is kept when `filter` is 0, when it is on water
+(`0x004D7210`) for 1, when it is not for 2 (any other value keeps none); a kept walker whose byte
+`0x00DBD7ED` is 0 is drawn with `0x0044FEF0(walker, x, y, wanted, layers)`. The loop of row r − 4
+keeps the walkers that are not on water (layers 1); the loop of row r − 2 keeps all of them, or
+those not on water when the tile has water life (terrain `0x44` and byte `0x00CB4B08`).
+
+The native version (`native_walkers.cpp`, `draw_tile_walkers`) serves the fast path of
+`0x0045A5A0` and step 7 of the second pass, which hands it its three lists at once. It first
+checks, without writing anything, that every walker it would draw is a case of the fast path of
+`0x0044FEF0`, then sorts each list and draws it, working each walker's plan out again: nothing a
+plan reads is written by the sort or by `0x0044FEF0` (the sort changes only the `+0` links; a
+walker writes its view direction `0x00FA05E4`, the found position, the pixels and bit `0x40000000`
+of neighbouring tiles, which no plan reads). A list of more than 50 walkers, which the sort leaves
+as it is, is drawn in its own order (a first version left them to the original: 463 calls in
+`working-city`, one per city frame).
+
 ### 11.4 Third pass
 
 For anchor tiles with flag `0x08` and a building, in modes other than `0x10`, the view object
@@ -719,10 +744,10 @@ steps before it, and the most frequent come first within a step. Counts: origina
 | 10 | `0x0043FF10`, `0x00440170`, `0x004406B0`, `0x00440FE0`, `0x00441E50` | bases of 2–6 tiles | 23,888 / 2,410 / 3,627 / 1,389 / 0 | 52 / 5 / 8 / 3 / 0 | **native** (in the dispatcher; overlay: original) |
 | 11 | `0x00457900` | ground of a tile, remaining cases | 593,891 | 1,283 | fast path (flat, sloped, flags `0x4020`), 5,941 still emulated (42,500 before the bases were native) |
 | 12 | `0x00449B30` | sort the walkers of a tile | 1,411,706 | 3,049 | **native** (11.3) |
-| 13 | `0x0045A5A0`, `0x0041D3D0`, `0x0041D150` | walkers and water life of a tile | 606,993 / 620,704 / 0 | 1,311 / 1,341 / 0 | `0x0041D3D0` fast path (when it draws nothing: every call outside a Poseidon game); `0x0045A5A0` original, now possible since the sort (12) is native |
+| 13 | `0x0045A5A0`, `0x0041D3D0`, `0x0041D150` | walkers and water life of a tile | 606,993 / 620,704 / 0 | 1,311 / 1,341 / 0 | `0x0045A5A0` and the two walker loops of the second pass **native** (11.3); `0x0041D3D0` fast path (when it draws nothing: every call outside a Poseidon game) |
 | 14 | `0x0044FEF0` | one walker | 27,178 | 59 | fast path (11.3): all but the C++ objects of sanctuaries, the trader's text and tinted walkers whose image the dispatcher refuses; in `working-city` no drawn walker is left to the original (`--count 0x0044FF29`: 0) |
 | 15 | `0x0044F320`, `0x0045D140`, `0x0053E5F0`, `0x0045DC10`, building-type functions of 11.2 step 5 | building extras and animations | 433,862 / 4,488 / 53,150 / 553,374 / — | 937 / 10 / 115 / 1,195 / — | `0x0053E5F0` native when it draws nothing (52,319 of 53,150 calls; fast path), towers native; `0x0044F320` fast path for the types it does not draw (all calls in the nine scenarios); `0x0045D140` and `0x00413380` fast paths and native in the second pass for their common cases (11.2); the rest original |
-| 16 | `0x00458170` | second and third passes | 463 | 1 | first pass native, second pass native for 92 % of the cells (11.2) |
+| 16 | `0x00458170` | second and third passes | 463 | 1 | first pass native, second pass native for XXPCT of the cells (11.2) |
 | 17 | `0x0044AD70`, `0x00451820`, `0x004517F0`, `0x00454420` | after the passes | 463 each | 1 | original |
 | 18 | `0x0044A830`, `0x0051CAB0`, `0x00449E50` | view set-up | 463 / 463 / rare | 1 | original |
 | 19 | `0x00514020`, `0x0050C1B0` and converters `0x004138B0`, `0x00413930`, `0x004139B0`, `0x00413A30` | frame and presentation | 8,398 / 8,412 | — | original (the host replaces the surfaces) |
@@ -733,18 +758,18 @@ Already native: `0x00413DC0` (5,319,977 calls), `0x004161B0` (2,384,169), `0x004
 (95,842), `0x00416010` (467), `0x00413E30` (4,317), `0x0050B410` (1,459), `0x00435070` (163,764),
 `0x004377B0` and `0x00438A90` (8,682 and 8,691), the clip functions (8,562,614 each) inside the dispatcher and the
 building tops, `0x005ADF00` except with an overlay, the first pass of `0x00458170`, `0x0044FEF0` for its
-common walkers, `0x0041D3D0` when it draws nothing and the walker sort `0x00449B30`.
+common walkers, `0x0041D3D0` when it draws nothing, the walker sort `0x00449B30` and the walker loops
+(`0x0045A5A0` and the two loops of the second pass).
 
 Where the list stands: steps 1 to 4 are native; 5 to 7 are never called in the nine scenarios,
 so no call-by-call proof is possible yet and they wait for a scenario that draws glyph masks,
 overlays (a building marked red) and the rare cases; the second pass (16) is native for its
-common cells; the bases of 2 to 6 tiles (10) and the walker sort `0x00449B30` (12) are native.
+common cells; the bases of 2 to 6 tiles (10), the walker sort `0x00449B30` (12) and the walker
+loops (13) are native.
 The extras of sanctuaries and monuments (15, `0x0053E5F0`) are native when they draw nothing,
 and the animations (15) for their common cases; the parts that draw (`0x0044EE80`, `0x005407A0`
 beyond its first tests), the 21 types `0x0044F320` draws and the per-type functions of step 5
-are left to the original. Next, in this order: the walker loops that call the sort
-(`0x0045A5A0` and the two loops inlined in the second pass, which could then run natively with
-`0x0044FEF0`).
+are left to the original.
 
 Weight of what is left (`zeus-run --profile`, `working-city`, natively, 2026-10-15): the
 walkers (`0x0044FEF0` 0.3 %, `0x0045A5A0` 0.2 %, `0x0041D3D0` 0.1 % before this rewrite) and

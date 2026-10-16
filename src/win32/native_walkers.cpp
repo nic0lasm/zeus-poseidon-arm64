@@ -1,14 +1,16 @@
 // Personnages de la ville réécrits pour l'hôte : FUN_0044fef0, qui dessine un personnage,
-// FUN_0041d3d0, l'animal ou le bateau sur l'eau d'une case, et FUN_00449b30, qui trie les
-// personnages d'une case avant leur dessin.
+// FUN_0041d3d0, l'animal ou le bateau sur l'eau d'une case, FUN_00449b30, qui trie les
+// personnages d'une case avant leur dessin, et FUN_0045a5a0, qui les trie puis les dessine.
 //
-// Le second parcours de la boucle de dessin (native_draw.cpp) rend la main à l'original pour toute
-// case où se tient un personnage : l'original trie les personnages de la case (FUN_00449b30) puis
-// appelle FUN_0044fef0 pour chacun. Dans la grande ville (`working-city`, 300 s), FUN_0044fef0 est
-// appelée 27 178 fois, dont 13 711 pour un personnage à dessiner (--count 0x0044FF29) ; les autres
-// ne sont pas du plan dessiné (octet +0x15 de la fiche contre le dernier argument).
+// Le second parcours de la boucle de dessin (native_draw.cpp) dessine les personnages de trois
+// cases à chaque case (étape 7) : il trie la liste de chacune (FUN_00449b30) puis appelle
+// FUN_0044fef0 pour chaque personnage retenu, en natif par draw_tile_walkers, comme FUN_0045a5a0
+// qui fait de même pour la case en cours quand l'original fait l'étape. Dans la grande ville
+// (`working-city`, 300 s), FUN_0044fef0 est appelée 27 178 fois, dont 13 711 pour un personnage à
+// dessiner (--count 0x0044FF29) ; les autres ne sont pas du plan dessiné (octet +0x15 de la fiche
+// contre le dernier argument).
 //
-// Les trois fonctions ont un chemin rapide (Cpu::add_fast_path). Celui de FUN_0044fef0 décide dès
+// Les quatre fonctions ont un chemin rapide (Cpu::add_fast_path). Celui de FUN_0044fef0 décide dès
 // l'entrée, sans rien écrire, si l'appel est un cas traité : tous les sprites à dessiner sont des
 // cas du répartiteur natif (sprite_handled), aucune fonction du jeu non réécrite n'est appelée
 // (objets C++ des sanctuaires, texte des marchands) ; sinon l'original fait
@@ -398,16 +400,10 @@ bool plan_walker(Cpu& cpu, int32_t figure, int32_t x, int32_t y, uint32_t wanted
     return mark_neighbours(cpu, figure, false);
 }
 
-std::optional<uint32_t> walker_call(Cpu& cpu) {
-    const int32_t figure = static_cast<int32_t>(cpu.arg(0));
-    // Plan dessiné (0x0044FF06) : octet +0x15 de la fiche nul, bit 1 du dernier argument, sinon bit 2.
-    const uint32_t layers = cpu.arg(4);
-    if ((layers & (u8(cpu, field(kFigureLayer, figure)) != 0 ? 2 : 1)) == 0) return cpu.reg(Cpu::Reg::EAX);
-    WalkerPlan p;
-    const int32_t x = static_cast<int32_t>(cpu.arg(1)), y = static_cast<int32_t>(cpu.arg(2));
-    if (!plan_walker(cpu, figure, x, y, cpu.arg(3), p)) return std::nullopt;
+// Écritures de FUN_0044fef0 pour un appel dont plan_walker a rendu le plan.
+void apply_walker(Cpu& cpu, int32_t figure, const WalkerPlan& p) {
     put32(cpu, kFigureViewDirection, static_cast<uint32_t>(p.direction));
-    if (p.stop) return cpu.reg(Cpu::Reg::EAX);
+    if (p.stop) return;
     if (p.matched) {
         put32(cpu, kFoundFigureY, static_cast<uint32_t>(p.found_y));
         put32(cpu, kFoundFigureX, static_cast<uint32_t>(p.found_x));
@@ -416,6 +412,21 @@ std::optional<uint32_t> walker_call(Cpu& cpu) {
         draw_sprite(cpu, kSpriteBanks, p.sprites[i].id, p.sprites[i].x, p.sprites[i].y, p.sprites[i].mode,
                     p.sprites[i].mirror);
     if (p.tail) mark_neighbours(cpu, figure, true);
+}
+
+// Plan dessiné (0x0044FF06) : octet +0x15 de la fiche nul, bit 1 du dernier argument, sinon bit 2.
+// Hors du plan, FUN_0044fef0 revient sans rien écrire.
+bool in_layers(Cpu& cpu, int32_t figure, uint32_t layers) {
+    return (layers & (u8(cpu, field(kFigureLayer, figure)) != 0 ? 2 : 1)) != 0;
+}
+
+std::optional<uint32_t> walker_call(Cpu& cpu) {
+    const int32_t figure = static_cast<int32_t>(cpu.arg(0));
+    if (!in_layers(cpu, figure, cpu.arg(4))) return cpu.reg(Cpu::Reg::EAX);
+    WalkerPlan p;
+    const int32_t x = static_cast<int32_t>(cpu.arg(1)), y = static_cast<int32_t>(cpu.arg(2));
+    if (!plan_walker(cpu, figure, x, y, cpu.arg(3), p)) return std::nullopt;
+    apply_walker(cpu, figure, p);
     return cpu.reg(Cpu::Reg::EAX);
 }
 
@@ -447,30 +458,94 @@ int32_t sort_rank(Cpu& cpu, int32_t figure) {
     }
 }
 
-// FUN_00449b30(case) : range la liste des personnages d'une case (premier dans kTileFigure, suivant
-// en +0 de la fiche) par rang croissant, puis par numéro croissant (comparateur FUN_00449b10 passé
-// à qsort). Deux personnages distincts ne sont jamais égaux pour ce comparateur : tout tri
-// correct donne l'ordre de l'original. Une liste d'un seul personnage, ou de plus de 50, n'est
-// pas touchée. Un numéro hors de 1 à 1 999 (fiche hors de la table) laisse faire l'original.
-std::optional<uint32_t> walker_sort_call(Cpu& cpu) {
+// Liste des personnages d'une case (premier dans kTileFigure, suivant en +0 de la fiche), dans
+// l'ordre où FUN_00449b30 la laisse.
+struct TileList {
+    uint32_t head;
+    int32_t figures[50];
+    int count;
+    bool sorted;  // faux : plus de 50 personnages, liste laissée telle quelle
+};
+
+// FUN_00449b30(case) sans rien écrire : range la liste par rang croissant, puis par numéro
+// croissant (comparateur FUN_00449b10 passé à qsort). Deux personnages distincts ne sont jamais
+// égaux pour ce comparateur : tout tri correct donne l'ordre de l'original. Au 51e personnage,
+// l'original revient sans rien écrire (0x00449C64). Renvoie faux pour un numéro hors de 1 à 1 999
+// (fiche hors de la table), laissé à l'original.
+bool read_list(Cpu& cpu, int32_t tile, TileList& l) {
     struct Entry {
         int32_t figure, rank;
     } list[50];
-    const uint32_t head = at(kTileFigure, static_cast<int32_t>(cpu.arg(0)), 2);
-    int count = 0;
-    for (int32_t figure = s16(cpu, head); figure != 0; figure = s16(cpu, field(kFigures, figure))) {
-        if (count == 50) return cpu.reg(Cpu::Reg::EAX);  // 0x00449C64
-        if (figure < 1 || figure >= 2000) return std::nullopt;
-        list[count] = {figure, sort_rank(cpu, figure)};
-        ++count;
+    l.head = at(kTileFigure, tile, 2);
+    l.count = 0;
+    l.sorted = false;
+    for (int32_t figure = s16(cpu, l.head); figure != 0; figure = s16(cpu, field(kFigures, figure))) {
+        if (l.count == 50) return true;
+        if (figure < 1 || figure >= 2000) return false;
+        list[l.count++] = {figure, sort_rank(cpu, figure)};
     }
-    if (count < 2) return cpu.reg(Cpu::Reg::EAX);
-    std::sort(list, list + count, [](const Entry& a, const Entry& b) {
+    std::sort(list, list + l.count, [](const Entry& a, const Entry& b) {
         return a.rank != b.rank ? a.rank < b.rank : a.figure < b.figure;
     });
-    put16(cpu, head, list[0].figure);
-    for (int i = 0; i + 1 < count; ++i) put16(cpu, field(kFigures, list[i].figure), list[i + 1].figure);
-    put16(cpu, field(kFigures, list[count - 1].figure), 0);
+    for (int i = 0; i < l.count; ++i) l.figures[i] = list[i].figure;
+    l.sorted = true;
+    return true;
+}
+
+// Écritures de FUN_00449b30 : la liste dans l'ordre du tri ; une liste d'un seul personnage, ou de
+// plus de 50, n'est pas touchée.
+void write_list(Cpu& cpu, const TileList& l) {
+    if (!l.sorted || l.count < 2) return;
+    put16(cpu, l.head, l.figures[0]);
+    for (int i = 0; i + 1 < l.count; ++i) put16(cpu, field(kFigures, l.figures[i]), l.figures[i + 1]);
+    put16(cpu, field(kFigures, l.figures[l.count - 1]), 0);
+}
+
+std::optional<uint32_t> walker_sort_call(Cpu& cpu) {
+    TileList l;
+    if (!read_list(cpu, static_cast<int32_t>(cpu.arg(0)), l)) return std::nullopt;
+    write_list(cpu, l);
+    return cpu.reg(Cpu::Reg::EAX);
+}
+
+bool loop_code = false;  // FUN_0044fef0, FUN_004d7210 et FUN_00449b30 vérifiées : boucles traitées
+
+// Boucle de FUN_0045a5a0 (0x0045A5C9 à 0x0045A637), la même que celles du second parcours : pour
+// chaque personnage de la liste triée, le filtre (FUN_004d7210), l'octet +0x5D de la fiche
+// (masqué), puis FUN_0044fef0, qui ne fait rien hors du plan dessiné. `visit` reçoit chaque
+// personnage pour lequel FUN_0044fef0 va plus loin ; walk_loop renvoie faux dès que `visit`
+// renvoie faux. Une liste de plus de 50 personnages est suivie telle quelle jusqu'au bout ; un
+// numéro hors de 1 à 1 999, ou plus de 2 000 maillons, la laisse à l'original.
+template <typename Visit>
+bool walk_loop(Cpu& cpu, const TileWalkers& loop, const TileList& l, Visit visit) {
+    auto one = [&](int32_t figure) {
+        bool kept = false;
+        switch (loop.filter) {
+            case 0: kept = true; break;
+            case 1: kept = on_water(cpu, figure); break;
+            case 2: kept = !on_water(cpu, figure); break;
+            default: break;
+        }
+        if (!kept || u8(cpu, field(kFigureHidden, figure)) != 0 || !in_layers(cpu, figure, loop.layers)) return true;
+        return visit(figure);
+    };
+    if (l.sorted) {
+        for (int i = 0; i < l.count; ++i)
+            if (!one(l.figures[i])) return false;
+        return true;
+    }
+    int links = 0;
+    for (int32_t figure = s16(cpu, l.head); figure != 0; figure = s16(cpu, field(kFigures, figure)))
+        if (figure < 1 || figure >= 2000 || ++links > 2000 || !one(figure)) return false;
+    return true;
+}
+
+// FUN_0045a5a0(case, x, y, cherché, filtre, plans) (cdecl).
+std::optional<uint32_t> tile_walkers_call(Cpu& cpu) {
+    const TileWalkers loop{static_cast<int32_t>(cpu.arg(0)), static_cast<int32_t>(cpu.arg(1)),
+                           static_cast<int32_t>(cpu.arg(2)), cpu.arg(3), static_cast<int32_t>(cpu.arg(4)),
+                           cpu.arg(5)};
+    if (!draw_tile_walkers(cpu, &loop, 1)) return std::nullopt;
     return cpu.reg(Cpu::Reg::EAX);
 }
 
@@ -494,6 +569,38 @@ uint64_t fingerprint(Cpu& cpu, uint32_t start, uint32_t end) {
 
 }  // namespace
 
+// Tous les personnages sont d'abord vérifiés (plan_walker, qui n'écrit rien), puis triés et
+// dessinés ; leur plan est refait au dessin. Il ne change pas : rien de ce que lisent les plans
+// (fiches hors du lien +0, nature et hauteur des cases, images, rectangle de dessin) n'est écrit
+// par le tri ou par FUN_0044fef0, qui ne change que les liens des listes, le bit 0x40000000 des
+// cases voisines et des variables de sortie.
+bool draw_tile_walkers(Cpu& cpu, const TileWalkers* loops, int count) {
+    TileList lists[3];
+    if (count > 3) return false;
+    for (int i = 0; i < count; ++i) {
+        const TileWalkers& loop = loops[i];
+        if (!read_list(cpu, loop.tile, lists[i])) return false;
+        if (lists[i].count == 0) continue;
+        if (!loop_code) return false;
+        WalkerPlan p;
+        if (!walk_loop(cpu, loop, lists[i], [&](int32_t figure) {
+                return plan_walker(cpu, figure, loop.x, loop.y, loop.wanted, p);
+            }))
+            return false;
+    }
+    for (int i = 0; i < count; ++i) {
+        const TileWalkers& loop = loops[i];
+        write_list(cpu, lists[i]);
+        walk_loop(cpu, loop, lists[i], [&](int32_t figure) {
+            WalkerPlan p;
+            plan_walker(cpu, figure, loop.x, loop.y, loop.wanted, p);
+            apply_walker(cpu, figure, p);
+            return true;
+        });
+    }
+    return true;
+}
+
 int install_native_walkers(Process& p) {
     Cpu& cpu = p.cpu();
     // Code réécrit : kWalkerHelpers (dont les premiers tests de FUN_0041d3d0), puis FUN_0044fef0
@@ -508,6 +615,13 @@ int install_native_walkers(Process& p) {
     }
     if (fingerprint(cpu, kWalkerSortCode, kWalkerSortEnd) == kWalkerSortHash) {
         cpu.add_fast_path(kWalkerSort, 0, 10, walker_sort_call);  // « MOV EAX,[ESP+4] ; SUB ESP,0x194 » déplacés
+        ++installed;
+        loop_code = installed == 3;
+    }
+    // FUN_0045a5a0 : sa boucle est celle de walk_loop. « PUSH EBX ; PUSH EBP ; PUSH ESI ;
+    // MOV ESI,[ESP+0x10] » déplacés.
+    if (loop_code && fingerprint(cpu, kTileWalkers, kTileWalkersEnd) == kTileWalkersHash) {
+        cpu.add_fast_path(kTileWalkers, 0, 7, tile_walkers_call);
         ++installed;
     }
     return installed;

@@ -219,6 +219,9 @@ constexpr Known kKnown[] = {
     // void FUN_00449b30(case) : ses trois appelants (0x00459DCD, 0x00459EE0, 0x0045A5A9) relisent
     // la liste de la case sans lire EAX.
     {kWalkerSort, 0, kEax | kEcx | kEdx, 0},
+    // void FUN_0045a5a0(case, x, y, cherché, filtre, plans) : son appelant (0x00459FBD) réécrit EDX,
+    // ECX et EAX avant de les lire (0x00459FC2, 0x00459FCB, 0x00459FF0).
+    {kTileWalkers, 0, kEax | kEcx | kEdx, 0},
 };
 
 struct Range {

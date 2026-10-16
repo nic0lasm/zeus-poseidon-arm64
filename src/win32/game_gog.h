@@ -158,6 +158,9 @@ constexpr uint32_t kViewFalse = 0x005656F0;   // méthode +0x14 du mode de vue 0
 constexpr uint32_t kWalkerSort = 0x00449B30;
 constexpr uint32_t kWalkerSortCode = 0x00449B10, kWalkerSortEnd = 0x00449E44;
 constexpr uint64_t kWalkerSortHash = 0xB9E1215F78D8A20Full;
+// FUN_0045a5a0(case, x, y, cherché, filtre, plans) : trie puis dessine les personnages d'une case.
+constexpr uint32_t kTileWalkers = 0x0045A5A0, kTileWalkersEnd = 0x0045A63E;
+constexpr uint64_t kTileWalkersHash = 0x34CC6535F235E629ull;
 
 // --- Code : terrain (native_terrain.cpp), fonctions entières, de leur début à la fin du « ret » ---
 
@@ -367,6 +370,7 @@ constexpr uint32_t kTileLife = 0x00CB4B08;      // par case : image animée (FUN
 constexpr uint32_t kTileFigure = 0x00D0D878;    // par case : premier personnage (16 bits signés)
 // Personnages : fiches de 0x184 octets ; +0 suivant sur la case (16 bits), +2 type, +0x5D masqué.
 constexpr uint32_t kFigures = 0x00DBD790;
+constexpr uint32_t kFigureHidden = 0x00DBD7ED;      // non nul : le personnage n'est pas dessiné
 // Champs d'une fiche de personnage lus par FUN_0044fef0, à leur adresse pour la fiche 0.
 constexpr uint32_t kFigureImage = 0x00DBD78C;       // image du corps (32 bits)
 constexpr uint32_t kFigureType = 0x00DBD792;        // type (8 bits)

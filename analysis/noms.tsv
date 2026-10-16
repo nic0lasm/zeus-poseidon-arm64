@@ -64,7 +64,7 @@ adresse	nom	module	statut	preuve	type
 004542b0	map_number_draw	interface	documenté	nombre posé sur la carte, ombre puis couleur ; 463 appels (un par image de ville)	fonction
 00457900	ground_tile_draw	rendu	nommé	sol d'une case ; natif partiel : chemin rapide dans native_draw.cpp (plat, en pente, drapeaux 0x4020)	fonction
 00458170	city_draw	rendu	nommé	dessin de la ville, trois passes ; natif partiel : premier et second parcours dans native_draw.cpp ; rendering.md §11	fonction
-0045a5a0	tile_walkers_draw	rendu	nommé	trie et dessine les personnages d'une case ; rendering.md §11.2	fonction
+0045a5a0	tile_walkers_draw	rendu	natif	trie et dessine les personnages d'une case ; remplacée par native_walkers.cpp ; rendering.md §11.3	fonction
 0045a640	tile_has_tower_type	rendu	documenté	la case porte un bâtiment de type 0x81, 0x91 ou 0x92 : côtés où 0x00458170 dessine une tour ; rendering.md §11.2	fonction
 0045a690	sloped_top_draw	rendu	documenté	partie haute d'un morceau en pente, décalée selon sa taille ; rendering.md §11.2	fonction
 0045d140	animation_draw	rendu	documenté	natif partiel : chemin rapide dans native_animations.cpp ; image n de l'animation d'une case, switch sur le type (0x0045DA24) ; rendering.md §11.2	fonction

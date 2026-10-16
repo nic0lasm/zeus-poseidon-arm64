@@ -787,7 +787,7 @@ adresse	taille	nom	module	statut	preuve	type
 004574c0	1077	FUN_004574c0	rendu	inconnu	hypothèse : appelants/appelés (poids 3 sur 3 en rendu)	fonction
 00457900	1906	ground_tile_draw	rendu	nommé	sol d'une case ; natif partiel : chemin rapide dans native_draw.cpp (plat, en pente, drapeaux 0x4020)	fonction
 00458170	8419	city_draw	rendu	nommé	dessin de la ville, trois passes ; natif partiel : premier et second parcours dans native_draw.cpp ; rendering.md §11	fonction
-0045a5a0	158	tile_walkers_draw	rendu	nommé	trie et dessine les personnages d'une case ; rendering.md §11.2	fonction
+0045a5a0	158	tile_walkers_draw	rendu	natif	trie et dessine les personnages d'une case ; remplacée par native_walkers.cpp ; rendering.md §11.3	fonction
 0045a640	70	tile_has_tower_type	rendu	documenté	la case porte un bâtiment de type 0x81, 0x91 ou 0x92 : côtés où 0x00458170 dessine une tour ; rendering.md §11.2	fonction
 0045a690	227	sloped_top_draw	rendu	documenté	partie haute d'un morceau en pente, décalée selon sa taille ; rendering.md §11.2	fonction
 0045a790	227	FUN_0045a790	rendu	inconnu	hypothèse : appelants/appelés (poids 3 sur 3 en rendu)	fonction
