@@ -33,6 +33,8 @@ namespace {
 
 using namespace gog;
 
+bool composites_installed = false;  // install_native_buildings a réussi
+
 uint32_t u32(Cpu& cpu, uint32_t address) {
     uint32_t value;
     std::memcpy(&value, cpu.host(address), 4);
@@ -325,21 +327,20 @@ void consider(Cpu& cpu, RoadSearch& s, int32_t tile, int32_t column, int32_t row
     }
 }
 
+}  // namespace
+
 // FUN_0053f810(this ; type, x, y, orientation, &x, &y) -> AL : une pièce d'entrée, sinon la case
 // de route la plus proche sur le pourtour du rectangle des pièces (rangée du dessus, du dessous,
 // colonne de gauche, de droite), en préférant les grands réseaux (0x00FEB0FC, dix premiers).
-std::optional<uint32_t> road_entry_call(Cpu& cpu) {
-    const uint32_t self = cpu.reg(Cpu::Reg::ECX);
-    const int32_t type = static_cast<int32_t>(cpu.arg(0));
-    const int32_t x = static_cast<int32_t>(cpu.arg(1)), y = static_cast<int32_t>(cpu.arg(2));
-    const uint32_t orientation = cpu.arg(3), out_x = cpu.arg(4), out_y = cpu.arg(5);
+// `entry` : ESP à l'entrée de la fonction, sous lequel elle range son rectangle.
+std::optional<uint32_t> composite_road_entry(Cpu& cpu, uint32_t self, int32_t type, int32_t x, int32_t y,
+                                             uint32_t orientation, uint32_t out_x, uint32_t out_y, uint32_t entry) {
     const std::optional<FindPart> f = find_part_list(cpu, self, type);
     const std::optional<Bounds> b = bounds_lists(cpu, self, type);
     if (!f || !b) return std::nullopt;
     const uint32_t found = find_part(cpu, *f, x, y, orientation, out_x, out_y);
     if (found & 0xFF) return found;
     // Le rectangle va, comme dans l'original, dans ses variables locales, sous la pile de l'appelant.
-    const uint32_t entry = cpu.reg(Cpu::Reg::ESP);
     const uint32_t min_x = entry - 0x0C, min_y = entry - 0x1C, max_x = entry - 0x18, max_y = entry - 0x20;
     bounds(cpu, *b, x, y, orientation, min_x, min_y, max_x, max_y, false);
     struct { int32_t min_x, min_y, max_x, max_y; } r{i32(cpu, min_x), i32(cpu, min_y), i32(cpu, max_x), i32(cpu, max_y)};
@@ -360,6 +361,21 @@ std::optional<uint32_t> road_entry_call(Cpu& cpu) {
     put_i32(cpu, out_x, x);
     put_i32(cpu, out_y, y);
     return with_al(out_y, false);
+}
+
+bool composite_type(int32_t type) { return (type_composite(type) & 0xFF) != 0; }
+uint32_t composite_parts(Cpu& cpu, uint32_t self, int32_t type) { return parts_of(cpu, self, type); }
+void composite_offset(Cpu& cpu, uint32_t part, uint32_t orientation, int32_t& x, int32_t& y) {
+    rotated(cpu, part, orientation, x, y);
+}
+bool composites_known() { return composites_installed; }
+
+namespace {
+
+std::optional<uint32_t> road_entry_call(Cpu& cpu) {
+    return composite_road_entry(cpu, cpu.reg(Cpu::Reg::ECX), static_cast<int32_t>(cpu.arg(0)),
+                                static_cast<int32_t>(cpu.arg(1)), static_cast<int32_t>(cpu.arg(2)), cpu.arg(3),
+                                cpu.arg(4), cpu.arg(5), cpu.reg(Cpu::Reg::ESP));
 }
 
 // Code réécrit ici, dans l'ordre des adresses (FUN_00418b00 est reprise dans road_entry).
@@ -409,6 +425,7 @@ int install_native_buildings(Process& p) {
     cpu.add_fast_path(kCompositeFindPart, 0x18, 8, find_part_call);
     cpu.add_fast_path(kCompositeBounds, 0x24, 8, bounds_call);
     cpu.add_fast_path(kCompositeRoadEntry, 0x18, 7, road_entry_call);
+    composites_installed = true;
     return 11;
 }
 

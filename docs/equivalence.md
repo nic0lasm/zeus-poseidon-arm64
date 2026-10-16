@@ -237,3 +237,8 @@ the whole `.data` section at the end of `working-city` (`zeus-run --dump-data`, 
 `0x00DB78A0` … `0x00DB78A8`, the count `0x00EF57E8` and the current record `0x00EF57EC`, which
 the state log does not cover. Under the deterministic clock each `GetTickCount` advances the
 clock, so equal timer values also show that the clock is read as many times, in the same order.
+
+**Hoplites** (`0x004B31F0`, `src/win32/native_figures.cpp`, 2026-10-16): `working-city`, one call
+in 20 checked, 35,992 passes, 1,800 compared, none left to the original, all identical. Its
+calls of the composite helpers go through the same native functions as `native_buildings.cpp`,
+so the hoplite is installed only when those are.

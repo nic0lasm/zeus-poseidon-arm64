@@ -53,6 +53,16 @@ int install_native_walkers(Process& process);
 
 // Aides des bâtiments composés (native_buildings.cpp) ; renvoie le nombre de remplacements installés.
 int install_native_buildings(Process& process);
+// Aides des bâtiments composés pour les autres réécritures (native_buildings.cpp), à n'utiliser
+// que si composites_known() : FUN_005344a0 ; FUN_0053c2c0(this, type) ; le décalage de la pièce
+// `part` tourné, sans les écritures de FUN_00546620 ; FUN_0053f810(this ; type, x, y, orientation,
+// &x, &y), `entry` étant ESP à son entrée (rien si une classe de pièce n'a pas la forme attendue).
+bool composite_type(int32_t type);
+uint32_t composite_parts(Cpu& cpu, uint32_t self, int32_t type);
+void composite_offset(Cpu& cpu, uint32_t part, uint32_t orientation, int32_t& x, int32_t& y);
+std::optional<uint32_t> composite_road_entry(Cpu& cpu, uint32_t self, int32_t type, int32_t x, int32_t y,
+                                             uint32_t orientation, uint32_t out_x, uint32_t out_y, uint32_t entry);
+bool composites_known();
 // Recherche de routes de la simulation (native_routes.cpp) ; renvoie le nombre de remplacements installés.
 int install_native_routes(Process& process);
 // Personnages de la simulation (native_figures.cpp) ; renvoie le nombre de remplacements installés.

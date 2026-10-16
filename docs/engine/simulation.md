@@ -252,7 +252,15 @@ By measured cost, and by what can be checked one call at a time (`--verify`,
       table `0x0063969C` + 36: hypothesis), handlers `0x004B31F0`, `0x004B26B0`, `0x004B1840`, with
       their shared `0x004B1630` (place in the formation, rank 31), `0x004B17F0` and
       `building_road_entry` `0x0053FB60`: about 0.57 ms per tick, a quarter of the tick
-      (`--time-span` from each handler to its return, `0x004CC987`).
+      (`--time-span` from each handler to its return, `0x004CC987`). **Hoplites done**
+      (`native_figures.cpp`): in `working-city` all 35,992 calls take one path, a soldier holding
+      its place in its group (action 6): the shared prologue, `figure_type_value` (index 8: only
+      its write counts, `+0x6A` of the group brought back to 10), `0x004B17F0`, `0x004B1630` with
+      the road entry of the group's building (through the composite helpers of
+      `native_buildings.cpp`), the view direction and the body image. Any other action, and a
+      soldier that must walk back to its place (`0x004B11C0`), stay with the original. The
+      handler's time falls from 135 ms to 41 ms over the run (`--time-span`, hooks included).
+      Horsemen and standard bearers follow the same pattern with their own code (`0x004E17A0` …).
    3. **Growers** (type 4, `0x004AE160`): 0.19 ms per tick.
    4. `figure_type_value` (`0x004E1B20`, 300 calls per tick from most handlers): only inside a
       native caller, since a hook costs about as much as its emulated code.

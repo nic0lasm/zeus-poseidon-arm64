@@ -247,6 +247,40 @@ constexpr uint32_t kTimerType = 0x00DB78A0, kTimerStart = 0x00DB78A4, kTimerStop
 constexpr uint32_t kTimerPrecise = 0x00EF57FC;      // non nul : QueryPerformanceCounter en plus
 constexpr uint32_t kTimerTotals = 0x00DB6EE0;       // par type, 32 octets : passages, durées, la plus longue
 
+// Soldats : gestionnaire de l'hoplite (type 0x0B) et ce qu'il appelle quand il tient sa place.
+constexpr uint32_t kHoplite = 0x004B31F0, kHopliteEnd = 0x004B3DD8;  // FUN_004b31f0 et sa table de sauts
+constexpr uint32_t kSoldierPlace = 0x004B1630, kSoldierPlaceEnd = 0x004B177C;      // FUN_004b1630
+constexpr uint32_t kSoldierRegroup = 0x004B17F0, kSoldierRegroupEnd = 0x004B1833;  // FUN_004b17f0
+constexpr uint32_t kFigureTypeValue = 0x004E1B20, kFigureTypeValueEnd = 0x004E2076;  // FUN_004e1b20, tables
+constexpr uint32_t kPoseidonGame = 0x004200F0, kPoseidonGameEnd = 0x00420113;      // FUN_004200f0
+constexpr uint32_t kBuildingRoadEntry = 0x0053FB60, kBuildingRoadEntryEnd = 0x0053FBD4;  // FUN_0053fb60
+constexpr uint32_t kBuildingOrigin = 0x005466A0, kBuildingOriginEnd = 0x00546727;  // FUN_005466a0
+// Champs d'une fiche de personnage (à leur adresse pour la fiche 0).
+constexpr uint32_t kFigureFrame = 0x00DBD789;        // pas de l'animation (8 bits)
+constexpr uint32_t kFigureFallbackDirection = 0x00DBD79A;
+constexpr uint32_t kFigureX = 0x00DBD79C, kFigureY = 0x00DBD79E;            // case (16 bits)
+constexpr uint32_t kFigureGoalX = 0x00DBD7B8, kFigureGoalY = 0x00DBD7BA;    // case visée (16 bits)
+constexpr uint32_t kFigureWait = 0x00DBD7BE;         // 16 bits
+constexpr uint32_t kFigureFormation = 0x00DBD7E8;    // groupe (16 bits)
+constexpr uint32_t kFigureRankInFormation = 0x00DBD7EA;  // place dans le groupe (8 bits)
+constexpr uint32_t kFigureInFormation = 0x00DBD7EB, kFigureAtPlace = 0x00DBD7ED;  // 8 bits
+constexpr uint32_t kFigureByte6A = 0x00DBD7FA;
+// Groupes de personnages (rang 31 des sauvegardes) : fiches de 0x9C octets.
+constexpr uint32_t kFormations = 0x00DB7B40;          // +0 : 1 en service
+constexpr uint32_t kFormationFlag03 = 0x00DB7B43;
+constexpr uint32_t kFormationBuilding = 0x00DB7B46;   // bâtiment (16 bits)
+constexpr uint32_t kFormationLayout = 0x00DB7B6A;     // disposition (16 bits), 5 : tous sur une case
+constexpr uint32_t kFormationX = 0x00DB7B76, kFormationY = 0x00DB7B78;  // 16 bits
+constexpr uint32_t kFormationFlag69 = 0x00DB7BA9, kFormationValue6A = 0x00DB7BAA;
+constexpr uint32_t kFormationDirection = 0x00DB7BAB;
+constexpr uint32_t kFormationLeader = 0x00DB7BB8;     // 16 bits, -1 aucun
+constexpr uint32_t kFormationFlag90 = 0x00DB7BD0, kFormationHalted = 0x00DB7BD3;
+constexpr uint32_t kFormationLinked = 0x00DB7BD4;     // 32 bits
+constexpr uint32_t kFormationOffsets = 0x005F2358;    // par disposition et place : x, y (16 bits, 8 octets)
+constexpr uint32_t kFigureTypeValues = 0x00786068;    // par type et indice (14 × 4 octets par type)
+// Images : par fichier, 0xCC44 octets ; mêmes tables que kFontGroups et kLastFontGroup.
+constexpr uint32_t kImageGroups = 0x012AFBEC, kImageLast = 0x012BC820, kImageFileStride = 0xCC44;
+
 // --- Code : recherche de routes de la simulation (native_routes.cpp) --------------------------
 
 // Fonctions réécrites ([début, fin[ de chacune, pour l'empreinte du code). Les parcours en

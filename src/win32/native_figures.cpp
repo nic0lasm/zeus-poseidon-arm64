@@ -31,12 +31,17 @@
 // ordre que par l'original : sous horloge déterministe chaque appel avance l'horloge. Quand
 // QueryPerformanceCounter est en service (0x00EF57FC non nul), tout est laissé à l'original.
 //
+// Deuxième lot : le gestionnaire des hoplites (FUN_004b31f0), par un chemin rapide, quand
+// l'hoplite tient sa place dans son groupe (voir hoplite() plus bas).
+//
 // Les indices et adresses sont calculés en 32 bits comme dans l'original. Adresses :
 // win32/game_gog.h. Le code n'est modifié que si ses octets sont ceux attendus (empreinte FNV-1a,
 // comparée avant toute modification).
 
 #include <cstdint>
 #include <cstring>
+#include <optional>
+#include <utility>
 
 #include "win32/game_gog.h"
 #include "win32/native.h"
@@ -66,6 +71,9 @@ struct Memory {
     }
     void put16(uint32_t address, int16_t v) const { std::memcpy(at(address), &v, 2); }
     uint8_t u8(uint32_t address) const { return *at(address); }
+    int32_t s8(uint32_t address) const { return static_cast<int8_t>(*at(address)); }
+    void put8(uint32_t address, uint8_t v) const { *at(address) = v; }
+    int32_t i32(uint32_t address) const { return static_cast<int32_t>(u32(address)); }
 };
 
 uint32_t record(int32_t figure) { return static_cast<uint32_t>(figure) * kRecord; }
@@ -134,6 +142,121 @@ uint32_t timer_stop(Cpu& cpu, const Process& process) {
     return next_figure(cpu, process, figure + 1);
 }
 
+// --- Soldats ---------------------------------------------------------------------------------
+
+uint32_t formation(int32_t index) { return static_cast<uint32_t>(index) * 0x9C; }
+uint32_t building(int32_t index) { return static_cast<uint32_t>(index) * 0x118; }
+
+// FUN_004200f0(0) : partie de Poséidon.
+bool poseidon(const Memory& m) { return m.u32(kGameMode) == 1 && m.s16(kGameSubmode) == 1; }
+
+// Image d'un identifiant positif : bits 9 et plus, fichier d'images ; bits 0 à 8, rang à partir de
+// 1 dans le fichier (0 : pas d'image). Un rang au-delà du dernier lit la première entrée.
+uint32_t image_of(const Memory& m, int32_t id) {
+    const int32_t file = id >> 9, rank = id & 0x1FF;
+    if (rank == 0) return 0;
+    const uint32_t table = static_cast<uint32_t>(file) * kImageFileStride;
+    uint32_t entry = m.u32(kImageGroups + table);
+    if (rank - 1 <= m.i32(kImageLast + table)) entry += static_cast<uint32_t>(rank - 1) * 8;
+    return (static_cast<uint32_t>(file) << 14) + m.u32(entry + 4);
+}
+
+// FUN_0053fb60(bâtiment) sans valeur de retour : la case de route par laquelle on entre dans un
+// bâtiment composé (FUN_005466a0 donne la case d'origine de sa pièce principale, FUN_0053f810
+// cherche la route autour). `scratch` : place libre sous la pile pour les variables de
+// FUN_0053f810. Rien si FUN_0053f810 n'est pas traitée en natif.
+std::optional<std::pair<int32_t, int32_t>> road_entry(Cpu& cpu, const Memory& m, int32_t number, uint32_t scratch) {
+    const uint32_t b = building(number);
+    const int32_t main = number - m.s16(kBuildings + 2 + b);
+    const uint32_t origin = building(main - m.s16(kBuildings + 2 + building(main)));
+    int32_t x = m.s16(kBuildings - 0x0A + origin), y = m.s16(kBuildings - 8 + origin);
+    const uint32_t parts = composite_parts(cpu, kCompositeTables, m.s16(kBuildings + origin));
+    if (parts) {
+        int32_t dx, dy;
+        composite_offset(cpu, parts, m.u8(kBuildings + 0x8C + origin), dx, dy);
+        x -= dx;
+        y -= dy;
+    }
+    const uint32_t out_x = scratch + 0x40, out_y = scratch + 0x44;
+    if (!composite_road_entry(cpu, kCompositeTables, m.s16(kBuildings + b), x, y, m.u8(kBuildings + 0x8C + b),
+                              out_x, out_y, scratch))
+        return std::nullopt;
+    return std::make_pair(m.i32(out_x), m.i32(out_y));
+}
+
+// Ce que FUN_004b1630 (soldat qui tient sa place) fait d'un soldat.
+enum class Place {
+    Halted,   // groupe arrêté (+0x90 et +0x93) : rien
+    Removed,  // groupe sans bâtiment, ou bâtiment ni composé ni de 100 à 114 : fiche à retirer
+    Linked,   // groupe rattaché (+0x94) à un meneur (+0x78) : rien d'autre
+    Placed,   // le soldat est sur la case d'entrée du bâtiment : +0x5D à 1
+};
+
+std::optional<Place> place(Cpu& cpu, const Memory& m, uint32_t r, uint32_t g, uint32_t scratch) {
+    if (m.u8(kFormationFlag90 + g) != 0 && m.u8(kFormationHalted + g) != 0) return Place::Halted;
+    const int32_t number = m.s16(kFormationBuilding + g);
+    if (number == 0) return Place::Removed;
+    const int32_t type = m.s16(kBuildings + building(number));
+    if (!composite_type(type) && (type < 100 || type > 0x72)) return Place::Removed;
+    const auto entry = road_entry(cpu, m, number, scratch);
+    if (!entry) return std::nullopt;
+    if (m.u32(kFormationLinked + g) != 0 && m.s16(kFormationLeader + g) != -1) return Place::Linked;
+    if (m.s16(kFigureX + r) == entry->first && m.s16(kFigureY + r) == entry->second) return Place::Placed;
+    return std::nullopt;  // il rejoint sa place : FUN_004b11c0, laissée à l'original
+}
+
+// FUN_004b31f0, gestionnaire des hoplites (type 0x0B), quand l'hoplite tient sa place dans son
+// groupe (action 6) : prologue commun aux soldats, FUN_004e1b20(personnage, 8) dont seule l'écriture
+// compte ici (+0x6A du groupe ramené à 10), FUN_004b17f0, FUN_004b1630, direction et image.
+// Les autres actions, et l'hoplite qui doit rejoindre sa place, sont laissés à l'original.
+std::optional<uint32_t> hoplite(Cpu& cpu) {
+    const Memory m{cpu.host(0)};
+    const int32_t figure = m.i32(kFigureCurrent);
+    const uint32_t r = record(figure);
+    const int32_t group = m.s16(kFigureFormation + r);
+    const uint32_t g = formation(group);
+    // Action 6 après le prologue (4 si le groupe n'est pas en service) et FUN_004b17f0.
+    if (m.u8(kFigureAction + r) != 6 || m.u8(kFormations + g) != 1) return std::nullopt;
+    if (group == 0x1F || group == 0x20) return std::nullopt;  // 0x004B389E : autres images
+    const std::optional<Place> placed = place(cpu, m, r, g, cpu.reg(Cpu::Reg::ESP) - 0x200);
+    if (!placed) return std::nullopt;
+
+    // Prologue (0x004B31F0) ; le pas de l'animation, avancé ici puis remis à 0 par FUN_004b1630,
+    // reprend sa valeur d'entrée en 0x004B3662.
+    const uint8_t frame = m.u8(kFigureFrame + r);
+    m.put8(kFigureByte6A + r, 0);
+    m.put32(kFigureExtraImage + r, 0);
+    if (group != 0 && m.u8(kFormationFlag69 + g) == 0 && m.u8(kFormationValue6A + g) >= 0x0B)
+        m.put8(kFormationValue6A + g, 0x0A);  // FUN_004e1b20
+    m.put8(kFigureInFormation + r, *placed == Place::Halted ? 0 : 1);
+    m.put8(kFigureAtPlace + r, *placed == Place::Placed || m.u8(kFormationFlag03 + g) != 0 ? 1 : 0);
+    const int32_t layout = m.s16(kFormationLayout + g);
+    if (layout == 5) {
+        m.put16(kFigureGoalX + r, static_cast<int16_t>(m.s16(kFormationX + g)));
+        m.put16(kFigureGoalY + r, static_cast<int16_t>(m.s16(kFormationY + g)));
+    } else {
+        const uint32_t offset = kFormationOffsets +
+                                (static_cast<uint32_t>(layout) * 8 + m.u8(kFigureRankInFormation + r)) * 8;
+        m.put16(kFigureGoalX + r, static_cast<int16_t>(m.s16(offset) + m.s16(kFormationX + g)));
+        m.put16(kFigureGoalY + r, static_cast<int16_t>(m.s16(offset + 4) + m.s16(kFormationY + g)));
+    }
+    // FUN_004b1630.
+    m.put16(kFigureWait + r, 0);
+    if (*placed == Place::Removed) m.put8(kFigurePlaced + r, 2);
+    // 0x004B364B : direction du groupe, pas de l'animation d'entrée.
+    m.put8(kFigureFallbackDirection + r, m.u8(kFormationDirection + g));
+    m.put8(kFigureFrame + r, frame);
+    int32_t direction = m.s8(kFigureDirection + r);
+    if (direction >= 8) direction = m.s8(kFigureFallbackDirection + r);
+    direction -= m.i32(kViewOrientation);
+    if (direction < 0) direction += 8;
+    if (direction >= 8) direction -= 8;
+    m.put32(kFigureViewDirection, static_cast<uint32_t>(direction));
+    const uint32_t image = image_of(m, poseidon(m) ? 0x6A4C : 0x667E) + frame * 8u + static_cast<uint32_t>(direction);
+    m.put32(kFigureImage + r, image);
+    return image;
+}
+
 // Code réécrit ici : walkers_update et ses deux minuteries.
 constexpr uint32_t kRewritten[][2] = {
     {kTimerStartFunction, kTimerStartFunctionEnd},
@@ -149,6 +272,22 @@ uint64_t fingerprint(Cpu& cpu) {
     return hash;
 }
 
+// Code des soldats lu ou réécrit ici, avec les tables de sauts.
+constexpr uint32_t kSoldiers[][2] = {
+    {kPoseidonGame, kPoseidonGameEnd},           {kSoldierPlace, kSoldierPlaceEnd},
+    {kSoldierRegroup, kSoldierRegroupEnd},       {kHoplite, kHopliteEnd},
+    {kFigureTypeValue, kFigureTypeValueEnd},     {kBuildingRoadEntry, kBuildingRoadEntryEnd},
+    {kBuildingOrigin, kBuildingOriginEnd},
+};
+constexpr uint64_t kSoldiersHash = 0x29B28F1E308EF3AFull;
+
+uint64_t soldiers_fingerprint(Cpu& cpu) {
+    uint64_t hash = 0xCBF29CE484222325ull;
+    for (const auto& range : kSoldiers)
+        for (uint32_t a = range[0]; a < range[1]; ++a) hash = (hash ^ *cpu.host(a)) * 0x100000001B3ull;
+    return hash;
+}
+
 }  // namespace
 
 int install_native_figures(Process& p) {
@@ -158,7 +297,13 @@ int install_native_figures(Process& p) {
     // « MOV AL,[0x00EF57FC] ; SUB ESP,8 » (8).
     cpu.add_code_jump(kWalkersUpdateLoop, 6, [&p](Cpu& c) { return loop_top(c, p); });
     cpu.add_code_jump(kTimerStopFunction, 8, [&p](Cpu& c) { return timer_stop(c, p); });
-    return 2;
+    int installed = 2;
+    if (composites_known() && soldiers_fingerprint(cpu) == kSoldiersHash) {
+        // « SUB ESP,0xC ; MOV EDX,[0x00EF57EC] » déplacés.
+        cpu.add_fast_path(kHoplite, 0, 9, hoplite);
+        ++installed;
+    }
+    return installed;
 }
 
 }  // namespace zeus::win32
