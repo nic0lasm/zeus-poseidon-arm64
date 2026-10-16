@@ -4040,14 +4040,14 @@ adresse	taille	nom	module	statut	preuve	type
 0059e5a0	1478	FUN_0059e5a0	marcheurs	inconnu	chaîne (figures)	fonction
 0059eb70	104	FUN_0059eb70	interface	inconnu	chaîne (fenêtre et réglages)	fonction
 0059ebe0	366	top_bar_background_draw	interface	documenté	fond de la barre du haut, image de 838 pixels en (0, 0)	fonction
-0059ed50	309	FUN_0059ed50	inconnu	inconnu	aucun indice	fonction
-0059ee90	596	window_frame_titled_draw	interface	documenté	cadre de cases de 16 pixels avec barre de titre ; 3 888 appels	fonction
-0059f0f0	186	FUN_0059f0f0	inconnu	inconnu	aucun indice	fonction
-0059f1b0	225	FUN_0059f1b0	inconnu	inconnu	aucun indice	fonction
-0059f2a0	589	window_frame_draw	interface	documenté	cadre de cases de 16 pixels ; 9 368 appels	fonction
-0059f4f0	262	FUN_0059f4f0	inconnu	inconnu	aucun indice	fonction
-0059f600	223	FUN_0059f600	inconnu	inconnu	aucun indice	fonction
-0059f6e0	486	window_highlight_draw	interface	documenté	surbrillance d'un rectangle en cases de 16 pixels ; 8 436 appels	fonction
+0059ed50	309	button_bar_draw	interface	documenté	rangée de cases de 16 pixels du groupe 0x0E (3 images par style), longueur lue dans 0x010DFEE0[indice] ; 38 887 appels ; natif : chemin rapide dans native_frames.cpp, repli sur l'original si une case n'est pas un cas du répartiteur natif ; interface.md §5.3	fonction
+0059ee90	596	window_frame_titled_draw	interface	documenté	cadre de cases de 16 pixels avec barre de titre (groupe 0x83) ; 3 888 appels ; natif : chemin rapide dans native_frames.cpp, repli sur l'original si une case n'est pas un cas du répartiteur natif ; interface.md §5.3	fonction
+0059f0f0	186	frame_titled_middle_draw	interface	documenté	bloc de cases du milieu du cadre à titre (groupe 0x83, +0xD + s + p) ; 0 / 3 576 / 0 appels ; interface.md §5.3	fonction
+0059f1b0	225	frame_titled_bottom_row_draw	interface	documenté	rangée du bas du cadre à titre (groupe 0x83, +0x84, +0x85 + s, +0x8F) ; jamais appelée dans les trois scénarios ; interface.md §5.3	fonction
+0059f2a0	589	window_frame_draw	interface	documenté	cadre de cases de 16 pixels (groupe 0x84) ; 9 368 appels ; natif : chemin rapide dans native_frames.cpp, repli sur l'original si une case n'est pas un cas du répartiteur natif ; interface.md §5.3	fonction
+0059f4f0	262	frame_bottom_row_draw	interface	documenté	rangée du bas du cadre simple (groupe 0x84, +0x2A, +0x2B + s, +0x30) ; 466 / 3 664 / 1 689 appels ; interface.md §5.3	fonction
+0059f600	223	tile_row_draw	interface	documenté	rangée de cases de 16 pixels du groupe 0x1B (+0, +1, +2) ; 3 211 / 9 722 / 5 772 appels ; interface.md §5.3	fonction
+0059f6e0	486	window_highlight_draw	interface	documenté	surbrillance d'un rectangle en cases de 16 pixels (groupe 0x7B, +8 selon la variante) ; 8 436 appels ; natif : chemin rapide dans native_frames.cpp, repli sur l'original si une case n'est pas un cas du répartiteur natif ; interface.md §5.3	fonction
 0059f8d0	666	FUN_0059f8d0	inconnu	inconnu	aucun indice	fonction
 0059fb70	40	FUN_0059fb70	inconnu	inconnu	aucun indice	fonction
 0059fba0	327	FUN_0059fba0	inconnu	inconnu	aucun indice	fonction

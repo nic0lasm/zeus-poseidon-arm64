@@ -17,6 +17,7 @@
 #include "win32/game_gog.h"
 #include "win32/native.h"
 #include "win32/native_animations.h"
+#include "win32/native_frames.h"
 #include "win32/native_sanctuaries.h"
 #include "win32/process.h"
 #include "win32/sprite_clip.h"
@@ -852,6 +853,7 @@ void install_native_functions(Process& p) {
     installed += install_native_figures(p);
     installed += install_native_terrain(p);
     installed += install_native_text(p);
+    installed += install_native_frames(p);
     if (p.trace) std::fprintf(stderr, "[hôte] %d fonctions du jeu remplacées par des fonctions natives\n", installed);
 }
 

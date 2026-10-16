@@ -197,6 +197,21 @@ constexpr uint32_t kBuildingFigures = 0x00782F70;  // FUN_00433d50(type, 5) : [t
 constexpr uint32_t kAnimationHalfWidth = 0x00847D20;  // FUN_0045d140 : demi-largeur de l'image, laissée là
 constexpr uint32_t kAnimationMirror = 0x00847D1C;     // FUN_0045d140 : FUN_0045dc10(bâtiment), laissée là
 
+// --- Code : cadres des fenêtres en cases de 16 pixels (native_frames.cpp) ----------------------
+
+constexpr uint32_t kButtonDraw = 0x0059ED50;       // FUN_0059ed50(indice, x, y, cases, style) : bouton
+constexpr uint32_t kTitledFrameDraw = 0x0059EE90;  // FUN_0059ee90(x, y, colonnes, rangées) : cadre à titre
+constexpr uint32_t kFrameDraw = 0x0059F2A0;        // FUN_0059f2a0(x, y, colonnes, rangées) : cadre simple
+constexpr uint32_t kHighlightDraw = 0x0059F6E0;    // FUN_0059f6e0(a, x, y, largeur, hauteur, variante)
+// Ces quatre fonctions, puis FUN_0040fcf0 et FUN_0040fd10 (groupe d'une banque, groupe d'un
+// identifiant), empreinte commune.
+constexpr uint32_t kFrameCode[][2] = {{0x0059ED50, 0x0059EE85}, {0x0059EE90, 0x0059F0E4}, {0x0059F2A0, 0x0059F4ED},
+                                      {0x0059F6E0, 0x0059F8C6}, {0x0040FCF0, 0x0040FD75}};
+constexpr uint64_t kFrameCodeHash = 0x903396CF9C1C771Aull;
+// Groupes d'images de la banque 1 : table de 8 octets par groupe (+4 premier numéro) et dernier rang.
+constexpr uint32_t kFrameGroups = 0x012BC830, kFrameGroupCount = 0x012C9464;
+constexpr uint32_t kButtonLengths = 0x010DFEE0;  // FUN_0059ed50 : longueur par indice, 32 bits (rôle non établi)
+
 // --- Code : cadencement (user32.cpp) ----------------------------------------------------------
 
 constexpr uint32_t kSimulationDue = 0x005168A0;  // FUN_005168a0 : un tour de simulation est-il dû ?

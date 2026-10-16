@@ -249,10 +249,55 @@ callers). Drawing goes through `0x005ACF50` with the position in `0x00F13A40`/`0
 
 Windows and panels are drawn from **16 × 16-pixel tiles**: `0x0059EE90(x, y, columns, rows)` (3,888 / 7,999 /
 4,003 calls) draws a frame with its title bar, `0x0059F2A0(x, y, columns, rows)` (9,368 / 16,910 / 12,159) a
-plain frame and `0x0059F6E0(…)` a highlight (8,436 / 22,364 / 8,781). The tile numbers come from fixed
-groups of bank 0 and `0x0040FD10`/`0x0040FCF0` ids (`0x83`, `0x84`, `0x284`, `0x285`: groups of the interface
-bank) with the corner, edge and middle tiles chosen by row and column and the edge tiles cycling every 5 or
-10 columns. **verified** (loops and ids); the group names are not read.
+plain frame, `0x0059F6E0(unused, x, y, width, height, variant)` a highlight (8,436 / 22,364 / 8,781) and
+`0x0059ED50(index, x, y, cells, style)` a button bar (38,887 calls in each of the three). All four are
+`cdecl` and draw each tile through `0x005ACF50(0x012AEBE8, image, x, y, 0, 0, 0)`, after writing the tile's
+position into `0x00F13A40` / `0x00F13A3C` and (except the highlight) its image into `0x00F13A20`. **verified** (listing; native code identical call by call, section 12)
+
+The images are those of fixed groups of **bank 1** (the interface bank): the first image of group *g* is
++4 of the 8-byte entry *g* of the table pointed to by `0x012BC830`, or of entry 0 when *g* is greater than
+`0x012C9464` (signed comparison), plus `0x4000` (bank × 16384). The functions read the table directly, or
+through `0x0040FCF0(g)` with `this` = `0x012BC82C` (the bank-1 group object: table at +4, last rank at
++0xCC38), or through `0x0040FD10(0x200 + g + 1)`; the three forms give the same image. **verified**
+
+In both frames, tile (r, c) is at (x + 16c, y + 16r). Row 0 is tested first, then the last row; in a row,
+column 0 first, then the last column (signed comparisons with rows − 1 and columns − 1). The middle tiles of
+a row add a counter *s* (0 at each row, +1 per middle tile, back to 0 at a ceiling); the tiles of the middle
+rows ("sides") add a counter *p*, which grows after each middle row by the height of a side pattern and goes
+back to 0 at a ceiling. Offsets from the first image of the group, `0x4000` included:
+
+| Function | Group | Top row: first, last, middle | Bottom row | Middle rows | *s* ceiling | *p* step, ceiling |
+|---|---|---|---|---|---|---|
+| `0x0059EE90` | `0x83` | +0, +0xB, +1+s | +0x84, +0x8F, +0x85+s | +0xC+p, +0x17+p, +0xD+s+p | 10 | 0xC, 0x78 |
+| `0x0059F2A0` | `0x84` | +0, +6, +1+s | +0x2A, +0x30, +0x2B+s | +7+p, +0xD+p, +8+s+p | 5 | 7, 0x23 |
+
+Both return the number of rows in `EAX` (0 when it is zero or negative) and write no argument slot.
+**verified**
+
+The highlight `0x0059F6E0` takes a rectangle in pixels: columns = width / 16 rounded toward zero, plus one
+when the remainder is not zero (same for the rows). Its images are those of group `0x7B`, the eight next
+ones when the last argument is not zero: top row +0, +1 (middle), +2 (last); bottom row +6, +5, +4; middle
+rows +7 (first) and +3 (last), their inner tiles not drawn (`0x0059F885`; their position is still written).
+The last column is drawn 16 × columns − width pixels to the left and the bottom row 16 × rows − height
+pixels up, so the highlight covers the rectangle exactly; the position variables receive the grid position.
+The first argument is not read. It reuses four argument slots (the y of the current row, the columns, the
+rows, the row counter) and returns the number of rows. **verified**
+
+The button bar `0x0059ED50` draws one row of group `0x0E` images, three per style (+3 × style, then +0
+first, +2 last, +1 between). Its length comes from the 32-bit table `0x010DFEE0`, by index; the ten callers
+(`0x004202C6`, `0x00422B17`, `0x00422B8A`, `0x00422C02`, `0x004FDE29`, `0x004FDE91`, `0x004FDED6`,
+`0x005BE948`, `0x005BE9B1`, `0x005BEA2D`) all pass 6, the entry `0x010DFEF8`, which `0x00424E2C`,
+`0x005900E9`, `0x00590139` and `0x00590194` set to 100: below 15, nothing is drawn and the value is
+returned; otherwise value − 13 tiles, reduced to `cells`, or centred in `cells` (x += (cells − length) × 16 /
+2, written back into x's argument slot). The style is 0 or 1 where the caller computes it (a `SETE` at six
+of the ten, e.g. `0x00422AF9`, which also stores it in `0x00F13A92`). It returns the value of the last
+dispatcher call, or `cells` when the length is reduced to zero or less. **verified**
+(*hypothesis*: what the table holds, and why 100.)
+
+Four smaller relatives stay with the original: `0x0059F600(x, y, cells)` a row of group `0x1B` (+0, +1, +2;
+3,211 / 9,722 / 5,772 calls), `0x0059F4F0(x, y, cells)` a bottom row of the plain frame (466 / 3,664 /
+1,689), `0x0059F0F0` a block of the titled frame's middle tiles (0 / 3,576 / 0) and `0x0059F1B0` a bottom
+row of the titled frame (never called in the three scenarios). **verified** (listing and counts)
 
 ### 5.4 Layout overrides (`dialog.loc`)
 
@@ -585,7 +630,7 @@ section 1 (`working-city` / `options` / `tutorial`). "Native" = already replaced
 | 12 | `0x005090A0` | word-wrapped paragraph | 466 / 3,665 / 1,689 | 4, 8 | original |
 | 13 | `0x00432300`, `0x004321E0`, `0x00513180` | hit-test, click, hover of the hit table | 12.6 k, 4.5 k, 4.5 k / 16 k, 7.7 k, 7.7 k / 12.8 k, 4.5 k, 4.5 k | mouse state | original |
 | 14 | `0x004316F0`, `0x00431530` | draw table, image table | 6.2 k, 0 / 24.7 k, 2.6 k / 12.4 k, 0 | dispatcher | original |
-| 15 | `0x0059F2A0`, `0x0059EE90`, `0x0059F6E0` | frames and highlights from 16-pixel tiles | 9.4 k, 3.9 k, 8.4 k / 16.9 k, 8.0 k, 22.4 k / 12.2 k, 4.0 k, 8.8 k | dispatcher | original |
+| 15 | `0x0059F2A0`, `0x0059EE90`, `0x0059F6E0`, `0x0059ED50` | frames, highlights and button bars from 16-pixel tiles (section 5.3) | 9.4 k, 3.9 k, 8.4 k, 38.9 k / 16.9 k, 8.0 k, 22.4 k, 38.9 k / 12.2 k, 4.0 k, 8.8 k, 38.9 k | dispatcher | **native** (`src/win32/native_frames.cpp`); `0x0059F600`, `0x0059F4F0`, `0x0059F0F0`, `0x0059F1B0` original |
 | 16 | `0x00512740`, `0x005128E0`, `0x00512990`, `0x00512BF0`, `0x005132A0`, `0x00512B50`, `0x00512FF0` | layout-override lookups and helpers; dead without `dialog.loc` | 15 k, 11 k, 7.8 k, … / 113 k, 106 k, 88 k, … | 8, 13 | original |
 | 17 | `0x0050B470`, `0x0050B450` | per-turn mouse edges | 8,398 / 18,513 / 9,614 | window state | original |
 | 18 | `0x005C4A90` and its key tables | recording of mouse and keys | 95 / 122 / 50 | 17 | original |
@@ -599,14 +644,23 @@ left that touches pixels. (b) Steps 13 to 17 depend on the *exact* edge semantic
 reset at the next poll). (c) Step 16 can be dropped rather than rewritten only if `dialog.loc` support is declared
 out of scope (it is absent from the GOG data, but the language packs of other editions are not examined for it).
 (d) The debug overlays (`0x0059C8A0`, `0x0059D040`, `0x0059D280`, `0x005C5D60`) run every city frame but test a flag
-first and draw nothing in normal play; they need only their flag test.
+first and draw nothing in normal play; they need only their flag test. (e) Step 15 is native
+(`src/win32/native_frames.cpp`): one fast path per function computes every tile, checks that the native
+sprite dispatcher handles each of them before writing anything, then draws them in the original's order, or
+hands the whole call back. In the nine scenarios no call is handed back (at most 38,887 button bars,
+14,605 titled frames in `editor`, 39,838 plain frames in `adventure`, 254,115 highlights in `editor`); frames and state are
+identical to the references, and every call of the four functions in `options`, `working-city` and `tutorial`
+passes `--verify`. One hook per call replaces one dispatcher hook per tile plus the emulated loop: on one
+cloud machine, three alternating runs each, `working-city` goes from 24.2–25.1 s to 21.5–22.4 s of CPU and
+`options` from 36.3–37.4 s to 32.0–32.6 s.
 
 ## 13. Open questions
 
 - The meaning of each screen number not listed with a role in section 4, and the classes behind the menu objects
   (`0x00423250`, `0x00424AF0`, `0x00426B00`, `0x0041E5A0`, `0x0051D830`, `0x0052DA30`, `0x005A8B30`, `0x005BB860`, `0x005C1A50`, `0x005C2A40`).
 - The handlers behind the key calls (`0x00407600`, `0x00433AB0`, `0x00402430`, `0x005BF750`, `0x005BF880`, `0x00408930` roles).
-- The contents of each building-information window kind and of each panel page; the 16-tile frames' group names.
+- The contents of each building-information window kind and of each panel page; the 16-tile frames' group names;
+  what the table `0x010DFEE0` of the button bar `0x0059ED50` holds.
 - The third parameter of `0x00508800` (a flag) and the write of `0x00F13970`, `0x00F13974`, `0x00F13978` (the style variables).
 - Whether `dialog.loc` exists in any edition (the three lists it fills, `0x00513490`).
 - The `@G` image base (`0x012C9474`, group of bank 2) and the 14-byte `0x00EF8220` link table's reader (the click on a link).
