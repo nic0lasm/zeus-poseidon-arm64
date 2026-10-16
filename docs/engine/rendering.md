@@ -761,9 +761,15 @@ building tops, `0x005ADF00` except with an overlay, the first pass of `0x0045817
 common walkers, `0x0041D3D0` when it draws nothing, the walker sort `0x00449B30` and the walker loops
 (`0x0045A5A0` and the two loops of the second pass).
 
-Where the list stands: steps 1 to 4 are native; 5 to 7 are never called in the nine scenarios,
-so no call-by-call proof is possible yet and they wait for a scenario that draws glyph masks,
-overlays (a building marked red) and the rare cases; the second pass (16) is native for its
+Where the list stands: steps 1 to 4 are native; 5 to 7 were called by none of the nine first
+scenarios. The tenth, `rare` (tests/README.md), reaches the 6 × 6 base `0x00441E50` (381 calls in the original; the 270 left with native code on
+are identical call by call), the overlay routines on runs `0x00416820`, `0x00416AF0`,
+`0x00416B90` and the mirrored tops `0x00415B80`, `0x00415C40`, `0x00415D30`, and the alpha routine with its five
+variants (`0x00413E30`; `0x00414CE0`, `0x00414540`, `0x00414190`, `0x004150B0`, `0x00414910`)
+(`zeus-run --count`, original code). Still reached by no scenario: the clipped glyph masks
+`0x00416F00`, `0x00416FA0`, the overlay on uncompressed images `0x00416070`, `0x00416140`, the
+tint `0x005B86A0`, `0x005B8910`, `0x005B8B60`, the squares `0x00417290`, `0x004171E0`,
+`0x00417140`, `0x00417100` and the mirrored keyed copies `0x00415E30`, `0x00415EC0`; the second pass (16) is native for its
 common cells; the bases of 2 to 6 tiles (10), the walker sort `0x00449B30` (12) and the walker
 loops (13) are native.
 The extras of sanctuaries and monuments (15, `0x0053E5F0`) are native when they draw nothing,

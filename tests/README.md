@@ -46,6 +46,7 @@ also fails if the game stops on a missing function.
 | `options` | *File* menu, every window of the *Options* menu, in-game help, *About* |
 | `window` | window sent to the background and back (the game waits), mouse wheel in a list |
 | `working-city` | the last tutorial's large city: sanctuaries, stadium, a god and a monster |
+| `rare` | rare drawing cases, in Poseidon's open play *The Founding of Troy*: the museum (a 6 × 6 base) as a green and a red ghost, then placed and marked red by the land-clearing tool at the right edge of the view, the view turned while dragging (mirrored tops), Cerberus followed and swept across both edges (alpha images, clipped and mirrored) |
 
 Scenarios were written for the English GOG edition at 800×600. Lines starting with `#` are
 comments; `# durée : N` gives the length of the run in virtual seconds and `# options : …` extra
