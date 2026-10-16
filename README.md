@@ -46,7 +46,8 @@ also rewritten by hand in native code, each one proven identical to the original
 |---|---|---|
 | Mac with Apple Silicon (M1 or later), macOS 14+ | **[⬇ Zeus-Poseidon-macos-arm64.zip](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest/download/Zeus-Poseidon-macos-arm64.zip)** | available |
 | Mac with an Intel processor, macOS 15+ | **[⬇ Zeus-Poseidon-macos-intel.zip](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest/download/Zeus-Poseidon-macos-intel.zip)** | from version 1.3 ([#41](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/41)) |
-| Linux (AppImage) | not yet | planned ([#40](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/40)) |
+| Linux x86-64 (Ubuntu 22.04, Debian 12, Fedora 36 or later) | **[⬇ Zeus-Poseidon-linux-x86_64.AppImage](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest/download/Zeus-Poseidon-linux-x86_64.AppImage)** | from version 1.3 ([#40](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/40)) |
+| Linux arm64 (same distributions) | **[⬇ Zeus-Poseidon-linux-aarch64.AppImage](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest/download/Zeus-Poseidon-linux-aarch64.AppImage)** | from version 1.3 ([#40](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/40)) |
 
 Every version and its notes: [Releases](https://github.com/nic0lasm/zeus-poseidon-arm64/releases).
 
@@ -67,6 +68,10 @@ Every version and its notes: [Releases](https://github.com/nic0lasm/zeus-poseido
 **In French?** Hold the Option key (⌥) at launch and choose *Another language, from the original
 CDs…*: the application builds a French pack from the images of your own CDs
 ([details](docs/languages.md)).
+
+**On Linux:** make the AppImage executable (`chmod +x`, or *Properties → Allow executing*) and run
+it. It asks for the GOG installer the same way (with zenity or kdialog if installed, otherwise in
+the terminal); start it with `ZEUS_ASK_LANGUAGE=1` for the language choice.
 
 ## What you get
 

@@ -46,7 +46,8 @@ l'original. [Détails plus bas](#principe).
 |---|---|---|
 | Mac à puce Apple Silicon (M1 ou plus récent), macOS 14+ | **[⬇ Zeus-Poseidon-macos-arm64.zip](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest/download/Zeus-Poseidon-macos-arm64.zip)** | disponible |
 | Mac à processeur Intel, macOS 15+ | **[⬇ Zeus-Poseidon-macos-intel.zip](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest/download/Zeus-Poseidon-macos-intel.zip)** | à partir de la 1.3 ([#41](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/41)) |
-| Linux (AppImage) | pas encore | prévu ([#40](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/40)) |
+| Linux x86-64 (Ubuntu 22.04, Debian 12, Fedora 36 ou plus récents) | **[⬇ Zeus-Poseidon-linux-x86_64.AppImage](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest/download/Zeus-Poseidon-linux-x86_64.AppImage)** | à partir de la 1.3 ([#40](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/40)) |
+| Linux arm64 (mêmes distributions) | **[⬇ Zeus-Poseidon-linux-aarch64.AppImage](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest/download/Zeus-Poseidon-linux-aarch64.AppImage)** | à partir de la 1.3 ([#40](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/40)) |
 
 Toutes les versions et leurs notes : [Releases](https://github.com/nic0lasm/zeus-poseidon-arm64/releases).
 
@@ -68,6 +69,11 @@ Toutes les versions et leurs notes : [Releases](https://github.com/nic0lasm/zeus
 **En français ?** Gardez la touche Option (⌥) enfoncée au lancement et choisissez *Autre langue,
 depuis les CD d'origine…* : l'application fabrique un pack français à partir des images de vos
 propres CD ([détails](docs/languages.md), en anglais).
+
+**Sous Linux :** rendez l'AppImage exécutable (`chmod +x`, ou *Propriétés → Autoriser
+l'exécution*) et lancez-la. Elle demande l'installateur GOG de la même façon (avec zenity ou
+kdialog s'ils sont installés, sinon dans le terminal) ; lancez-la avec `ZEUS_ASK_LANGUAGE=1` pour
+choisir la langue.
 
 ## Ce que vous obtenez
 
