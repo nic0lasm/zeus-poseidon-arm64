@@ -175,7 +175,7 @@ adresse	taille	nom	module	statut	preuve	type
 004131c0	330	FUN_004131c0	inconnu	inconnu	aucun indice	fonction
 00413310	32	FUN_00413310	inconnu	inconnu	aucun indice	fonction
 00413330	68	FUN_00413330	inconnu	inconnu	aucun indice	fonction
-00413380	1011	FUN_00413380	inconnu	inconnu	aucun indice	fonction
+00413380	1011	animation_frame_step	rendu	documenté	natif partiel : chemin rapide dans native_animations.cpp ; image courante de l'animation d'une case, rangée dans 0x00CB4B08 (avance selon 0x006668EC) ; rendering.md §11.2	fonction
 004138b0	120	FUN_004138b0	inconnu	inconnu	aucun indice	fonction
 00413930	121	FUN_00413930	inconnu	inconnu	aucun indice	fonction
 004139b0	115	FUN_004139b0	inconnu	inconnu	aucun indice	fonction
@@ -753,8 +753,8 @@ adresse	taille	nom	module	statut	preuve	type
 0044e0b0	67	FUN_0044e0b0	inconnu	inconnu	aucun indice	fonction
 0044e100	2478	FUN_0044e100	inconnu	inconnu	aucun indice	fonction
 0044eab0	636	FUN_0044eab0	inconnu	inconnu	aucun indice	fonction
-0044f1a0	378	FUN_0044f1a0	rendu	inconnu	hypothèse : appelants/appelés (poids 4 sur 4 en rendu)	fonction
-0044f320	2588	building_extra_draw	rendu	documenté	dessin d'appoint d'un bâtiment selon son type (21 types) ; rendering.md §11.2	fonction
+0044f1a0	378	building_extra_sprite	rendu	documenté	un sprite de 0x0044F320 en (x + dx, y + dy), ou retourné par 0x005AE9F0 ; rendering.md §11.2	fonction
+0044f320	2588	building_extra_draw	rendu	documenté	natif partiel : chemin rapide dans native_animations.cpp pour les types qu'elle ne dessine pas ; dessin d'appoint d'un bâtiment selon son type (21 types) ; rendering.md §11.2	fonction
 0044fea0	70	FUN_0044fea0	inconnu	inconnu	aucun indice	fonction
 0044fef0	5977	walker_draw	rendu	documenté	natif partiel : chemin rapide dans native_walkers.cpp ; un personnage (plan, position, sprites, cases à redessiner) ; rendering.md §11.3	fonction
 00451790	91	FUN_00451790	inconnu	inconnu	aucun indice	fonction
@@ -808,12 +808,12 @@ adresse	taille	nom	module	statut	preuve	type
 0045c580	390	FUN_0045c580	rendu	inconnu	hypothèse : appelants/appelés (poids 3 sur 4 en rendu)	fonction
 0045c710	1743	FUN_0045c710	rendu	inconnu	hypothèse : appelants/appelés (poids 3 sur 3 en rendu)	fonction
 0045cde0	860	FUN_0045cde0	rendu	inconnu	hypothèse : appelants/appelés (poids 3 sur 4 en rendu)	fonction
-0045d140	2250	FUN_0045d140	rendu	inconnu	hypothèse : appelants/appelés (poids 3 sur 4 en rendu)	fonction
+0045d140	2250	animation_draw	rendu	documenté	natif partiel : chemin rapide dans native_animations.cpp ; image n de l'animation d'une case, switch sur le type (0x0045DA24) ; rendering.md §11.2	fonction
 0045daf0	102	figure_type_on_tile	rendu	documenté	un personnage visible de certains types se tient sur la case ; rendering.md §11.2	fonction
-0045dbb0	24	FUN_0045dbb0	rendu	inconnu	hypothèse : appelants/appelés (poids 4 sur 4 en rendu)	fonction
+0045dbb0	24	building_type_100_114	bâtiments	nommé	vrai pour les types 100 à 114 (thiscall) ; avec 0x005344A0, FUN_0045d140 prend alors le type de 0x00547980 ; rendering.md §11.2	fonction
 0045dbd0	37	FUN_0045dbd0	inconnu	inconnu	aucun indice	fonction
 0045dc00	13	FUN_0045dc00	inconnu	inconnu	aucun indice	fonction
-0045dc10	32	FUN_0045dc10	rendu	inconnu	hypothèse : appelants/appelés (poids 4 sur 4 en rendu)	fonction
+0045dc10	32	building_mirrored	rendu	nommé	vrai quand l'orientation 0x00DA2F88 vaut 2 ou 6 et que le bâtiment est non nul (0x0045DC00) ; rendering.md §11.2	fonction
 0045dc30	21	FUN_0045dc30	inconnu	inconnu	aucun indice	fonction
 0045dc50	23	FUN_0045dc50	inconnu	inconnu	aucun indice	fonction
 0045dc70	23	FUN_0045dc70	inconnu	inconnu	aucun indice	fonction

@@ -168,6 +168,32 @@ constexpr uint32_t kAreaHasMarker = 0x00496B50, kAreaHasMarkerEnd = 0x00496BFF; 
 constexpr uint32_t kCountNeighbours = 0x0049CAE0, kCountNeighboursEnd = 0x0049CB3F;  // FUN_0049cae0 : voisines
 constexpr uint32_t kAreaBuildable = 0x004A0DC0, kAreaBuildableEnd = 0x004A0FCE;  // FUN_004a0dc0 : libre pour bâtir
 
+// --- Code : animations et compléments des bâtiments (native_animations.cpp) ------------------
+
+constexpr uint32_t kAnimationStep = 0x00413380;  // FUN_00413380(image, case) : image suivante de l'animation
+constexpr uint32_t kAnimationStepEnd = 0x004138AE;  // fin de FUN_00413380 et de ses tables
+constexpr uint64_t kAnimationStepHash = 0x9FB5A3D5B1848D20ull;
+constexpr uint32_t kStepKinds = 0x0041377C;   // FUN_00413380 : octet par type - 0x35 (0 : avec occupants)
+constexpr uint32_t kStepCounters = 0x00413824;  // FUN_00413380 : octet par type - 0x0F (0 : compteur +0xDC)
+constexpr uint32_t kAnimationDraw = 0x0045D140;  // FUN_0045d140(bâtiment, image, n, x, y) : image n de l'animation
+constexpr uint32_t kAnimationDrawEnd = 0x0045DAE7;  // fin de FUN_0045d140 et de ses tables
+constexpr uint64_t kAnimationDrawHash = 0x876A71F9792CE44Cull;
+constexpr uint32_t kAnimationKinds = 0x0045DA24;  // FUN_0045d140 : octet par type - 0x16 (cas du switch)
+constexpr uint32_t kWorkingSign = 0x0044EAB0, kWorkingSignEnd = 0x0044EE7F;  // FUN_0044eab0 et ses tables
+constexpr uint64_t kWorkingSignHash = 0x47D660F744035149ull;
+constexpr uint32_t kWorkingKinds = 0x0044ED44, kWorkingStock = 0x0044EE20;  // ses octets par type - 0x29
+constexpr uint32_t kExtraKinds = 0x0044FDC4;  // FUN_0044f320 : octet par type - 0x25 (21 : rien à dessiner)
+// Petites fonctions réécrites avec elles, empreinte commune : FUN_00433d50 (début), FUN_00423180,
+// FUN_005344a0, FUN_0045dbb0, FUN_0045dc00, FUN_0045dc10, FUN_0040aa20, FUN_004200f0.
+constexpr uint32_t kAnimationHelpers[][2] = {
+    {0x00433D50, 0x00433D7F}, {0x00423180, 0x0042319E}, {0x005344A0, 0x005344BC}, {0x0045DBB0, 0x0045DBC6},
+    {0x0045DC00, 0x0045DC30}, {0x0040AA20, 0x0040AA64}, {0x004200F0, 0x00420113}};
+constexpr uint64_t kAnimationHelpersHash = 0xF8AB6C929B0FF098ull;
+constexpr uint32_t kAnimationTicks = 0x006668EC;  // FUN_00413380 : octet par vitesse (+0x3A de l'image), 0 : pas d'avance
+constexpr uint32_t kBuildingFigures = 0x00782F70;  // FUN_00433d50(type, 5) : [type × 10 + 5] (32 bits, rôle non établi)
+constexpr uint32_t kAnimationHalfWidth = 0x00847D20;  // FUN_0045d140 : demi-largeur de l'image, laissée là
+constexpr uint32_t kAnimationMirror = 0x00847D1C;     // FUN_0045d140 : FUN_0045dc10(bâtiment), laissée là
+
 // --- Code : cadencement (user32.cpp) ----------------------------------------------------------
 
 constexpr uint32_t kSimulationDue = 0x005168A0;  // FUN_005168a0 : un tour de simulation est-il dû ?
@@ -337,7 +363,7 @@ constexpr uint32_t kTileBuilding = 0x00D26E98;  // par case : bâtiment (16 bits
 constexpr uint32_t kTileBits = 0x00D404B8;      // par case : 0x40 la case est à dessiner
 constexpr uint32_t kTileSlope = 0x00D00D68;     // par case : pente (4 bits bas), 0x10 sol de remplacement
 constexpr uint32_t kTileHidden = 0x0083AD6C;    // par case : non nul, ses personnages ne comptent pas
-constexpr uint32_t kTileLife = 0x00CB4B08;      // par case : animal ou bateau sur l'eau (8 bits, hypothèse)
+constexpr uint32_t kTileLife = 0x00CB4B08;      // par case : image animée (FUN_00413380) ; animal ou bateau sur l'eau (hypothèse)
 constexpr uint32_t kTileFigure = 0x00D0D878;    // par case : premier personnage (16 bits signés)
 // Personnages : fiches de 0x184 octets ; +0 suivant sur la case (16 bits), +2 type, +0x5D masqué.
 constexpr uint32_t kFigures = 0x00DBD790;

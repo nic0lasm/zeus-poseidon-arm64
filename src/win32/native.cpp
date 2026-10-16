@@ -16,6 +16,7 @@
 
 #include "win32/game_gog.h"
 #include "win32/native.h"
+#include "win32/native_animations.h"
 #include "win32/native_sanctuaries.h"
 #include "win32/process.h"
 #include "win32/sprite_clip.h"
@@ -842,7 +843,9 @@ void install_native_functions(Process& p) {
     }
     installed += install_native_drawing(p);
     installed += install_native_walkers(p);
-    // Avant install_native_buildings, qui remplace des fonctions dont kSanctuaryCode prend l'empreinte.
+    // Avant install_native_buildings, qui remplace des fonctions dont les empreintes de ces deux
+    // installations couvrent les octets d'origine.
+    installed += install_native_animations(p);
     installed += install_native_sanctuaries(p);
     installed += install_native_buildings(p);
     installed += install_native_routes(p);

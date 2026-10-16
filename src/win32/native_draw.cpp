@@ -27,6 +27,7 @@
 #include "win32/game_gog.h"
 #include "win32/native.h"
 #include "win32/native_sanctuaries.h"
+#include "win32/native_animations.h"
 #include "win32/process.h"
 
 namespace zeus::win32 {
@@ -546,23 +547,30 @@ bool building_extra(int32_t type) {
     }
 }
 
-// 0x004597FD, case d'ancrage : image du sol non animée (+0x1E de son entrée nul, FUN_00423180),
-// et bâtiment d'un autre type que 0x83 et 0x39. `building` reçoit EBX en 0x00459CE2.
-bool plain_animation(Cpu& cpu, int32_t tile, uint32_t bits, int32_t& building) {
+// 0x004597FD : +0x1E de l'entrée de l'image du sol de la case (FUN_00423180) non nul, l'image
+// est animée (0x0045984B).
+bool animated_ground(Cpu& cpu, int32_t tile) {
     const int32_t image = i32(cpu, at(kTileImage, tile, 4));
     const int32_t bank = image / 16384, number = image % 16384;
     const uint32_t banks = at(kSpriteBanks, bank, 0xCC44);
     const uint32_t table = u32(cpu, banks + 0x1000);
     const uint32_t entry = number <= i32(cpu, banks + 0xDC34) ? at(table, number, 0x48) : table;
-    if (s16(cpu, entry + 0x1E) != 0) return false;  // FUN_00413380, FUN_0045d140 : image animée
+    return s16(cpu, entry + 0x1E) != 0;
+}
+
+// 0x004597FD, case d'ancrage : image du sol non animée, et bâtiment d'un autre type que 0x83 et
+// 0x39. `building` reçoit EBX en 0x00459CE2.
+bool plain_animation(Cpu& cpu, int32_t tile, uint32_t bits, int32_t& building) {
+    if (animated_ground(cpu, tile)) return false;  // FUN_00413380, FUN_0045d140 : image animée
     building = s16(cpu, at(kTileBuilding, tile, 2));
     const int32_t type = building_type(cpu, building);
     return !((type == 0x83 && (bits & 0x40)) || type == 0x39);  // FUN_004e5730, FUN_004574c0
 }
 
-// Étape 4 (0x00459553 à 0x00459CE2) : animation du bâtiment. Rien n'est dessiné dans les cas
-// traités : pas d'animation (+0x1E de l'image nul) ou case sans ancrage. Renvoie faux pour laisser
-// l'étape à l'original ; sinon, `building` et `bits` sont EBX et [ESP+0x28] en 0x00459CE2.
+// Étape 4 (0x00459553 à 0x00459CE2) : animation du bâtiment. Cas traités : pas d'animation (+0x1E
+// de l'image nul), case sans ancrage, ou image animée dont FUN_00413380 et FUN_0045d140 sont des
+// cas de native_animations.cpp. Renvoie faux pour laisser l'étape à l'original ; sinon,
+// `building` et `bits` sont EBX et [ESP+0x28] en 0x00459CE2.
 bool objects_animation(Cpu& cpu, uint32_t esp, const ObjectCell& c, int32_t& building, uint32_t& bits) {
     const int32_t tile = c.tile;
     const int32_t first = i32(cpu, esp + kObjectBuilding);
@@ -581,6 +589,12 @@ bool objects_animation(Cpu& cpu, uint32_t esp, const ObjectCell& c, int32_t& bui
     } else {
         if (s16(cpu, at(kBuildings + 0x3A, first, 0x118)) != 0) return false;  // FUN_0045a8e0 et suivantes
         if (listed_building(cpu, type) || special_building(type)) return false;
+        if (animated_ground(cpu, tile)) {
+            // 0x0045984B : FUN_00413380 puis FUN_0045d140 (native_animations.cpp), qui remet la
+            // surimpression à 0 ; EBX reste le bâtiment lu en [ESP+0x30].
+            building = first;
+            return animated_anchor(cpu, esp, tile, first, c.x, c.y);
+        }
         if (!plain_animation(cpu, tile, bits, building)) return false;
     }
     if (first != 0 && u8(cpu, at(kBuildings + 0xBF, first, 0x118)) != 0) put16(cpu, kOverlay, 0xF863);
