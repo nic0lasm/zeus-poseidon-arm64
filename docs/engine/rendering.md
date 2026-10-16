@@ -598,9 +598,9 @@ counters, 12,308 times after the object, never before `0x0044F320` and 28,186 ti
 walkers: **560,575 cells (92.4 %)** stay native. The original still calls `0x0045D140` and
 `0x00413380` 576 times and `0x0044F320` 11,148 times (cells it resumed), all through their fast
 paths.
-With the walker loops native as well (`0x0045A5A0` and step 7, 11.3): **XXCELLS**; the
-original no longer resumes at the walkers (`--count 0x00459D7A`: XXPASSES passes, exactly the cells it
-took over earlier, against XXBEFORE before), and the calls of `0x0045A5A0` it still makes all take
+With the walker loops native as well (`0x0045A5A0` and step 7, 11.3): **588,761 cells (97.0 %)**; the
+original no longer resumes at the walkers (`--count 0x00459D7A`: 18,232 passes, exactly the cells it
+took over earlier, against 46,418 before), and the calls of `0x0045A5A0` it still makes all take
 the fast path.
 
 ### 11.3 One walker, `0x0044FEF0`
@@ -747,7 +747,7 @@ steps before it, and the most frequent come first within a step. Counts: origina
 | 13 | `0x0045A5A0`, `0x0041D3D0`, `0x0041D150` | walkers and water life of a tile | 606,993 / 620,704 / 0 | 1,311 / 1,341 / 0 | `0x0045A5A0` and the two walker loops of the second pass **native** (11.3); `0x0041D3D0` fast path (when it draws nothing: every call outside a Poseidon game) |
 | 14 | `0x0044FEF0` | one walker | 27,178 | 59 | fast path (11.3): all but the C++ objects of sanctuaries, the trader's text and tinted walkers whose image the dispatcher refuses; in `working-city` no drawn walker is left to the original (`--count 0x0044FF29`: 0) |
 | 15 | `0x0044F320`, `0x0045D140`, `0x0053E5F0`, `0x0045DC10`, building-type functions of 11.2 step 5 | building extras and animations | 433,862 / 4,488 / 53,150 / 553,374 / — | 937 / 10 / 115 / 1,195 / — | `0x0053E5F0` native when it draws nothing (52,319 of 53,150 calls; fast path), towers native; `0x0044F320` fast path for the types it does not draw (all calls in the nine scenarios); `0x0045D140` and `0x00413380` fast paths and native in the second pass for their common cases (11.2); the rest original |
-| 16 | `0x00458170` | second and third passes | 463 | 1 | first pass native, second pass native for XXPCT of the cells (11.2) |
+| 16 | `0x00458170` | second and third passes | 463 | 1 | first pass native, second pass native for 97 % of the cells (11.2) |
 | 17 | `0x0044AD70`, `0x00451820`, `0x004517F0`, `0x00454420` | after the passes | 463 each | 1 | original |
 | 18 | `0x0044A830`, `0x0051CAB0`, `0x00449E50` | view set-up | 463 / 463 / rare | 1 | original |
 | 19 | `0x00514020`, `0x0050C1B0` and converters `0x004138B0`, `0x00413930`, `0x004139B0`, `0x00413A30` | frame and presentation | 8,398 / 8,412 | — | original (the host replaces the surfaces) |
