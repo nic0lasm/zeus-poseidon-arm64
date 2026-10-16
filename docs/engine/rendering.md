@@ -590,11 +590,13 @@ Animations (`native_animations.cpp`): an anchor with an animated image stays nat
 `0x00413380` and `0x0045D140` are cases that file handles (no counter `+0xDC`, no back and
 forth, no sanctuary, case 0 or case 1 with `0x0044EAB0` always false, not red, not mirrored,
 type not `0x39`, `0x3A`, `0x3D`, `0x3E`); the two functions and `0x0044F320` (types it does not
-draw) also have fast paths, so `--verify` compares them call by call. In `working-city` the
-original now resumes 5,924 times at the start of a cell, 53,708 after the counters, 12,308 after
-the object, never before `0x0044F320` and 21,704 at the walkers: **513,349 cells (84.6 %)** stay
-native; the original still calls `0x0045D140` and `0x00413380` 576 times (cells it resumed
-earlier, through the fast paths) and `0x0044F320` 64,856 times, all through its fast path.
+draw) also have fast paths, so `--verify` compares them call by call. With the sanctuaries,
+the towers and the animations native (`working-city`, `--count` on the resume points): the
+original resumes 5,924 times at the start of a cell (all `0x00546530`), never after the
+counters, 12,308 times after the object, never before `0x0044F320` and 28,186 times at the
+walkers: **560,575 cells (92.4 %)** stay native. The original still calls `0x0045D140` and
+`0x00413380` 576 times and `0x0044F320` 11,148 times (cells it resumed), all through their fast
+paths.
 
 ### 11.3 One walker, `0x0044FEF0`
 
@@ -720,7 +722,7 @@ steps before it, and the most frequent come first within a step. Counts: origina
 | 13 | `0x0045A5A0`, `0x0041D3D0`, `0x0041D150` | walkers and water life of a tile | 606,993 / 620,704 / 0 | 1,311 / 1,341 / 0 | `0x0041D3D0` fast path (when it draws nothing: every call outside a Poseidon game); `0x0045A5A0` original, now possible since the sort (12) is native |
 | 14 | `0x0044FEF0` | one walker | 27,178 | 59 | fast path (11.3): all but the C++ objects of sanctuaries, the trader's text and tinted walkers whose image the dispatcher refuses; in `working-city` no drawn walker is left to the original (`--count 0x0044FF29`: 0) |
 | 15 | `0x0044F320`, `0x0045D140`, `0x0053E5F0`, `0x0045DC10`, building-type functions of 11.2 step 5 | building extras and animations | 433,862 / 4,488 / 53,150 / 553,374 / — | 937 / 10 / 115 / 1,195 / — | `0x0053E5F0` native when it draws nothing (52,319 of 53,150 calls; fast path), towers native; `0x0044F320` fast path for the types it does not draw (all calls in the nine scenarios); `0x0045D140` and `0x00413380` fast paths and native in the second pass for their common cases (11.2); the rest original |
-| 16 | `0x00458170` | second and third passes | 463 | 1 | first pass native, second pass native for @PCT@ of the cells (11.2) |
+| 16 | `0x00458170` | second and third passes | 463 | 1 | first pass native, second pass native for 92 % of the cells (11.2) |
 | 17 | `0x0044AD70`, `0x00451820`, `0x004517F0`, `0x00454420` | after the passes | 463 each | 1 | original |
 | 18 | `0x0044A830`, `0x0051CAB0`, `0x00449E50` | view set-up | 463 / 463 / rare | 1 | original |
 | 19 | `0x00514020`, `0x0050C1B0` and converters `0x004138B0`, `0x00413930`, `0x004139B0`, `0x00413A30` | frame and presentation | 8,398 / 8,412 | — | original (the host replaces the surfaces) |
