@@ -146,6 +146,8 @@ the 13,073 ticks, in all nine scenarios.
 | `0x00413E30` | run-length image, blended | 1 in 2 | 50,024 | 25,015 | 0 | 9 | identical |
 | `0x00416010` | rectangle copy, magenta transparent | 1 in 1 | 45,591 | 45,591 | 0 | 9 | identical |
 | `0x004161B0` | run-length image, optionally a shadow | 1 in 100 | 1,997,500 | 19,979 | 0 | 9 | identical |
+| `0x0041D3D0` | water life of a tile, when there is none to draw | 1 in 100 | 598,355 | 5,987 | 0 | 9 | identical |
+| `0x0044FEF0` | one walker | 1 in 5 | 91,648 | 18,333 | 0 | 8 | identical |
 | `0x00457900` | ground of one city tile | 1 in 100 | 6,043,020 | 60,435 | 0 | 9 | identical |
 | `0x00458170` | the whole city drawing loop, with every native piece it reaches (ground loop jump, ground tile, sprite dispatcher, diamond tile) | 1 in 1 | 20,391 | 20,391 | 0 | 9 | identical |
 | `0x005059F8:0x00505A33` | key lookup loop of `Zeus eventmsg.txt` | 1 in 50 | 75,294 | 1,512 | 0 | 9 | identical |
@@ -157,9 +159,10 @@ The seven calls of the sprite dispatcher left to the original are cases it does 
 natively, whose original code calls the host. The first runs found three kinds of difference,
 all outside the result and now excluded with their evidence: the argument slots reused by
 `0x00413E30`, `0x004161B0` and `0x00457900`, and the `EAX` of `0x00457900`, which its callers
-never read. The rows of `0x00413DC0`, `0x00416010`, `0x0050B410`, `0x005CC640`, `0x00458170`
+never read. `0x0044FEF0` also uses its five argument slots as variables and returns nothing; it is
+not called in `poseidon`. The rows of `0x00413DC0`, `0x00416010`, `0x0050B410`, `0x005CC640`, `0x00458170`
 and the key lookup loop come from an earlier run of the same bench, which also compared argument
 slots and covered 137 zones.
 
-Every native replacement of `src/win32/native.cpp` and `native_draw.cpp` is covered: the ground
+Every native replacement of `src/win32/native.cpp`, `native_draw.cpp` and `native_walkers.cpp` is covered: the ground
 loop jump (`0x0045829D`) and the diamond tile (`0x00435070`) run inside `0x00458170`.
