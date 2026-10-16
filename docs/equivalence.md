@@ -242,3 +242,8 @@ clock, so equal timer values also show that the clock is read as many times, in 
 in 20 checked, 35,992 passes, 1,800 compared, none left to the original, all identical. Its
 calls of the composite helpers go through the same native functions as `native_buildings.cpp`,
 so the hoplite is installed only when those are.
+
+**Horsemen and standard bearers** (`0x004B26B0`, `0x004B1840`, same file, 2026-10-16):
+`working-city`, one call in 4 checked. Horsemen: 6,544 passes, 1,635 compared, one left to the
+original (its first call loads the images through the host), all identical. Standard bearers:
+9,816 passes, 2,454 compared, none left to the original, all identical.

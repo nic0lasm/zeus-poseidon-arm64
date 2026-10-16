@@ -260,7 +260,15 @@ By measured cost, and by what can be checked one call at a time (`--verify`,
       `native_buildings.cpp`), the view direction and the body image. Any other action, and a
       soldier that must walk back to its place (`0x004B11C0`), stay with the original. The
       handler's time falls from 135 ms to 41 ms over the run (`--time-span`, hooks included).
-      Horsemen and standard bearers follow the same pattern with their own code (`0x004E17A0` …).
+      **Horsemen and standard bearers done**, same path: in `working-city` every call holds its
+      place (6,544 and 9,816 calls). Both also check `0x004E17A0` (the group has no target,
+      `+0x82` negative; otherwise action `0x0F`). The horseman takes the group's direction from
+      its first member (`0x004E2480`), needs its images loaded (`0x004FFB70(10)`) and animates a
+      copy of its frame (`0x005AF8C0`, `0x005AF770`); only groups `0x21` and `0x22`, the only
+      ones in the scenarios, are native (others use other images, `0x004B2CE2`). The standard
+      bearer puts layout 5 through the offset table like the others. Time over the run: horsemen
+      61 → 21 ms, standard bearers 45 → 11 ms; tick of `working-city` 2.10–2.25 → 1.84–1.88 ms
+      (two runs of each, alternating).
    3. **Growers** (type 4, `0x004AE160`): 0.19 ms per tick.
    4. `figure_type_value` (`0x004E1B20`, 300 calls per tick from most handlers): only inside a
       native caller, since a hook costs about as much as its emulated code.
