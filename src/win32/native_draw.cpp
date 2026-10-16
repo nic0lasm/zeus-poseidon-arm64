@@ -26,6 +26,7 @@
 
 #include "win32/game_gog.h"
 #include "win32/native.h"
+#include "win32/native_sanctuaries.h"
 #include "win32/process.h"
 
 namespace zeus::win32 {
@@ -499,13 +500,25 @@ bool objects_object(Cpu& cpu, const ObjectCell& c) {
             }
         }
     }
+    // 0x0045932F : sanctuaires et monuments (FUN_0053e5f0), puis les deux tours (0x004593B1),
+    // décidés avant la partie haute.
     const int32_t type = building_type(cpu, building);
-    if ((type > 0x53 && (type < 99 || type == 0x75)) || (type > 99 && type < 0x73))
-        return false;  // FUN_0053e5f0 : sanctuaires et monuments
-    if (type == 0x81 || type == 0x91 || type == 0x92) return false;  // les deux tours, FUN_0041fd40
+    const bool sanctuary = (type > 0x53 && (type < 99 || type == 0x75)) || (type > 99 && type < 0x73);
+    const bool towers = type == 0x81 || type == 0x91 || type == 0x92;
+    int32_t left = 0, right = 0;  // cases voisines de la rangée précédente (0x004593D6)
+    if (towers) {
+        const int32_t index = kColumns * c.row + c.column;
+        left = i32(cpu, at(kTileGrid, index - kColumns - (c.odd ? 1 : 0), 4));
+        right = i32(cpu, at(kTileGrid, index - kColumns + (c.odd ? 0 : 1), 4));
+    }
+    if (sanctuary && !sanctuary_handled(cpu, building)) return false;
+    if (towers && ((turned(cpu) && building != 0) || !towers_handled(cpu, left, right, c.x, c.y)))
+        return false;  // vue tournée : FUN_005ae9f0
     put32(cpu, kDrawnImage, static_cast<uint32_t>(image));
     if (top == Top::Flat) draw_building_top(cpu, kSpriteBanks, image, c.x, c.y);
     else if (top == Top::Sloped) sloped_top(cpu, slope, image, c.x, c.y);
+    if (sanctuary) draw_sanctuary(cpu, building);
+    if (towers) draw_towers(cpu, left, right, c.x, c.y);
     put16(cpu, kOverlay, 0);
     return true;
 }

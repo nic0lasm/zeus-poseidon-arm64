@@ -98,6 +98,44 @@ constexpr uint32_t kObjectHelpers[][2] = {
 constexpr uint64_t kObjectHelpersHash = 0x568E7297F13D31AEull;
 constexpr uint32_t kAlwaysFalse = 0x00565750;  // méthode +0x0C du mode de vue 0 : « XOR AL,AL ; RET 8 »
 constexpr uint32_t kViewModeZeroSetup = 0x0055E9B0;  // FUN_0055e9b0 : table de méthodes du mode 0
+// Extras de l'objet d'une case d'ancrage (native_sanctuaries.cpp) : FUN_0053e5f0 (sanctuaires et
+// monuments) et les deux tours des types 0x81, 0x91, 0x92 (FUN_0041fd40).
+constexpr uint32_t kSanctuary = 0x0053E5F0;     // FUN_0053e5f0(this, bâtiment, x, y), thiscall
+constexpr uint32_t kComposite = 0x00FE5100;     // objet des parties composées (this de FUN_0053c200)
+constexpr uint32_t kPartClasses = 0x00640E08;       // FUN_0053c1b0 : objets des classes 0 à 163
+constexpr uint32_t kPartClassesExtra = 0x00641098;  // FUN_0053c1b0 : objets des classes 1000 à 1006
+constexpr uint32_t kSanctuaryTable = 0x00EF5DF0;    // FUN_005406e0 : 0x34 octets par rang de FUN_00546db0
+constexpr uint32_t kDeferredPart = 0x00FE6148;      // FUN_005407a0 : 1, une partie attend d'être dessinée
+constexpr uint32_t kPartIcons = 0x00FE615C;         // FUN_005407a0 : non nul, icônes sur les parties
+// Méthodes des classes de parties que la réécriture reconnaît (lues dans la table de l'objet).
+constexpr uint32_t kPartDraw = 0x005407A0;      // +0x48
+constexpr uint32_t kPartDrawn = 0x00535600;     // +0x0C
+constexpr uint32_t kPartFrame = 0x0053E250;     // +0x1C
+constexpr uint32_t kPartStages = 0x005358E0;    // +0x18
+constexpr uint32_t kPartProgress = 0x0053E210;  // +0x04
+constexpr uint32_t kPartFramesOne = 0x005504B0, kPartFramesPlus1 = 0x00536E40, kPartFramesPlus2 = 0x005504C0,
+                   kPartFramesPlus3 = 0x0055DB50, kPartFramesPlus4 = 0x0053B7B0;  // +0x08
+constexpr uint32_t kPartExtra = 0x0044EE80, kPartExtraTwo = 0x005367B0;  // +0xF8
+constexpr uint32_t kPartLast = 0x0055E510;      // +0xFC : « RET 8 »
+constexpr uint32_t kReturnFalse = 0x00565930, kReturnTrue = 0x00565940;  // « XOR AL,AL ; RET », « MOV AL,1 ; RET »
+// Code relu par la réécriture de FUN_0053e5f0, empreinte commune : FUN_0053e5f0, FUN_0055ee60,
+// FUN_00540770, FUN_005406b0, FUN_005406e0, FUN_0053c1b0, FUN_0053c200, FUN_0053c2c0,
+// FUN_00540020, FUN_005344a0, FUN_00546db0 et sa table, FUN_005407a0, FUN_00535600, FUN_0053e250,
+// FUN_005358e0, FUN_0053e210, FUN_00534500, FUN_005504b0, FUN_005504c0, FUN_0055db50,
+// FUN_0053b7b0, FUN_00536e40, FUN_00565930, FUN_00565940, FUN_0044ee80, début et sortie de
+// FUN_005367b0, FUN_0055e510, FUN_0049b920.
+constexpr uint32_t kSanctuaryCode[][2] = {
+    {0x0053E5F0, 0x0053E62F}, {0x0055EE60, 0x0055EE63}, {0x00540770, 0x00540794}, {0x005406B0, 0x005406D5},
+    {0x005406E0, 0x0054076F}, {0x0053C1B0, 0x0053C1F9}, {0x0053C200, 0x0053C276}, {0x0053C2C0, 0x0053C2EF},
+    {0x00540020, 0x0054004F}, {0x005344A0, 0x005344BC}, {0x00546DB0, 0x00546E74}, {0x005407A0, 0x005414B4},
+    {0x00535600, 0x005356AE}, {0x0053E250, 0x0053E274}, {0x005358E0, 0x0053598E}, {0x0053E210, 0x0053E22E},
+    {0x00534500, 0x00534537}, {0x005504B0, 0x005504C9}, {0x0055DB50, 0x0055DB59}, {0x0053B7B0, 0x0053B7B9},
+    {0x00536E40, 0x00536E47}, {0x00565930, 0x00565933}, {0x00565940, 0x00565943}, {0x0044EE80, 0x0044F191},
+    {0x005367B0, 0x005367DA}, {0x005369F4, 0x005369FD}, {0x0055E510, 0x0055E513}, {0x0049B920, 0x0049B94E}};
+constexpr uint64_t kSanctuaryCodeHash = 0x243DBDFCE8D821E6ull;
+// Les tours : FUN_0041fd40, FUN_0045a640, FUN_0040fd10.
+constexpr uint32_t kTowerCode[][2] = {{0x0041FD40, 0x0041FD69}, {0x0045A640, 0x0045A686}, {0x0040FD10, 0x0040FD75}};
+constexpr uint64_t kTowerCodeHash = 0xB8EC3D065F83F6BDull;
 
 // --- Code : personnages de la ville (native_walkers.cpp) -------------------------------------
 

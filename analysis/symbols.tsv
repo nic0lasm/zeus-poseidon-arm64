@@ -307,7 +307,7 @@ adresse	taille	nom	module	statut	preuve	type
 0041fa50	86	FUN_0041fa50	inconnu	inconnu	aucun indice	fonction
 0041fb10	480	FUN_0041fb10	interface	inconnu	hypothèse : appelants/appelés (poids 3 sur 3 en interface)	fonction
 0041fcf0	65	FUN_0041fcf0	interface	inconnu	hypothèse : appelants/appelés (poids 4 sur 4 en interface)	fonction
-0041fd40	41	FUN_0041fd40	inconnu	inconnu	aucun indice	fonction
+0041fd40	41	sprite_draw_default	rendu	documenté	répartiteur 0x005ACF50 avec this = 0x012AEBE8 et ses six arguments ; tours de 0x00458170 ; rendering.md §11.2	fonction
 0041fdd0	43	FUN_0041fdd0	inconnu	inconnu	aucun indice	fonction
 0041fe00	49	FUN_0041fe00	inconnu	inconnu	aucun indice	fonction
 0041fe40	201	FUN_0041fe40	interface	inconnu	hypothèse : appelants/appelés (poids 4 sur 4 en interface)	fonction
@@ -788,7 +788,7 @@ adresse	taille	nom	module	statut	preuve	type
 00457900	1906	ground_tile_draw	rendu	nommé	sol d'une case ; natif partiel : chemin rapide dans native_draw.cpp (plat, en pente, drapeaux 0x4020)	fonction
 00458170	8419	city_draw	rendu	nommé	dessin de la ville, trois passes ; natif partiel : premier et second parcours dans native_draw.cpp ; rendering.md §11	fonction
 0045a5a0	158	tile_walkers_draw	rendu	nommé	trie et dessine les personnages d'une case ; rendering.md §11.2	fonction
-0045a640	70	FUN_0045a640	inconnu	inconnu	aucun indice	fonction
+0045a640	70	tile_has_tower_type	rendu	documenté	la case porte un bâtiment de type 0x81, 0x91 ou 0x92 : côtés où 0x00458170 dessine une tour ; rendering.md §11.2	fonction
 0045a690	227	sloped_top_draw	rendu	documenté	partie haute d'un morceau en pente, décalée selon sa taille ; rendering.md §11.2	fonction
 0045a790	227	FUN_0045a790	rendu	inconnu	hypothèse : appelants/appelés (poids 3 sur 3 en rendu)	fonction
 0045a890	79	FUN_0045a890	rendu	inconnu	hypothèse : appelants/appelés (poids 3 sur 3 en rendu)	fonction
@@ -3493,7 +3493,7 @@ adresse	taille	nom	module	statut	preuve	type
 0053e280	44	FUN_0053e280	inconnu	inconnu	aucun indice	fonction
 0053e2b0	37	FUN_0053e2b0	inconnu	inconnu	aucun indice	fonction
 0053e2e0	571	FUN_0053e2e0	dieux et héros	inconnu	chaîne (dieux et monstres)	fonction
-0053e5f0	63	FUN_0053e5f0	inconnu	inconnu	aucun indice	fonction
+0053e5f0	63	composite_draw_extras	rendu	documenté	seul appelant 0x00459375 (sanctuaires, monuments) : 0x0055EE60, 0x00540770, 0x005406B0, 0x005406E0 ; natif partiel : chemin rapide dans native_sanctuaries.cpp (quand rien n'est dessiné) ; rendering.md §11.2	fonction
 0053e630	30	FUN_0053e630	inconnu	inconnu	aucun indice	fonction
 0053e650	150	FUN_0053e650	inconnu	inconnu	aucun indice	fonction
 0053e700	12	FUN_0053e700	inconnu	inconnu	aucun indice	fonction
@@ -3513,9 +3513,9 @@ adresse	taille	nom	module	statut	preuve	type
 00540090	47	composite_extras_count	bâtiments	nommé	taille de la seconde liste (this + 0xCCC + type × 4) ; simulation.md §5	fonction
 005400c0	75	FUN_005400c0	dieux et héros	inconnu	hypothèse : appelants/appelés (poids 4 sur 4 en dieux et héros)	fonction
 00540110	1429	FUN_00540110	inconnu	inconnu	aucun indice	fonction
-005406b0	37	FUN_005406b0	inconnu	inconnu	aucun indice	fonction
-005406e0	143	FUN_005406e0	inconnu	inconnu	aucun indice	fonction
-00540770	36	FUN_00540770	inconnu	inconnu	aucun indice	fonction
+005406b0	37	composite_part_draw_extra	rendu	documenté	méthode +0xF8 (x, y) de l'objet de classe de la partie (0x0053C200) ; rendering.md §11.2	fonction
+005406e0	143	composite_part_draw_last	rendu	documenté	méthode +0xFC (x, y) de l'objet de classe de la partie, selon la table 0x00EF5DF0 (rang 0x00546DB0) ou l'octet +0xCA de la première partie d'un monument ; rendering.md §11.2	fonction
+00540770	36	composite_part_draw	rendu	documenté	méthode +0x48 (x, y, 0) de l'objet de classe de la partie (0x0053C200), 0x005407A0 pour les 171 classes ; rendering.md §11.2	fonction
 005414c0	272	FUN_005414c0	inconnu	inconnu	aucun indice	fonction
 00541610	94	FUN_00541610	inconnu	inconnu	aucun indice	fonction
 00541670	27	FUN_00541670	bâtiments	inconnu	hypothèse : tour de simulation, appelée par 1 fonctions sur 1 en bâtiments	fonction
@@ -3581,7 +3581,7 @@ adresse	taille	nom	module	statut	preuve	type
 0055de90	38	FUN_0055de90	inconnu	inconnu	aucun indice	fonction
 0055e4f0	21	FUN_0055e4f0	inconnu	inconnu	aucun indice	fonction
 0055ec00	583	FUN_0055ec00	inconnu	inconnu	aucun indice	fonction
-0055ee60	3	FUN_0055ee60	inconnu	inconnu	aucun indice	fonction
+0055ee60	3	empty_thiscall_3	rendu	documenté	un seul « ret 0xC » ; appelée par 0x0053E5F0 ; rendering.md §11.2	fonction
 0055ee70	93	FUN_0055ee70	inconnu	inconnu	aucun indice	fonction
 0055f3d0	0	view_mode0_always_true	interface	nommé	méthode +0x18 du mode de vue 0, renvoie vrai	fonction
 0055f3e0	64	FUN_0055f3e0	inconnu	inconnu	aucun indice	fonction

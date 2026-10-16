@@ -25,6 +25,7 @@ adresse	nom	module	statut	preuve	type
 00418b00	tile_step_to_anchor	terrain	nommé	hors route, avance d'une case vers la case d'ancrage selon les bits 0x07 et 0x38 de la grille 0x00D404B8 (±1, ±228) ; simulation.md §5	fonction
 0041d3d0	water_life_draw	rendu	nommé	animal ou bateau sur l'eau d'une case (hypothèse) ; natif partiel : chemin rapide dans native_walkers.cpp (rien à dessiner) ; rendering.md §11.3	fonction
 0041dfc0	blit_alpha_runs	rendu	nommé	mélange (a*src + (31-a)*dst) >> 5 par composante de 5 bits	fonction
+0041fd40	sprite_draw_default	rendu	documenté	répartiteur 0x005ACF50 avec this = 0x012AEBE8 et ses six arguments ; tours de 0x00458170 ; rendering.md §11.2	fonction
 00420020	fullscreen_background_a	interface	documenté	fond plein écran centré (menus)	fonction
 004200f0	poseidon_game	scénario	nommé	vrai si 0x006AA4E0 et 0x00902BB0 valent 1 (partie de Poséidon : hypothèse) ; rendering.md §11.3	fonction
 00422270	fullscreen_background_b	interface	documenté	fond plein écran centré (menus)	fonction
@@ -62,6 +63,7 @@ adresse	nom	module	statut	preuve	type
 00457900	ground_tile_draw	rendu	nommé	sol d'une case ; natif partiel : chemin rapide dans native_draw.cpp (plat, en pente, drapeaux 0x4020)	fonction
 00458170	city_draw	rendu	nommé	dessin de la ville, trois passes ; natif partiel : premier et second parcours dans native_draw.cpp ; rendering.md §11	fonction
 0045a5a0	tile_walkers_draw	rendu	nommé	trie et dessine les personnages d'une case ; rendering.md §11.2	fonction
+0045a640	tile_has_tower_type	rendu	documenté	la case porte un bâtiment de type 0x81, 0x91 ou 0x92 : côtés où 0x00458170 dessine une tour ; rendering.md §11.2	fonction
 0045a690	sloped_top_draw	rendu	documenté	partie haute d'un morceau en pente, décalée selon sa taille ; rendering.md §11.2	fonction
 0045daf0	figure_type_on_tile	rendu	documenté	un personnage visible de certains types se tient sur la case ; rendering.md §11.2	fonction
 0045ed20	map_elevation_project	terrain	documenté	altitude projetée selon l'orientation, règles des falaises ; docs/engine/terrain.md §4	fonction
@@ -243,12 +245,17 @@ adresse	nom	module	statut	preuve	type
 0053cc30	composite_find_part	bâtiments	nommé	case de la première pièce dont la méthode +0xC0 de la classe est vraie ; simulation.md §5	fonction
 0053cd80	composite_bounds	bâtiments	nommé	rectangle couvert par les pièces d'un bâtiment composé placé en (x, y) avec une orientation ; simulation.md §5	fonction
 0053d900	composite_part_size	bâtiments	nommé	taille d'une pièce, par la méthode 0 de sa classe (0x0053C1B0) ; simulation.md §5	fonction
+0053e5f0	composite_draw_extras	rendu	documenté	seul appelant 0x00459375 (sanctuaires, monuments) : 0x0055EE60, 0x00540770, 0x005406B0, 0x005406E0 ; natif partiel : chemin rapide dans native_sanctuaries.cpp (quand rien n'est dessiné) ; rendering.md §11.2	fonction
 0053f810	composite_road_entry	bâtiments	nommé	case de route (terrain & 0x44 = 0x40) la plus proche autour d'un bâtiment composé, en préférant les grands réseaux (0x00FEB0FC, road_networks_update) ; simulation.md §5	fonction
 0053fb60	building_road_entry	bâtiments	nommé	composite_road_entry pour un bâtiment numéroté (type +0x10, orientation +0x9C) ; 14 appelants ; simulation.md §5	fonction
 00540020	composite_parts_count	bâtiments	nommé	nombre de pièces d'un type composé (this + 0x958 + type × 4) ; simulation.md §5	fonction
 00540090	composite_extras_count	bâtiments	nommé	taille de la seconde liste (this + 0xCCC + type × 4) ; simulation.md §5	fonction
+005406b0	composite_part_draw_extra	rendu	documenté	méthode +0xF8 (x, y) de l'objet de classe de la partie (0x0053C200) ; rendering.md §11.2	fonction
+005406e0	composite_part_draw_last	rendu	documenté	méthode +0xFC (x, y) de l'objet de classe de la partie, selon la table 0x00EF5DF0 (rang 0x00546DB0) ou l'octet +0xCA de la première partie d'un monument ; rendering.md §11.2	fonction
+00540770	composite_part_draw	rendu	documenté	méthode +0x48 (x, y, 0) de l'objet de classe de la partie (0x0053C200), 0x005407A0 pour les 171 classes ; rendering.md §11.2	fonction
 00546620	composite_offset_rotate	bâtiments	nommé	tourne le décalage (x, y) d'une pièce selon l'orientation 0 à 3 ; simulation.md §5	fonction
 005466a0	composite_offset_rotate_b	bâtiments	nommé	135 octets, bâtiments ; appelée par building_road_entry ; même famille que composite_offset_rotate ; simulation.md §5	fonction
+0055ee60	empty_thiscall_3	rendu	documenté	un seul « ret 0xC » ; appelée par 0x0053E5F0 ; rendering.md §11.2	fonction
 0055f3d0	view_mode0_always_true	interface	nommé	méthode +0x18 du mode de vue 0, renvoie vrai	fonction
 00565760	tile_ground_image_test	terrain	nommé	compare l'image du sol de la case (0x00D4CFC8) à celles de plusieurs groupes ; simulation.md §5	fonction
 00566930	population_record	économie	documenté	étape 11 : garde le maximum de la population (+0x24 du rang 4) dans 0x00FEB0EC ; simulation.md §3	fonction
