@@ -25,8 +25,8 @@ Silicon : le jeu d'origine, sans Windows, sans Wine et sans machine virtuelle.**
 | | |
 |---|---|
 | **Ce que c'est** | Le vrai *Zeus* + *Poséidon* (Impressions Games, 2000) : le code d'origine du jeu, non modifié, exécuté sur un Mac. Même simulation, mêmes règles, mêmes sauvegardes. Pas une réécriture. |
-| **État** | Jouable du début à la fin. Dernière version : **[1.2](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest)** (16 octobre 2026). |
-| **Fonctionne sur** | Mac à puce Apple Silicon (M1 ou plus récent), macOS 14 ou plus récent. Mac Intel et Linux en préparation, voir [Télécharger](#télécharger). |
+| **État** | Jouable du début à la fin. Dernière version : **[1.3](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest)** (16 octobre 2026). |
+| **Fonctionne sur** | Mac à puce Apple Silicon (M1 ou plus récent), macOS 14 ou plus récent ; Mac à processeur Intel, macOS 15 ou plus récent ; Linux x86-64 et arm64. Voir [Télécharger](#télécharger). |
 | **Il vous faut** | Votre propre copie du jeu, édition GOG. Ce dépôt ne contient aucun fichier du jeu ([Mentions légales](#mentions-légales)). |
 | **Fidèle** | Dix scénarios rejoués comparent chaque image et tout l'état de la partie, tour par tour, avec le jeu d'origine. |
 | **Léger** | Une petite ville occupe environ 23 % d'un cœur (51 à 60 % en 1.0.1). [Chiffres](#plus-léger-à-chaque-version). |
@@ -45,9 +45,9 @@ l'original. [Détails plus bas](#principe).
 | Votre ordinateur | Téléchargement | |
 |---|---|---|
 | Mac à puce Apple Silicon (M1 ou plus récent), macOS 14+ | **[⬇ Zeus-Poseidon-macos-arm64.zip](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest/download/Zeus-Poseidon-macos-arm64.zip)** | disponible |
-| Mac à processeur Intel, macOS 15+ | **[⬇ Zeus-Poseidon-macos-intel.zip](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest/download/Zeus-Poseidon-macos-intel.zip)** | à partir de la 1.3 ([#41](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/41)) |
-| Linux x86-64 (Ubuntu 22.04, Debian 12, Fedora 36 ou plus récents) | **[⬇ Zeus-Poseidon-linux-x86_64.AppImage](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest/download/Zeus-Poseidon-linux-x86_64.AppImage)** | à partir de la 1.3 ([#40](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/40)) |
-| Linux arm64 (mêmes distributions) | **[⬇ Zeus-Poseidon-linux-aarch64.AppImage](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest/download/Zeus-Poseidon-linux-aarch64.AppImage)** | à partir de la 1.3 ([#40](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/40)) |
+| Mac à processeur Intel, macOS 15+ | **[⬇ Zeus-Poseidon-macos-intel.zip](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest/download/Zeus-Poseidon-macos-intel.zip)** | disponible (1.3) |
+| Linux x86-64 (Ubuntu 22.04, Debian 12, Fedora 36 ou plus récents) | **[⬇ Zeus-Poseidon-linux-x86_64.AppImage](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest/download/Zeus-Poseidon-linux-x86_64.AppImage)** | disponible (1.3) |
+| Linux arm64 (mêmes distributions) | **[⬇ Zeus-Poseidon-linux-aarch64.AppImage](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest/download/Zeus-Poseidon-linux-aarch64.AppImage)** | disponible (1.3) |
 
 Toutes les versions et leurs notes : [Releases](https://github.com/nic0lasm/zeus-poseidon-arm64/releases).
 
@@ -96,15 +96,16 @@ choisir la langue.
 Chaque version fait passer davantage de travail de l'original émulé à du code natif écrit à la
 main, chaque partie prouvée identique à l'original.
 
-| Mesure | 1.0.1 | 1.1 | 1.2 |
-|---|---:|---:|---:|
-| Petite ville, temps réel sur Mac (part d'un cœur) | 51–60 % | environ 35 % | **environ 23 %** |
-| Tour de simulation d'une grande ville (banc, `working-city`) | | 5,3–5,8 ms | **1,6 ms** |
-| Dessin de la ville resté en natif (second passage, grande ville) | | | **97 %** des cases |
+| Mesure | 1.0.1 | 1.1 | 1.2 | 1.3 |
+|---|---:|---:|---:|---:|
+| Petite ville, temps réel sur Mac (part d'un cœur) | 51–60 % | environ 35 % | environ 23 % | mesurée sur le Mac à la sortie ([#117](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/117)) |
+| Tour de simulation d'une grande ville (banc, `working-city`) | | 5,3–5,8 ms | 1,6 ms | **1,6 ms** |
+| Dessin de la ville resté en natif (second passage, grande ville) | | | 97 % des cases | **97 %** des cases |
+| Jeu figé par une sauvegarde (grande ville, temps réel) | | | 3,85 s | **0,33 s** |
 
 Aussi dans la 1.2 : les cadres des fenêtres en natif (10 à 12 % de calcul en moins sur les
-scénarios de la grande ville et des options). **Depuis la 1.2**, pour la prochaine version : les
-textes d'une ligne en natif, 7 à 9 % de calcul en moins en jeu réel
+scénarios de la grande ville et des options). Nouveau dans la 1.3 : les
+textes d'une ligne en natif, 7 à 9 % de calcul en moins en jeu réel sur la grande ville
 ([#113](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/113)).
 
 **Avancée du moteur :** 322 des 4 872 fonctions de l'exécutable GOG sont comprises (nommées,
@@ -118,13 +119,11 @@ Les gains de vitesse qu'un joueur pouvait sentir sont faits ; chaque morceau de 
 reste pèse environ 1 % du temps ou moins. Les prochaines étapes visent ce que les joueurs
 remarquent ([plan complet](docs/roadmap.md#after-12-review-of-16-october-2026) en anglais, [jalon 1.3](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/11)) :
 
-1. **Des sauvegardes sans pause** ([#116](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/116)). Une sauvegarde fige le jeu environ 3,6 s pendant que le code
-   émulé la compresse ; le compresseur réécrit à la main redonne déjà les fichiers du jeu octet
-   pour octet.
-2. **Les Mac Intel** ([#41](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/41)), une
-   seconde archive fabriquée par la CI.
-3. **Linux** ([#40](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/40)), une AppImage.
-4. **La version 1.3** ([#117](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/117)), jouée de bout en bout sur un Mac, avec une mesure du coût de l'affichage.
+Fait dans la 1.3 : **des sauvegardes sans pause** ([#116](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/116), 3,85 s → 0,33 s),
+**les Mac Intel** ([#41](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/41)) et **Linux** ([#40](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/40), AppImage).
+Ensuite :
+
+1. **La version 1.3 jouée de bout en bout sur un Mac** ([#117](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/117)), avec une mesure du coût de l'affichage.
 
 À plus long terme, le but ne change pas : que *Zeus* et *Poséidon* restent jouables aussi
 longtemps qu'on aura envie d'y jouer. Un moteur entièrement natif (2.0, sans émulateur, comme
@@ -135,6 +134,7 @@ Julius l'a fait pour *Caesar III*) est en pause ; la carte du code, les fiches d
 
 | Version | Points forts |
 |---|---|
+| [**1.3**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.3) | sauvegardes sans pause (3,85 s → 0,33 s sur une grande ville) ; archive pour Mac Intel (macOS 15+) ; AppImage Linux (x86-64, arm64) ; textes d'une ligne en natif (7 à 9 % de calcul en moins) |
 | [**1.2**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.2) | plus léger : dessin de la ville, cadres des fenêtres et textes en natif (petite ville à environ 23 % d'un cœur au lieu de 35 %) ; tour de simulation d'une grande ville environ trois fois plus rapide ; dix scénarios prouvés identiques à l'original, tour par tour |
 | [**1.1**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.1) | premier lancement en moins de clics (téléchargement en un clic, sélecteur dans Téléchargements, plus de question de langue) ; modes larges plus hauts ; sol de la ville dessiné en natif (petite ville à 35 % d'un cœur au lieu d'environ 50 %) |
 | [**1.0.1**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.0.1) | le jeu à sa vraie vitesse (il tournait aux deux tiers depuis la 0.2) ; répartiteur de sprites natif |
