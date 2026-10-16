@@ -5,6 +5,7 @@ pull request.
 
 ## Unreleased
 
+- **README reorganised for visitors.** English and French: an "at a glance" table (what it is, status, Macs it runs on, what you need, proof, figures), a download table by computer (Apple Silicon now, Intel Mac #41 and Linux #40 to come), the gains of each version in one table, the next steps of the plan after 1.2 instead of the phases, older versions folded; no em dashes, and the note on the macOS wording simplified (from #90).
 - **One-line strings in native code.** The string renderer `0x00508800`, through which every one-line text of the game is drawn (panel titles and values, buttons, menus), gets a fast path in `src/win32/native_strings.cpp` that places every glyph as `0x00508B50` does, outline and shadow styles included, checks that the native sprite dispatcher handles them all and draws them, or hands the call back; the language pack is followed. In real play it was the largest item of the interface, 6.3 % of the emulator thread's time in the large city. Frames and state identical in the ten scenarios, every checked call identical (with and without a language pack); in real time, `working-city` needs 7 to 9 % less CPU (30.2–30.8 s → 28.0–28.2 s over 150 s). Where the rest of the interface's time goes in real play is in `docs/engine/interface.md` §10. Step 8 of the interface plan.
 
 ## 1.2 — 2026-10-16

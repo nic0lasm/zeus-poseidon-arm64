@@ -1,12 +1,13 @@
 # Zeus + Poséidon sur Mac Apple Silicon
 
 [![Dernière version](https://img.shields.io/github/v/release/nic0lasm/zeus-poseidon-arm64?label=t%C3%A9l%C3%A9charger&color=1f6feb)](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest)
-[![macOS Apple Silicon](https://img.shields.io/badge/macOS-Apple%20Silicon-333?logo=apple)](docs/getting-started.md)
+[![macOS 14+ Apple Silicon](https://img.shields.io/badge/macOS%2014%2B-Apple%20Silicon-333?logo=apple)](#télécharger)
 [![build](https://github.com/nic0lasm/zeus-poseidon-arm64/actions/workflows/build.yml/badge.svg)](https://github.com/nic0lasm/zeus-poseidon-arm64/actions/workflows/build.yml)
+[![Prouvé identique : 10 scénarios](https://img.shields.io/badge/prouv%C3%A9%20identique-10%20sc%C3%A9narios-2ea043)](docs/equivalence.md)
 [![Licence : GPL-2.0-or-later](https://img.shields.io/badge/licence-GPL--2.0--or--later-green)](LICENSE)
 
 **Jouer à *Zeus : Le Maître de l'Olympe* et à son extension *Poséidon* sur un Mac Apple
-Silicon — le jeu d'origine, sans Windows, sans Wine et sans machine virtuelle.**
+Silicon : le jeu d'origine, sans Windows, sans Wine et sans machine virtuelle.**
 
 *[English version](README.md)*
 
@@ -17,34 +18,51 @@ Silicon — le jeu d'origine, sans Windows, sans Wine et sans machine virtuelle.
   <img src="docs/images/menu-fr.png" width="49%" alt="Le menu principal avec le pack français">
   <img src="docs/images/tutorials.png" width="49%" alt="L'écran des tutoriels">
 </p>
-<p align="center"><sub>Une grande ville en mode large, et le menu principal en français — à partir de votre propre exemplaire du jeu.</sub></p>
+<p align="center"><sub>Une grande ville en mode large, et le menu principal en français, à partir de votre propre exemplaire du jeu.</sub></p>
 
-*Zeus* (Impressions Games, 2000) est un jeu Windows 32 bits que les Mac récents ne savent plus
-lancer. Ce projet exécute son **code d'origine, non modifié**, dans un petit émulateur x86
-cloisonné, et réécrit en natif les fonctions Windows dont il a besoin : fichiers, fenêtre,
-souris, clavier, DirectDraw, son et vidéo. Le résultat est le vrai jeu — même simulation, mêmes
-règles, mêmes sauvegardes — et non une réécriture.
+## En un coup d'œil
 
-> **Ce dépôt ne contient aucun fichier du jeu.** Il faut posséder sa propre copie (édition GOG).
-> Voir [Mentions légales](#mentions-légales).
+| | |
+|---|---|
+| **Ce que c'est** | Le vrai *Zeus* + *Poséidon* (Impressions Games, 2000) : le code d'origine du jeu, non modifié, exécuté sur un Mac. Même simulation, mêmes règles, mêmes sauvegardes. Pas une réécriture. |
+| **État** | Jouable du début à la fin. Dernière version : **[1.2](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest)** (16 octobre 2026). |
+| **Fonctionne sur** | Mac à puce Apple Silicon (M1 ou plus récent), macOS 14 ou plus récent. Mac Intel et Linux en préparation, voir [Télécharger](#télécharger). |
+| **Il vous faut** | Votre propre copie du jeu, édition GOG. Ce dépôt ne contient aucun fichier du jeu ([Mentions légales](#mentions-légales)). |
+| **Fidèle** | Dix scénarios rejoués comparent chaque image et tout l'état de la partie, tour par tour, avec le jeu d'origine. |
+| **Léger** | Une petite ville occupe environ 23 % d'un cœur (51 à 60 % en 1.0.1). [Chiffres](#plus-léger-à-chaque-version). |
 
-## Jouer
+## Le principe en bref
 
-**[⬇ Télécharger Zeus-Poseidon-macos-arm64.zip](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest/download/Zeus-Poseidon-macos-arm64.zip)** — pour un Mac à puce **Apple Silicon**
-(M1 ou plus récent, macOS 14 ou plus récent ; ne fonctionne pas sur un Mac Intel). Il faut aussi votre propre copie du
-jeu : l'installateur GOG, voir l'étape 3.
+*Zeus* est un jeu Windows 32 bits que les Mac récents ne savent plus lancer. Ce projet exécute
+son **code d'origine** dans un petit émulateur x86 cloisonné, et réécrit en natif les fonctions
+Windows dont il a besoin : fichiers, fenêtre, souris, clavier, DirectDraw, son et vidéo. Les
+parties les plus sollicitées du jeu (l'essentiel du dessin de la ville, les parties les plus
+coûteuses de la simulation) sont aussi réécrites à la main en natif, chacune prouvée identique à
+l'original. [Détails plus bas](#principe).
+
+## Télécharger
+
+| Votre ordinateur | Téléchargement | |
+|---|---|---|
+| Mac à puce Apple Silicon (M1 ou plus récent), macOS 14+ | **[⬇ Zeus-Poseidon-macos-arm64.zip](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest/download/Zeus-Poseidon-macos-arm64.zip)** | disponible |
+| Mac à processeur Intel | pas encore | en cours ([#41](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/41)) |
+| Linux (AppImage) | pas encore | prévu ([#40](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/40)) |
+
+Toutes les versions et leurs notes : [Releases](https://github.com/nic0lasm/zeus-poseidon-arm64/releases).
+
+### Installer et jouer
 
 1. Ouvrez le zip téléchargé (double-clic), puis double-cliquez sur **Zeus Poseidon**.
 2. macOS refuse de l'ouvrir la première fois, car l'application n'est pas notariée par Apple.
    Cliquez sur **OK**, puis ouvrez **menu Pomme → Réglages Système → Confidentialité et
    sécurité**, descendez jusqu'au message sur « Zeus Poseidon » et cliquez sur **Ouvrir quand
    même** ; confirmez avec votre mot de passe ou Touch ID, puis cliquez sur **Ouvrir**. Une seule
-   fois. *(Écrit pour macOS 15 d'après la documentation d'Apple ; les libellés exacts peuvent
-   varier selon la version, et restent à vérifier par un humain sur un Mac neuf.)*
-3. Désignez votre installateur GOG (`setup_zeus_and_poseidon_….exe`) — le sélecteur s'ouvre dans Téléchargements — ou déposez-le sur l'icône de l'application. Il est déballé une fois
-   pour toutes (environ une minute, 800 Mo) ; ensuite, jouez. Pour l'obtenir depuis un Mac :
-   connectez-vous sur **GOG.com → bibliothèque → Zeus + Poseidon → installateurs Windows hors ligne
-   (« Télécharger les installateurs hors ligne ») → Windows** (téléchargez le `.exe` et les
+   fois. *(Les libellés peuvent varier légèrement selon la version de macOS.)*
+3. Désignez votre installateur GOG (`setup_zeus_and_poseidon_….exe` ; le sélecteur s'ouvre dans
+   Téléchargements) ou déposez-le sur l'icône de l'application. Il est déballé une fois pour
+   toutes (environ une minute, 800 Mo) ; ensuite, jouez. Pour l'obtenir depuis un Mac :
+   connectez-vous sur **GOG.com → bibliothèque → Zeus + Poseidon → installateurs Windows hors
+   ligne (« Télécharger les installateurs hors ligne ») → Windows** (téléchargez le `.exe` et les
    fichiers `.bin` qui l'accompagnent, s'il y en a).
 
 **En français ?** Gardez la touche Option (⌥) enfoncée au lancement et choisissez *Autre langue,
@@ -53,66 +71,59 @@ propres CD ([détails](docs/languages.md), en anglais).
 
 ## Ce que vous obtenez
 
-- **Tout le jeu** — les seize tutoriels, les aventures de Zeus et de Poséidon, l'éditeur
+- **Tout le jeu :** les seize tutoriels, les aventures de Zeus et de Poséidon, l'éditeur
   d'aventures, dieux, héros, monstres et catastrophes, sauvegarde et chargement.
-- **Le son et l'image** — musiques, ambiances, son 3D, bruitages et vidéo d'introduction.
-- **Une fenêtre moderne** — fenêtre ou plein écran (⌘F), nette à toute taille, et un mode large
-  adapté à votre écran : prenez la plus grande résolution dans les options d'affichage du jeu.
-- **Votre langue** — l'anglais d'emblée, le français (et d'autres éditions, voir plus bas)
-  depuis vos propres CD.
-- **Le confort** — molette dans les listes, pause quand vous passez à une autre application,
+- **Le son et l'image :** musiques, ambiances, son 3D, bruitages et vidéo d'introduction.
+- **Une fenêtre moderne :** fenêtre ou plein écran (⌘F), nette à toute taille, et un mode large
+  adapté à votre écran (prenez la plus grande résolution dans les options d'affichage du jeu).
+- **Votre langue :** l'anglais d'emblée, le français (et d'autres éditions, voir
+  [#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24)) depuis vos propres CD.
+- **Le confort :** molette dans les listes, pause quand vous passez à une autre application,
   démarrage en moins d'une seconde.
-- **La fidélité prouvée** — dix scénarios rejoués comparent chaque image et tout l'état de la
+- **La fidélité prouvée :** dix scénarios rejoués comparent chaque image et tout l'état de la
   partie, tour par tour, avec le jeu d'origine : une modification qui changerait un seul pixel
-  ou un seul nombre de la simulation ne peut pas passer inaperçue.
-
-### Plus léger à chaque version
-
-La version 1.2 fait passer la plus grande partie du dessin de la ville et les parties les plus
-coûteuses de la simulation de l'original émulé à du code natif écrit à la main, chaque partie
-prouvée identique à l'original :
-
-- **Une petite ville à environ 23 % d'un cœur**, contre environ 35 % en 1.1 et 51 à 60 % en
-  1.0.1 (en temps réel, sur Mac) : le second passage du dessin de la ville (ce qui se tient sur
-  chaque case : bâtiments, animations, sanctuaires, marcheurs) reste en natif sur 97 % de ses
-  cases dans la grande ville du dernier tutoriel.
-- **Le tour de simulation d'une grande ville environ trois fois plus rapide** : de 5,3–5,8 ms à
-  1,6 ms au banc (`working-city`, horloge déterministe), avec les recherches de chemin, la
-  boucle des marcheurs, les soldats et les bâtiments composés (sanctuaires, monuments) en natif.
-- **Cadres des fenêtres en natif** : 10 à 12 % de temps de calcul en moins sur les scénarios de
-  la grande ville et des options.
-- **La preuve à chaque modification** : dix scénarios, images et état de la partie identiques à
-  chaque tour, et chaque fonction native vérifiée appel par appel contre l'original
+  ou un seul nombre de la simulation ne peut pas passer inaperçue
   ([equivalence.md](docs/equivalence.md), en anglais).
+
+## Plus léger à chaque version
+
+Chaque version fait passer davantage de travail de l'original émulé à du code natif écrit à la
+main, chaque partie prouvée identique à l'original.
+
+| Mesure | 1.0.1 | 1.1 | 1.2 |
+|---|---:|---:|---:|
+| Petite ville, temps réel sur Mac (part d'un cœur) | 51–60 % | environ 35 % | **environ 23 %** |
+| Tour de simulation d'une grande ville (banc, `working-city`) | | 5,3–5,8 ms | **1,6 ms** |
+| Dessin de la ville resté en natif (second passage, grande ville) | | | **97 %** des cases |
+
+Aussi dans la 1.2 : les cadres des fenêtres en natif (10 à 12 % de calcul en moins sur les
+scénarios de la grande ville et des options). **Depuis la 1.2**, pour la prochaine version : les
+textes d'une ligne en natif, 7 à 9 % de calcul en moins en jeu réel
+([#113](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/113)).
+
+**Avancée du moteur :** 322 des 4 872 fonctions de l'exécutable GOG sont comprises (nommées,
+documentées ou natives) et 24 sont remplacées entières par du code natif ; le code natif fait
+53,2 % du temps de calcul du jeu sur `working-city`, plus 17,1 % dans des fonctions natives en
+partie. [Carte du code et compteurs](docs/engine/README.md) (en anglais).
 
 ## La suite
 
-Le but : que *Zeus* et *Poséidon* restent jouables aussi longtemps qu'on aura envie d'y jouer — le
-jeu d'origine, sur les machines qu'on possède, prouvé identique à l'original.
+Les gains de vitesse qu'un joueur pouvait sentir sont faits ; chaque morceau de code émulé qui
+reste pèse environ 1 % du temps ou moins. Les prochaines étapes visent ce que les joueurs
+remarquent ([plan complet](docs/roadmap.md#after-12-review-of-16-october-2026), en anglais) :
 
-Le jeu est jouable aujourd'hui (1.2). La suite consiste à **remplacer l'original morceau par
-morceau par un moteur écrit à la main et documenté**, comme Julius l'a fait pour *Caesar III*.
-L'original émulé reste la référence et le juge : chaque partie réécrite doit prouver, tour par
-tour, qu'elle donne exactement le même état de partie. Rien n'est traduit mécaniquement. Aucune
-date n'est promise.
+1. **Des sauvegardes sans pause.** Une sauvegarde fige le jeu environ 3,6 s pendant que le code
+   émulé la compresse ; le compresseur réécrit à la main redonne déjà les fichiers du jeu octet
+   pour octet.
+2. **Les Mac Intel** ([#41](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/41)), une
+   seconde archive fabriquée par la CI.
+3. **Linux** ([#40](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/40)), une AppImage.
+4. **La version 1.3**, jouée de bout en bout sur un Mac, avec une mesure du coût de l'affichage.
 
-**Avancée du moteur :** 322 des 4 872 fonctions de l'exécutable GOG sont comprises (nommées, documentées ou natives) et 24 sont remplacées entières par du code natif écrit à la main ; le code natif fait 53,2 % du temps de calcul du jeu sur le scénario `working-city`, plus 17,1 % dans des fonctions natives en partie (code x86 émulé seul, travail de l'hôte exclu). [Carte du code et compteurs](docs/engine/README.md) (en anglais).
-
-- **1.x Jouable** — le garder léger et dans toutes les éditions : premier lancement ([#55](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/55)), packs de
-  langue ([#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24), **testeurs recherchés**), charge processeur ([#22](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/22)). [Jalon](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/2)
-- **Phase A — Instruments** — équivalence sur l'état complet de la partie ([#26](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/26)) ; une carte du
-  code et deux compteurs publics : fonctions comprises sur 4 872, part du calcul faite en natif
-  ([#69](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/69)). [Jalon](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/7)
-- **Phase B — Données** — la sauvegarde décrite en entier ([#70](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/70)), puis cartes et aventures, images,
-  textes, tables ([#30](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/30)) ; chaque format relu puis réécrit octet pour octet. [Jalon](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/8)
-- **Phase C — Moteur natif** — rendu, interface, terrain, marcheurs, logement, économie, dieux,
-  héros et monstres, armée, événements, sauvegarde, un par un, chacun avec une fiche dans
-  `docs/engine/` ([#71](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/71)). [Jalon](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/9)
-- **2.0 Moteur natif** — plus d'émulateur pour jouer ; Linux et Intel en découlent ([#25](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/25)). [Jalon](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/3)
-- **Modding** — plus tard, sur une branche à part ; `main` garde le jeu d'origine ([#72](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/72)).
-- **Exploration** — la City Building Series, en veille ([#28](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/28), [#29](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/29)).
-
-Le plan complet : [docs/roadmap.md](docs/roadmap.md) (en anglais).
+À plus long terme, le but ne change pas : que *Zeus* et *Poséidon* restent jouables aussi
+longtemps qu'on aura envie d'y jouer. Un moteur entièrement natif (2.0, sans émulateur, comme
+Julius l'a fait pour *Caesar III*) est en pause ; la carte du code, les fiches de
+[`docs/engine/`](docs/engine/) et le banc restent prêts. Aucune date n'est promise.
 
 ## Historique des versions
 
@@ -122,11 +133,19 @@ Le plan complet : [docs/roadmap.md](docs/roadmap.md) (en anglais).
 | [**1.1**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.1) | premier lancement en moins de clics (téléchargement en un clic, sélecteur dans Téléchargements, plus de question de langue) ; modes larges plus hauts ; sol de la ville dessiné en natif (petite ville à 35 % d'un cœur au lieu d'environ 50 %) |
 | [**1.0.1**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.0.1) | le jeu à sa vraie vitesse (il tournait aux deux tiers depuis la 0.2) ; répartiteur de sprites natif |
 | [**1.0**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.0) | première version stable : le code de la 0.9, joué à la main |
+
+<details>
+<summary>Versions plus anciennes (0.1 à 0.9)</summary>
+
+| Version | Points forts |
+|---|---|
 | [0.9](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v0.9) | version candidate : démarrage en moins d'une seconde, vraie résolution affichée en mode large, moins de mémoire |
 | [0.4](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v0.4) | son 3D, routines de dessin natives, molette, pause en arrière-plan, essais automatiques bien plus larges |
 | [0.3](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v0.3) | écran large ; packs de langue fabriqués par l'application depuis les CD d'origine |
 | [0.2](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v0.2) | le français ; deux fois moins de processeur ; l'application ouvre elle-même l'installateur GOG |
 | [0.1](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v0.1) | premier aperçu : menus, tutoriels, construction, sauvegarde et chargement, musiques, bruitages, vidéo d'introduction, plein écran |
+
+</details>
 
 Les archives des versions 0.1 et 0.2 ont été retirées (elles contenaient des chemins de la
 machine qui les avait fabriquées) ; chaque changement est décrit dans [CHANGELOG.md](CHANGELOG.md)
@@ -158,9 +177,9 @@ dossier du jeu n'est jamais modifié : tout ce que le jeu écrit (sauvegardes, r
 
 Le jeu importe 202 fonctions Windows. Chacune est une petite fonction native dans `src/win32/` ;
 une fonction pas encore écrite arrête le programme en se nommant, ce qui a guidé le travail. Les
-routines les plus sollicitées du jeu — dessin des sprites et leur répartiteur, l'essentiel du
+routines les plus sollicitées du jeu (dessin des sprites et leur répartiteur, l'essentiel du
 dessin de la ville, cadres des fenêtres et textes, et les parties les plus coûteuses de la
-simulation (recherches de chemin, marcheurs, bâtiments composés) — tournent aussi en natif,
+simulation : recherches de chemin, marcheurs, bâtiments composés) tournent aussi en natif,
 chacune prouvée identique image par image et tour par tour. Le jeu voit un
 dossier `C:\Zeus` privé : les lectures aboutissent dans vos fichiers du jeu, les écritures dans
 un dossier séparé. Voir [docs/architecture.md](docs/architecture.md).
@@ -170,15 +189,14 @@ un dossier séparé. Voir [docs/architecture.md](docs/architecture.md).
 Le projet a commencé par l'étude des données et du code du jeu ; ce travail est documenté pour
 quiconque fabrique des outils pour la communauté *Zeus* / *Poséidon* :
 
-- **Formats de fichiers** — [`formats/sg3.md`](formats/sg3.md) (sprites, `.sg3` + `.555`),
-  [`formats/map.md`](formats/map.md) (cartes et sauvegardes, `.map` / `.sav` / `.pak`) et
-  [`formats/eng.md`](formats/eng.md) (textes et aide du jeu, `.eng`), chacun
-  avec un lecteur de référence en Python ; d'autres à venir ([#30](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/30)).
-- **Outils d'extraction** — lecteurs en pur Python des images CD d'origine, des archives
+- **Formats de fichiers :** [`formats/`](formats/) décrit les sprites (`.sg3` + `.555`), les
+  cartes, les sauvegardes (avec leur compression), les aventures, les textes et l'aide du jeu,
+  chacun avec un lecteur de référence en Python ; d'autres à venir ([#30](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/30)).
+- **Outils d'extraction :** lecteurs en pur Python des images CD d'origine, des archives
   InstallShield et des installateurs de mises à jour Wise ([`tools/`](tools/)).
-- **Visionneuses** — `zeus-sprites` (tous les sprites du jeu) et `zeus-map` (terrain
+- **Visionneuses :** `zeus-sprites` (tous les sprites du jeu) et `zeus-map` (terrain
   isométrique d'une carte).
-- **Notes de rétro-ingénierie** — imports, symboles, comportement du moteur
+- **Notes de rétro-ingénierie :** imports, symboles, comportement du moteur
   ([`analysis/notes/`](analysis/notes/), [docs/reverse-engineering.md](docs/reverse-engineering.md)).
 
 ## Communauté
@@ -190,11 +208,10 @@ les [tickets](https://github.com/nic0lasm/zeus-poseidon-arm64/issues).
 
 L'aide la plus utile aujourd'hui :
 
-- **Jouer et raconter** — une aventure jouée jusqu'au bout, sur votre modèle de Mac.
+- **Jouer et raconter :** une aventure jouée jusqu'au bout, sur votre modèle de Mac.
 - **Une autre édition linguistique ?** Essayez un pack depuis vos CD et dites-nous
   ([#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24)).
-- **Du code** — les tickets [good first issue](https://github.com/nic0lasm/zeus-poseidon-arm64/labels/good%20first%20issue)
-  et [help wanted](https://github.com/nic0lasm/zeus-poseidon-arm64/labels/help%20wanted) ; voir
+- **Du code :** voir les [tickets ouverts](https://github.com/nic0lasm/zeus-poseidon-arm64/issues) et
   [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Mentions légales
@@ -210,7 +227,7 @@ fournissez.
 
 ## Licence
 
-GPL-2.0-or-later — voir [LICENSE](LICENSE). Elle ne couvre que le code et la documentation de
+GPL-2.0-or-later, voir [LICENSE](LICENSE). Elle ne couvre que le code et la documentation de
 ce dépôt, jamais le jeu.
 
 L'émulation x86 repose sur [Unicorn](https://www.unicorn-engine.org/) (GPL-2.0) ; les vidéos
