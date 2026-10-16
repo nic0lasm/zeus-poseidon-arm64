@@ -408,10 +408,10 @@ uint32_t draw_runs(Cpu& cpu) {
 // FUN_00413e30(image, transparence) : dessine une image compressée en la mélangeant au fond. La
 // transparence est une seconde suite de segments, parallèle à la première : un octet de 0 à 31
 // par pixel. Mélange par composante : (a * image + (31 - a) * fond) >> 5.
-uint32_t draw_runs_blended(Cpu& cpu) {
+void draw_runs_blended_from(Cpu& cpu, uint32_t image, uint32_t table) {
     require_555(cpu);
-    const uint8_t* p = cpu.host(cpu.arg(0));
-    const uint8_t* alpha = cpu.host(cpu.arg(1));
+    const uint8_t* p = cpu.host(image);
+    const uint8_t* alpha = cpu.host(table);
     // FUN_00417040 : saute les lignes masquées en haut, dans les deux suites.
     for (int32_t rows = i32(cpu, kSkippedRows); rows > 0; --rows) {
         for (int32_t left = image_width(cpu); left > 0;) {
@@ -455,6 +455,10 @@ uint32_t draw_runs_blended(Cpu& cpu) {
         }
         out += target_skip;
     }
+}
+
+uint32_t draw_runs_blended(Cpu& cpu) {
+    draw_runs_blended_from(cpu, cpu.arg(0), cpu.arg(1));
     return 0u;
 }
 
@@ -480,7 +484,9 @@ uint32_t strcmpi(Cpu& cpu) {
 //
 // Seuls les cas qui font l'essentiel des appels sont traités ici : image compressée par suites,
 // ni rognée en largeur ni retournée, image opaque ni rognée ni retournée, et sol en losange non
-// rogné en largeur (native_draw.cpp). Pour tous les autres, la fonction rend la main au code
+// rogné en largeur (native_draw.cpp) ; s'y ajoutent les images par suites mélangées au fond ou
+// recouvertes de la couleur de surimpression, et les masques de glyphes non rognés
+// (native_blending.cpp). Pour tous les autres, la fonction rend la main au code
 // d'origine sans avoir rien écrit : le répartiteur d'origine refait alors tout depuis ses
 // arguments. Quand le cas est traité, les variables
 // écrites sont celles qu'écrit l'original sur ce chemin, avec les mêmes largeurs.
@@ -600,26 +606,35 @@ std::optional<uint32_t> dispatch(Cpu& cpu, uint32_t self, int32_t id, int32_t x,
 
     // Choix de la routine (0x005AD748 et suivantes). Images non compressées : la source avance de
     // (largeur x lignes masquées + colonnes masquées) x 2 octets, écrite dans kSpriteImage.
-    enum class Draw { None, Runs, Opaque, Ground, Keyed, KeyedRows } draw = Draw::None;
-    uint32_t source = static_cast<uint32_t>(image);
+    // Images par suites : le recouvrement (kOverlay non nul, FUN_00416820 et ses variantes) suit le
+    // dessin, retourné ou non (0x005AD9CF). Pour les autres images, il est laissé à l'original.
+    enum class Draw { None, Runs, Blended, Glyph, Opaque, Ground, Keyed, KeyedRows } draw = Draw::None;
+    uint32_t source = static_cast<uint32_t>(image), alpha = 0;
+    const uint16_t overlay = u16(cpu, kOverlay);
     if (clip_y != 5) {
-        if (u16(cpu, kOverlay) != 0) return std::nullopt;
         bool uncompressed = false;
-        if (kind == 0x1E) {
+        if (kind == 0 && *cpu.host(entry + 0x33) != 0 && mode != 1) {
+            if (overlay != 0 && !blending_known()) return std::nullopt;
+            alpha = u32(cpu, entry + 0x40);  // transparence, FUN_00413e30 et ses variantes ; sans ombre
+            if (alpha != 0 && !blending_known()) return std::nullopt;
+            draw = alpha != 0 ? Draw::Blended : Draw::Runs;
+        } else if (overlay != 0) {
+            return std::nullopt;
+        } else if (kind == 0x1E) {
             if (clip_x != 0 && !ground_halves_known()) return std::nullopt;
             draw = Draw::Ground;  // FUN_00435070, FUN_004377b0, FUN_00438a90 ; sans retournement
         } else if (kind == 0) {
             if (mode == 1) return std::nullopt;  // teinte, FUN_005b86a0 et variantes
-            if (*cpu.host(entry + 0x33) != 0) {
-                if (u32(cpu, entry + 0x40) != 0) return std::nullopt;  // transparence, FUN_00413e30…
-                draw = Draw::Runs;
-            } else {
-                if (mirror != 0) return std::nullopt;  // FUN_00415e30, FUN_00415ec0
-                uncompressed = true;
-                draw = clip_x == 0 ? Draw::KeyedRows : Draw::Keyed;  // FUN_00415f50, FUN_00416010
-            }
+            if (mirror != 0) return std::nullopt;  // non compressée retournée : FUN_00415e30, FUN_00415ec0
+            uncompressed = true;
+            draw = clip_x == 0 ? Draw::KeyedRows : Draw::Keyed;  // FUN_00415f50, FUN_00416010
+        } else if (kind == 0x14) {
+            // Masque de glyphe, sans retournement ni surimpression (0x005ADD84) ; rogné en largeur,
+            // FUN_00416f00 et FUN_00416fa0 restent à l'original.
+            if (clip_x != 0 || !blending_known()) return std::nullopt;
+            draw = Draw::Glyph;
         } else {
-            if (mirror != 0 || kind == 0x0C || kind == 0x14) return std::nullopt;
+            if (mirror != 0 || kind == 0x0C) return std::nullopt;
             if ((kind == 0x0D || kind == 0x0A || kind == 0x02) && clip_x != 0) return std::nullopt;  // carrés fixes
             uncompressed = true;
             draw = clip_x != 0 ? Draw::Keyed : clip_y == 0 ? Draw::Opaque : Draw::KeyedRows;
@@ -661,7 +676,13 @@ std::optional<uint32_t> dispatch(Cpu& cpu, uint32_t self, int32_t id, int32_t x,
             } else {
                 draw_runs_from(cpu, source, shadow);
             }
+            if (overlay != 0) overlay_runs(cpu, source, overlay, clip_x);
             break;
+        case Draw::Blended:  // FUN_00413e30, FUN_00414ce0, FUN_00414540 ; retournée : FUN_00414190…
+            draw_runs_blended_variant(cpu, source, alpha, mirror != 0, clip_x);
+            if (overlay != 0) overlay_runs(cpu, source, overlay, clip_x);
+            break;
+        case Draw::Glyph: draw_glyph_mask(cpu, source); break;  // FUN_00416c30
         case Draw::Opaque: copy_rectangle_from(cpu, source); break;
         case Draw::Keyed: copy_rectangle_keyed_from(cpu, source); break;
         case Draw::KeyedRows: copy_rows_keyed_from(cpu, source); break;
@@ -697,17 +718,21 @@ void clip_sprite(Cpu& cpu) {
 // compressée qui suit la base en losange dans l'image (entrée +0x35 non nulle). Elle est placée
 // d'après la largeur de la base, de 1 à 6 cases ; pour une autre largeur, la position et la
 // hauteur restent celles du sprite précédent, comme dans l'original. Le miroir de l'entrée
-// (+0x3E) n'est pas suivi. Renvoie 1 quand l'entrée a une partie haute, 0 sinon. Seule la
-// surimpression (FUN_00416820 et ses variantes) est laissée à l'original, décidée avant toute
+// (+0x3E) n'est pas suivi. Renvoie 1 quand l'entrée a une partie haute, 0 sinon. Avec une
+// couleur de surimpression, les pixels de la partie haute sont ensuite recouverts (FUN_00416820 et
+// ses variantes). FUN_005ae1b0 (`mirrored`) est la même fonction, octet pour octet aux adresses
+// près, avec les routines retournées (FUN_00415490 et ses variantes) et, pour la surimpression,
+// l'image retournée redessinée avec source & couleur (FUN_00415b80 et ses variantes). Sans les
+// routines de native_blending.cpp, la surimpression est laissée à l'original, décidée avant toute
 // écriture.
-std::optional<uint32_t> building_top(Cpu& cpu, uint32_t self, int32_t id, int32_t x, int32_t y) {
+std::optional<uint32_t> building_top(Cpu& cpu, uint32_t self, int32_t id, int32_t x, int32_t y, bool mirrored) {
     const int32_t bank = id / 16384, number = id % 16384;
     if (number < 1 && bank == 0) return 0u;
     const uint32_t base = self + static_cast<uint32_t>(bank) * 0xCC44;
     if (i32(cpu, base + 0xDC34) <= number) return 0u;
     const uint32_t entry = u32(cpu, base + 0x1000) + static_cast<uint32_t>(number) * 0x48;
     if (*cpu.host(entry + 0x35) == 0) return 0u;
-    if (u16(cpu, kOverlay) != 0) return std::nullopt;
+    if (u16(cpu, kOverlay) != 0 && !blending_known()) return std::nullopt;
     int32_t image = i32(cpu, entry);
     put32(cpu, kSpriteImage, image);
     if (image < 1) return 0u;
@@ -733,17 +758,28 @@ std::optional<uint32_t> building_top(Cpu& cpu, uint32_t self, int32_t id, int32_
     clip_sprite(cpu);
     if (*cpu.host(kClipY) == 5) return 1u;
     const bool shadow = *cpu.host(entry + 0x3B) != 0;
-    switch (*cpu.host(kClipX)) {
-        case 1: draw_runs_left_from(cpu, static_cast<uint32_t>(image), shadow); break;
-        case 2: draw_runs_right_from(cpu, static_cast<uint32_t>(image), shadow); break;
-        default: draw_runs_from(cpu, static_cast<uint32_t>(image), shadow); break;
+    const uint32_t pixels = static_cast<uint32_t>(image);
+    const uint8_t clip_x = *cpu.host(kClipX);
+    switch (clip_x) {
+        case 1: mirrored ? draw_runs_mirrored_left_from(cpu, pixels, shadow) : draw_runs_left_from(cpu, pixels, shadow); break;
+        case 2: mirrored ? draw_runs_mirrored_right_from(cpu, pixels, shadow) : draw_runs_right_from(cpu, pixels, shadow); break;
+        default: mirrored ? draw_runs_mirrored_from(cpu, pixels, shadow) : draw_runs_from(cpu, pixels, shadow); break;
+    }
+    if (const uint16_t overlay = u16(cpu, kOverlay); overlay != 0) {
+        if (mirrored) draw_runs_mirrored_coloured(cpu, pixels, overlay, clip_x);
+        else overlay_runs(cpu, pixels, overlay, clip_x);
     }
     return 1u;
 }
 
 std::optional<uint32_t> building_top_call(Cpu& cpu) {
     return building_top(cpu, cpu.reg(Cpu::Reg::ECX), static_cast<int32_t>(cpu.arg(0)), static_cast<int32_t>(cpu.arg(1)),
-                        static_cast<int32_t>(cpu.arg(2)));
+                        static_cast<int32_t>(cpu.arg(2)), false);
+}
+
+std::optional<uint32_t> building_top_mirrored_call(Cpu& cpu) {
+    return building_top(cpu, cpu.reg(Cpu::Reg::ECX), static_cast<int32_t>(cpu.arg(0)), static_cast<int32_t>(cpu.arg(1)),
+                        static_cast<int32_t>(cpu.arg(2)), true);
 }
 
 std::optional<uint32_t> dispatch_call(Cpu& cpu) {
@@ -817,8 +853,12 @@ bool sprite_handled(Cpu& cpu, uint32_t self, int32_t id, int32_t x, int32_t y, i
 }
 
 std::optional<uint32_t> draw_building_top(Cpu& cpu, uint32_t self, int32_t id, int32_t x, int32_t y) {
-    return sprite::building_top(cpu, self, id, x, y);
+    return sprite::building_top(cpu, self, id, x, y, false);
 }
+
+uint32_t skip_run_rows(Cpu& cpu, uint32_t image) { return skip_rows(cpu, image); }
+
+void draw_runs_blended_whole(Cpu& cpu, uint32_t image, uint32_t table) { draw_runs_blended_from(cpu, image, table); }
 
 void install_native_functions(Process& p) {
     Cpu& cpu = p.cpu();
@@ -828,12 +868,17 @@ void install_native_functions(Process& p) {
         cpu.replace_function(r.address, r.arg_bytes, r.fn);
         ++installed;
     }
+    installed += install_native_blending(p);
     if (matches(cpu, kSpriteDispatch, {0x81, 0xEC, 0x14, 0x01, 0x00, 0x00, 0x8B, 0x84, 0x24, 0x1C, 0x01, 0x00, 0x00})) {
         cpu.add_fast_path(kSpriteDispatch, 0x18, 6, sprite::dispatch_call);  // « SUB ESP,0x114 » déplacé
         ++installed;
     }
     if (matches(cpu, kBuildingTop, {0x56, 0x8B, 0x74, 0x24, 0x08, 0x8B, 0xC6, 0x99})) {
         cpu.add_fast_path(kBuildingTop, 0x0C, 5, sprite::building_top_call);  // « PUSH ESI ; MOV ESI,[ESP+8] »
+        ++installed;
+    }
+    if (blending_known()) {  // FUN_005ae1b0 entière comparée à son empreinte (native_blending.cpp)
+        cpu.add_fast_path(kBuildingTopMirrored, 0x0C, 5, sprite::building_top_mirrored_call);
         ++installed;
     }
     if (matches(cpu, kKeySearch, kKeySearchBytes, sizeof kKeySearchBytes)) {

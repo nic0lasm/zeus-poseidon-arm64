@@ -55,6 +55,20 @@ constexpr uint32_t kBaseOffset = 0x00F29F74;  // ajouté à l'adresse de chaque 
 constexpr uint32_t kClearFrame = 0x0050B410;          // FUN_0050b410 : efface le tampon d'affichage
 constexpr uint32_t kSpriteDispatch = 0x005ACF50;      // FUN_005acf50 : répartiteur de sprites
 constexpr uint32_t kBuildingTop = 0x005ADF00;         // FUN_005adf00 : partie haute d'un bâtiment
+constexpr uint32_t kBuildingTopMirrored = 0x005AE1B0; // FUN_005ae1b0 : la même, retournée
+// Recouvrement et transparence (native_blending.cpp).
+constexpr uint32_t kOverlayRuns = 0x00416820;           // FUN_00416820 : fond &= couleur sous une image par suites
+constexpr uint32_t kOverlayRunsLeft = 0x00416AF0;       // FUN_00416af0 : le même, rognée à gauche
+constexpr uint32_t kOverlayRunsRight = 0x00416B90;      // FUN_00416b90 : le même, rognée à droite
+constexpr uint32_t kGlyphMask = 0x00416C30;             // FUN_00416c30 : masque de glyphe (type 20), non rogné
+constexpr uint32_t kColouredMirrored = 0x00415B80;      // FUN_00415b80 : image retournée, source & couleur
+constexpr uint32_t kColouredMirroredRight = 0x00415C40; // FUN_00415c40 : la même, rognée à droite
+constexpr uint32_t kColouredMirroredLeft = 0x00415D30;  // FUN_00415d30 : la même, rognée à gauche
+constexpr uint32_t kBlendedMirrored = 0x00414190;       // FUN_00414190 : image mélangée, retournée
+constexpr uint32_t kBlendedRight = 0x00414540;          // FUN_00414540 : rognée à droite
+constexpr uint32_t kBlendedMirroredRight = 0x00414910;  // FUN_00414910 : retournée, rognée à droite
+constexpr uint32_t kBlendedLeft = 0x00414CE0;           // FUN_00414ce0 : rognée à gauche
+constexpr uint32_t kBlendedMirroredLeft = 0x004150B0;   // FUN_004150b0 : retournée, rognée à gauche
 constexpr uint32_t kStrcmpi = 0x005CC640;             // __strcmpi de la bibliothèque C (VC++ 6)
 // Boucle de recherche de clé de FUN_00505770 (lecture de « Zeus eventmsg.txt ») : début et sortie.
 constexpr uint32_t kKeySearch = 0x005059F8, kKeySearchEnd = 0x00505A33;
@@ -410,6 +424,7 @@ constexpr uint32_t kSkipLeft = 0x00F139AC, kRight = 0x00F139A8, kVisibleRows = 0
 constexpr uint32_t kClipLeft = 0x00F139BC, kClipRight = 0x00F139B8;  // rectangle de dessin
 constexpr uint32_t kClipTop = 0x00F139B4, kClipBottom = 0x00F139B0;
 constexpr uint32_t kOverlay = 0x0078C570;  // couleur de surimpression, 16 bits
+constexpr uint32_t kGlyphColour = 0x00F1397C;  // couleur des masques de glyphes (type 20), 16 bits
 // Lus par FUN_005acf50 en 0x005AD65B pour reconnaître les écrans dont le fond de carte se dessine
 // d'un bloc : écran courant (octet), sous-mode, sous-écran, objet dont +4 est l'image du fond.
 constexpr uint32_t kScreen = 0x00F2A6DD, kSubmode = 0x00781894, kSubscreen = 0x00FFA180,

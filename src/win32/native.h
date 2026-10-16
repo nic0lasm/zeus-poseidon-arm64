@@ -73,4 +73,24 @@ int install_native_terrain(Process& process);
 // nombre de remplacements installés.
 int install_native_text(Process& process);
 
+// FUN_004170b0 : saute les lignes masquées en haut d'une image par suites (native.cpp) ; renvoie
+// l'adresse de la première ligne visible.
+uint32_t skip_run_rows(Cpu& cpu, uint32_t image);
+// FUN_00413e30(image, transparence) : image par suites mélangée au fond (native.cpp).
+void draw_runs_blended_whole(Cpu& cpu, uint32_t image, uint32_t table);
+// Recouvrement et transparence (native_blending.cpp), à n'utiliser que si blending_known() :
+//   - overlay_runs : fond &= couleur sous une image par suites, FUN_00416820, rognée à gauche
+//     (`clip_x` 1) FUN_00416af0, à droite (2) FUN_00416b90 ;
+//   - draw_runs_mirrored_coloured : image par suites retournée redessinée avec source & couleur,
+//     FUN_00415b80, FUN_00415d30 (1), FUN_00415c40 (2) ;
+//   - draw_runs_blended_variant : FUN_00414ce0 (1), FUN_00414540 (2), retournée FUN_00414190 (0),
+//     FUN_004150b0 (1), FUN_00414910 (2) ; non retournée et entière, FUN_00413e30 ;
+//   - draw_glyph_mask : FUN_00416c30, masque de glyphe non rogné, couleur kGlyphColour.
+bool blending_known();
+void draw_glyph_mask(Cpu& cpu, uint32_t image);
+void overlay_runs(Cpu& cpu, uint32_t image, uint16_t colour, uint8_t clip_x);
+void draw_runs_mirrored_coloured(Cpu& cpu, uint32_t image, uint16_t colour, uint8_t clip_x);
+void draw_runs_blended_variant(Cpu& cpu, uint32_t image, uint32_t table, bool mirror, uint8_t clip_x);
+int install_native_blending(Process& process);
+
 }  // namespace zeus::win32

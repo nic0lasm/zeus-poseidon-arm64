@@ -203,7 +203,10 @@ no alpha → `0x004161B0`, `0x004163B0`, `0x004165D0`, or mirrored `0x00415490`,
 `0x00415680`; uncompressed type 0 not mirrored → `0x00415F50` or `0x00416010`; other types
 (not 12, 20, nor 2, 10, 13 clipped sideways), not mirrored → `0x00413DC0`, `0x00415F50` or
 `0x00416010`, the source advanced as above; 58-pixel diamonds → `0x00435070`, `0x004377B0` or
-`0x00438A90`. Measured before the last three extensions: With it, 7,938,575 of the
+`0x00438A90`; since the tenth scenario, also compressed type 0 with an alpha stream (`+0x40`,
+`0x00413E30` and its five clipped or mirrored variants), the overlay after any compressed type 0
+image (`0x00416820`, `0x00416AF0`, `0x00416B90`), and unclipped glyph masks (`0x00416C30`).
+Measured before the last three extensions: With it, 7,938,575 of the
 8,215,286 calls stay in native code from entry to exit except 276,711 that fall back; the clip
 functions still run 493,617 times in emulated code (fallbacks and `0x005ADF00`). **verified**
 (two runs above).
@@ -292,8 +295,12 @@ instruction by instruction, where marked *structure*.
 - **Blended images** `0x00413E30(src, alpha)`: a second run stream with one byte (0–31) per
   pixel, parallel to the first (`0x00417040` skips hidden rows in both). Per 5-bit component:
   `(a × src + (31 − a) × dst) >> 5`; `a = 0` leaves the pixel. *verified, native* (555 only).
-  Clipped and mirrored versions: `0x00414CE0`, `0x00414540`, `0x00414190`, `0x004150B0`,
-  `0x00414910`. *structure*. `0x0041DF90` uses the same formula on whole images (`formats/sg3.md`).
+  Clipped and mirrored versions: `0x00414CE0` (left), `0x00414540` (right), `0x00414190`
+  (mirrored), `0x004150B0` (mirrored, left), `0x00414910` (mirrored, right); they walk the two
+  streams like the run-length routines of the same clipping (rows `[0x00F2A698]` apart, a row
+  ends at the first run that reaches the width). One quirk: the mirrored one writes the pixel of
+  rank x at row start + 2 × (width − x), one pixel to the right of the mirrored image (column
+  `width` is written, column 0 never, `0x0041428E`). *verified (listing), native* (555 only). `0x0041DF90` uses the same formula on whole images (`formats/sg3.md`).
 - **Ground diamond** `0x00435070(src, cy)`: 15 rows widening by 4 pixels (2, 6, …, 58),
   centred, then 15 rows narrowing; stored back to back (450 words). Clipped at the top (state
   3) only the lower half is drawn; at the bottom (4) only the upper half. *verified, native
@@ -322,10 +329,15 @@ instruction by instruction, where marked *structure*.
   width: 58 → (x, y − h + 30), height h − 16; 118 → (x − 30, y − h + 60), h − 31; 178 →
   (x − 60, y − h + 90), h − 46; 238 → (x − 90, y − h + 120), h − 61; 298 → (x − 120,
   y − h + 150), h − 76; 358 → (x − 150, y − h + 180), h − 91 (h = image height). Drawn with the
-  run-length routines (shadow flag `+0x3B`) and the overlay. *verified*
+  run-length routines (shadow flag `+0x3B`) and the overlay. `0x005AE1B0` is the same function
+  byte for byte apart from addresses, with the mirrored routines and, for the overlay, the
+  mirrored top drawn again with `src & colour`. *verified, native*
 - **Glyph mask** (type 20) `0x00416C30`: run-length segments whose pixels are all replaced by
-  one colour, `0x00F1397C`. *verified*; that type 20 images are font glyphs: *hypothesis*
-  (the colour is set in the text code).
+  one colour, `0x00F1397C`. *verified, native*; that type 20 images are font glyphs: *hypothesis*
+  (the colour is set in the text code). The count of a segment goes through a 16-case table: 1
+  to 14 and 16 pixels are written as such, any other count (0, 15, 17 or more) as 15 pixels
+  (the default case, `0x00416E87`); the overlay `0x00416820` has the same table. At least one
+  row is drawn. The clipped versions `0x00416F00`, `0x00416FA0` are reached by no scenario.
 - **Tint** (mode 1) `0x005B86A0(src, colour)`: grey = (r + g + b) / 3 of each source pixel; each
   output component = `(c × grey) >> 5`, rounded up when bit 4 of the product is set, with
   `c` the component of `colour`; handles both 555 and 565. *verified*
@@ -343,14 +355,21 @@ instruction by instruction, where marked *structure*.
 | Alpha | `(a × src + (31 − a) × dst) >> 5` per component, a ∈ 0…31 | `0x00413E30` and variants | verified |
 | Tint | grey level × colour / 32 | `0x005B86A0` and variants, `mode = 1` | verified |
 | Single-colour mask | every opaque pixel = `[0x00F1397C]` | `0x00416C30` and variants | verified |
-| **Overlay** | after the sprite, every pixel it covered: `dst &= [0x0078C570]` | `0x00416070` (uncompressed), `0x00416140` (clipped), `0x00416820` (runs), `0x00416AF0`, `0x00416B90` (runs, clipped); mirrored tops `0x00415B80`, `0x00415C40`, `0x00415D30` | verified |
+| **Overlay** | after the sprite, every pixel it covered: `dst &= [0x0078C570]`; for a mirrored building top, the top drawn again mirrored with `src & [0x0078C570]` | `0x00416070` (uncompressed), `0x00416140` (clipped), `0x00416820` (runs), `0x00416AF0`, `0x00416B90` (runs, clipped); mirrored tops `0x00415B80`, `0x00415D30` (left), `0x00415C40` (right) | verified; native for runs and tops |
 
 The overlay colour is set by the city loop just before a building or tile is drawn and cleared
 just after: `0xF863` (red: keeps red, crushes green and blue) when byte `+0xBF` of the building
 record (`0x0092E727 + 0x118 n`) is set; the value returned by `0x0045DBD0(tile)` for tiles with
 flag `0x01000000`; `0x0051EF30` may change it when `0x00665E2C == 1`. **verified** (writes in
 `0x00458170`); that `+0xBF` marks a building selected for demolition or out of order is a
-**hypothesis**. The overlay routines ran 0 times in this scenario.
+**hypothesis**. The overlay routines ran 0 times in this scenario; the tenth scenario, `rare`,
+reaches the six routines for run-length images and building tops (section 13).
+
+The run-length overlays follow the drawing routines' walk with two differences: `0x00416AF0`
+and `0x00416B90` handle a run to its end and stop a row at the first run that reaches the width,
+and a run of 0 pixels counts as one (the loop tests its count at the end, `0x00416B64`); all three
+draw at least one row. The mirrored tops `0x00415B80`, `0x00415D30`, `0x00415C40` walk exactly
+like `0x00415490`, `0x004158E0`, `0x00415680`, with no shadow. *verified (listing), native.*
 
 ## 10. The isometric view
 
@@ -736,11 +755,11 @@ steps before it, and the most frequent come first within a step. Counts: origina
 | 2 | `0x00415F50` | keyed copy, whole width | 95,842 | — (menus too) | **native** |
 | 3 | `0x004377B0`, `0x00438A90` | ground diamond clipped left / right | 8,682 / 8,691 | 19 / 19 | **native** (overlay: original) |
 | 4 | `0x00415490`, `0x004158E0`, `0x00415680` | mirrored run-length images | 1,020 / 57 / 2 | 2 / 0.1 / 0 | **native** |
-| 5 | `0x00416C30`, `0x00416F00`, `0x00416FA0` | glyph masks | 934 / 0 / 0 | — | original |
-| 6 | overlay `0x00416070`, `0x00416140`, `0x00416820`, `0x00416AF0`, `0x00416B90`, `0x00415B80`, `0x00415C40`, `0x00415D30` | `dst &= colour` | 0 | 0 | original |
-| 7 | alpha variants `0x00414CE0`, `0x00414540`, `0x00414190`, `0x004150B0`, `0x00414910`; tint `0x005B86A0`, `0x005B8910`, `0x005B8B60`; squares `0x00417290`, `0x004171E0`, `0x00417140`, `0x00417100`; mirrored keyed `0x00415E30`, `0x00415EC0` | rare cases | 0 | 0 | original |
+| 5 | `0x00416C30`, `0x00416F00`, `0x00416FA0` | glyph masks | 934 / 0 / 0 | — | `0x00416C30` **native** (in the dispatcher too); clipped: original, reached by no scenario |
+| 6 | overlay `0x00416070`, `0x00416140`, `0x00416820`, `0x00416AF0`, `0x00416B90`, `0x00415B80`, `0x00415C40`, `0x00415D30` | `dst &= colour` | 0 | 0 | the six on run-length images and building tops **native** (in the dispatcher and both building tops too); uncompressed `0x00416070`, `0x00416140`: original, reached by no scenario |
+| 7 | alpha variants `0x00414CE0`, `0x00414540`, `0x00414190`, `0x004150B0`, `0x00414910`; tint `0x005B86A0`, `0x005B8910`, `0x005B8B60`; squares `0x00417290`, `0x004171E0`, `0x00417140`, `0x00417100`; mirrored keyed `0x00415E30`, `0x00415EC0` | rare cases | 0 | 0 | alpha variants **native** (in the dispatcher too); tint, squares, mirrored keyed: original, reached by no scenario |
 | 8 | `0x005ACF50` | dispatcher: every remaining case, then the whole function | 8,215,286 | — (all screens) | fast path (clipped run-length images included) |
-| 9 | `0x005ADF00`, `0x005AE1B0`, `0x0045A690`, `0x0045A790` | building tops | 433,862 / 0 / 45,747 / 0 | 937 / 0 / 99 / 0 | `0x005ADF00` fast path (all but the overlay) |
+| 9 | `0x005ADF00`, `0x005AE1B0`, `0x0045A690`, `0x0045A790` | building tops | 433,862 / 0 / 45,747 / 0 | 937 / 0 / 99 / 0 | `0x005ADF00` and `0x005AE1B0` fast paths, overlay included |
 | 10 | `0x0043FF10`, `0x00440170`, `0x004406B0`, `0x00440FE0`, `0x00441E50` | bases of 2–6 tiles | 23,888 / 2,410 / 3,627 / 1,389 / 0 | 52 / 5 / 8 / 3 / 0 | **native** (in the dispatcher; overlay: original) |
 | 11 | `0x00457900` | ground of a tile, remaining cases | 593,891 | 1,283 | fast path (flat, sloped, flags `0x4020`), 5,941 still emulated (42,500 before the bases were native) |
 | 12 | `0x00449B30` | sort the walkers of a tile | 1,411,706 | 3,049 | **native** (11.3) |
@@ -756,22 +775,30 @@ steps before it, and the most frequent come first within a step. Counts: origina
 Already native: `0x00413DC0` (5,319,977 calls), `0x004161B0` (2,384,169), `0x004163B0` and
 `0x004165D0` (5,563 and 5,703), `0x00415490`, `0x004158E0`, `0x00415680`, `0x00415F50`
 (95,842), `0x00416010` (467), `0x00413E30` (4,317), `0x0050B410` (1,459), `0x00435070` (163,764),
-`0x004377B0` and `0x00438A90` (8,682 and 8,691), the clip functions (8,562,614 each) inside the dispatcher and the
-building tops, `0x005ADF00` except with an overlay, the first pass of `0x00458170`, `0x0044FEF0` for its
+`0x004377B0` and `0x00438A90` (8,682 and 8,691), the glyph mask `0x00416C30` (934), the clip functions (8,562,614 each) inside the dispatcher and the
+building tops, `0x005ADF00` and its mirrored twin `0x005AE1B0`, the overlays of run-length images and
+building tops and the five alpha variants (section 9), the first pass of `0x00458170`, `0x0044FEF0` for its
 common walkers, `0x0041D3D0` when it draws nothing, the walker sort `0x00449B30` and the walker loops
 (`0x0045A5A0` and the two loops of the second pass).
 
-Where the list stands: steps 1 to 4 are native; 5 to 7 were called by none of the nine first
-scenarios. The tenth, `rare` (tests/README.md), reaches the 6 × 6 base `0x00441E50` (381 calls in the original; the 270 left with native code on
-are identical call by call), the overlay routines on runs `0x00416820`, `0x00416AF0`,
-`0x00416B90` and the mirrored tops `0x00415B80`, `0x00415C40`, `0x00415D30`, and the alpha routine with its five
-variants (`0x00413E30`; `0x00414CE0`, `0x00414540`, `0x00414190`, `0x004150B0`, `0x00414910`)
-(`zeus-run --count`, original code). Still reached by no scenario: the clipped glyph masks
-`0x00416F00`, `0x00416FA0`, the overlay on uncompressed images `0x00416070`, `0x00416140`, the
-tint `0x005B86A0`, `0x005B8910`, `0x005B8B60`, the squares `0x00417290`, `0x004171E0`,
-`0x00417140`, `0x00417100` and the mirrored keyed copies `0x00415E30`, `0x00415EC0`; the second pass (16) is native for its
-common cells; the bases of 2 to 6 tiles (10), the walker sort `0x00449B30` (12) and the walker
-loops (13) are native.
+Where the list stands: steps 1 to 4 are native. Steps 5 to 7 were called by none of the nine
+first scenarios except `0x00416C30`; the tenth, `rare` (tests/README.md), reaches the 6 × 6 base
+`0x00441E50` (381 calls in the original; the 270 left with native code on are identical call by
+call), the six overlays of run-length images and building tops (`0x00416820` 3,615 calls,
+`0x00416AF0` 236, `0x00416B90` 205; mirrored tops `0x00415B80` 400, `0x00415C40` 40, `0x00415D30`
+5, through `0x005AE1B0`, 1,005 calls) and the alpha routine with its five variants (`0x00413E30`
+8,381; `0x00414CE0` 98, `0x00414540` 49, `0x00414190` 511, `0x004150B0` 21, `0x00414910` 20)
+(`zeus-run --count`, original code). All of them, and the glyph mask (4,470 calls in `rare`, 934 in
+`working-city`), are now native in `src/win32/native_blending.cpp`, every call identical
+(`--verify`, the dispatcher's and the tops' native paths switched off so that each routine is
+reached), and the dispatcher and both building tops use them. Still reached by no scenario, and
+left to the original: the clipped glyph masks `0x00416F00`, `0x00416FA0`, the overlay on
+uncompressed images `0x00416070`, `0x00416140`, the tint `0x005B86A0`, `0x005B8910`, `0x005B8B60`,
+the squares `0x00417290`, `0x004171E0`, `0x00417140`, `0x00417100` and the mirrored keyed copies
+`0x00415E30`, `0x00415EC0`. The second pass (16) is native for its common cells (a building
+marked red still hands back to the original there, which then reaches the native dispatcher and
+tops); the bases of 2 to 6 tiles (10), the walker sort `0x00449B30` (12) and the walker loops (13)
+are native.
 The extras of sanctuaries and monuments (15, `0x0053E5F0`) are native when they draw nothing,
 and the animations (15) for their common cases; the parts that draw (`0x0044EE80`, `0x005407A0`
 beyond its first tests), the 21 types `0x0044F320` draws and the per-type functions of step 5
