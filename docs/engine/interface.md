@@ -541,6 +541,29 @@ The attempt leaves a ready list of **invariants**: the word-copy loop's resume p
 with the original in the native version (a full rewrite handles them: section 7.6); `0x004F59B0` returns the glyph
 width without the +1. It also left one unexplained real-time run (no tick counted); the cause was not found.
 
+### 11.1 Native today (`src/win32/native_text.cpp`)
+
+The lesson of #35 applied: the 140 ns of a call into native code is paid once per *line*, not once per word or
+character, so `0x004F57A0` and `0x00507F20` (2.2 and 10 million calls in `working-city`) are rewritten but not
+intercepted.
+
+| Original | What the native code does |
+|---|---|
+| `0x00507BF0` | replaced whole: walks the group's strings as the original does (7.1) |
+| `0x004F536C` in `0x004F5300` | host jump: clears the 200-byte line buffer, registers as after the `REP STOSD` (`EAX`, `ECX` 0, `EBX` 0x32, `EDI` past the buffer), resumes at `0x004F537C` |
+| `0x004F53B6` in `0x004F5300` | host jump at the top of the word loop: measures each word (`0x004F57A0` with `0x00507F20` for each character, `0x00F13A58` and `0x00F13A20` written as the original writes them), copies the words that fit into the line, `@P` and `@L` included, and resumes at `0x004F554C` once the line is made; a line reserved by an `@G` image (`0x004F5548`) and the `@G` code itself (`0x004F5455`) go back to the original, which comes back to the host jump for the next word |
+
+Not written by the native word measure: the low byte of `0x004F57A0`'s own argument slot, where the original keeps
+the last character read; that slot lies below the stack of `0x004F5300` when the loop goes on. The drawing of a
+line (`0x004F58C0`, `0x004F59B0`) stays with the original. Installed only when the four functions have the expected
+FNV-1a fingerprint; the language pack changes none of them (it changes the glyph table, read at every character).
+
+Proof: frames and state identical in the nine scenarios; `--verify 0x004F5300 --every 3` compared 15,038 calls and
+`--verify 0x00507BF0 --every 25` 62,243 calls, all identical. Cost, `main` against the branch on one cloud machine:
+under the deterministic clock `working-city` takes 15.7–15.8 s of CPU instead of 18.3–18.7 s, `options` 25.6–26.4 s
+instead of 28.1–28.5 s, `tutorial` 17.5–18.4 s instead of 19.9–20.5 s; in real time (150 s of `working-city`, both
+builds side by side, two pairs) 20.5–23.1 % of a core instead of 21.4–23.6 %, the size of the noise, as #35 found.
+
 ## 12. Ordered list of the functions to rewrite
 
 Each step only needs the steps before it; within a step the most frequent function comes first. Counts are those of
@@ -548,13 +571,13 @@ section 1 (`working-city` / `options` / `tutorial`). "Native" = already replaced
 
 | # | Function | Role | Calls | Needs | Status |
 |---|---|---|---|---|---|
-| 1 | `0x00507F20` | width of a character | 9.98 M / 8.73 M / 8.44 M | glyph table, image entries | original (native attempt closed) |
-| 2 | `0x004F57A0` | width of a word | 2.20 M / 1.78 M / 1.77 M | 1 | original |
+| 1 | `0x00507F20` | width of a character | 9.98 M / 8.73 M / 8.44 M | glyph table, image entries | rewritten inside step 6's line fill, not intercepted (11.1) |
+| 2 | `0x004F57A0` | width of a word | 2.20 M / 1.78 M / 1.77 M | 1 | rewritten inside step 6's line fill, not intercepted (11.1) |
 | 3 | `0x004F59B0`, `0x00508B50` | one glyph (panel text / line text) | 1.15 M + 1.01 M / 0.91 M + 2.49 M / 0.89 M + 1.28 M | the dispatcher `0x005ACF50` (native fast path) | original |
 | 4 | `0x005091B0` | width of the next word (line breaker) | 11 k / 88 k / 37 k | 1 | original |
 | 5 | `0x004F58C0`, `0x004F5260` | draw a line, register a link box | 34 k / 38 k / 36 k ; 0 / 198 / 0 | 2, 3 | original |
-| 6 | `0x004F5300` | layout of a text (modes 0 and 1, `@` codes) | 2,280 / 3,906 / 2,395 | 2, 3, 5 | original |
-| 7 | `0x00507BF0` | find string (group, index) | 64 k / 236 k / 83 k | text file loader `0x0050ADA0` | original |
+| 6 | `0x004F5300` | layout of a text (modes 0 and 1, `@` codes) | 2,280 / 3,906 / 2,395 | 2, 3, 5 | partly native: line clear and line fill (11.1) |
+| 7 | `0x00507BF0` | find string (group, index) | 64 k / 236 k / 83 k | text file loader `0x0050ADA0` | native (11.1) |
 | 8 | `0x00508800` | string renderer (styles, `_`, `#`) | 83 k / 285 k / 116 k | 3 | original |
 | 9 | `0x00507DA0`, `0x00508670` | string width; centred string | 77 k + 64 k / 138 k + 121 k / 97 k + 84 k | 1 | original |
 | 10 | `0x00508D90`, `0x00508D40`, `0x00508060`, `0x00508080` | string by (group, rank) | 4 k + 36 k / 106 k + 64 k / 10 k + 42 k | 7, 8, 9 | original |

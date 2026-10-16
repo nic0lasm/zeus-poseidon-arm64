@@ -82,6 +82,7 @@ add_library(zeus_win32 STATIC
     src/win32/native_walkers.cpp
     src/win32/native_terrain.cpp
     src/win32/native_sanctuaries.cpp
+    src/win32/native_text.cpp
     src/win32/pe_image.cpp
     src/win32/process.cpp
     src/win32/text.cpp

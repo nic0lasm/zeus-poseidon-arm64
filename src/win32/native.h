@@ -69,5 +69,8 @@ int install_native_routes(Process& process);
 int install_native_figures(Process& process);
 // Fonctions du terrain (native_terrain.cpp) ; renvoie le nombre de remplacements installés.
 int install_native_terrain(Process& process);
+// Recherche des chaînes et mise en page des textes des panneaux (native_text.cpp) ; renvoie le
+// nombre de remplacements installés.
+int install_native_text(Process& process);
 
 }  // namespace zeus::win32

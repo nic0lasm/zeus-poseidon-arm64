@@ -176,8 +176,8 @@ adresse	nom	module	statut	preuve	type
 004f2600	message_window_open	interface	documenté	ouvre l'écran 0x05 : mémorise l'écran précédent (0x00EF8CB0) ; 3 appelants	fonction
 004f2d80	help_page_draw	interface	documenté	page d'aide / message : 5 appels de text_layout ; 5 467 octets	fonction
 004f5260	link_box_add	texte	documenté	enregistre un rectangle de lien @n (50 au plus, 20 octets chacun, 0x00EF8220)	fonction
-004f5300	text_layout	texte	documenté	mise en page d'un texte en lignes, modes 0 (dessin) et 1 (comptage), codes @P @L @G @n ; 2 280 appels	fonction
-004f57a0	word_width_panel	texte	documenté	largeur du mot suivant et octets lus (0x00F13A58) ; 2,2 M d'appels	fonction
+004f5300	text_layout	texte	documenté	natif partiel : effacement et remplissage de la ligne dans native_text.cpp ; mise en page d'un texte en lignes, modes 0 (dessin) et 1 (comptage), codes @P @L @G @n ; 2 280 appels	fonction
+004f57a0	word_width_panel	texte	documenté	largeur du mot suivant et octets lus (0x00F13A58) ; 2,2 M d'appels ; réécrite dans native_text.cpp pour 0x004F5300, non interceptée	fonction
 004f58c0	text_line_draw	texte	documenté	dessine une ligne de texte de panneau, enregistre les liens ; 34 315 appels	fonction
 004f59b0	text_draw_panel	texte	documenté	texte de panneau ; soustrait une constante en 004f5a33	fonction
 004f6e40	tooltip_draw	interface	documenté	écran 0x23 : info-bulle, mise en page en deux passes (190 puis 270 pixels)	fonction
@@ -188,9 +188,9 @@ adresse	nom	module	statut	preuve	type
 00503a60	route_search_ship	marcheurs	nommé	parcours en largeur avec la file 0x010AC0A0 sur une seconde grille (0x01046820…) ; hypothèse (eau) ; simulation.md §5	fonction
 00504fa0	backdrop_jpeg_load	rendu	documenté	fonds JPEG ; surfaces de tailles égales	fonction
 00505770	event_messages_load	texte	nommé	lit « Zeus eventmsg.txt » (boucle de recherche de clé hôte)	fonction
-00507bf0	text_string_find	texte	documenté	chaîne (groupe, rang) du fichier de textes ; 73 appelants, 64 286 appels	fonction
+00507bf0	text_string_find	texte	natif	chaîne (groupe, rang) du fichier de textes ; 73 appelants, 64 286 appels ; remplacée par native_text.cpp	fonction
 00507da0	string_width	texte	documenté	largeur d'une chaîne selon la police (espaces 10, 4 ou 6) ; 76 861 appels	fonction
-00507f20	char_width	texte	documenté	largeur d'un caractère : espace 4, sinon largeur du glyphe + 1 ; 9,98 M d'appels	fonction
+00507f20	char_width	texte	documenté	largeur d'un caractère : espace 4, sinon largeur du glyphe + 1 ; 9,98 M d'appels ; réécrite dans native_text.cpp pour 0x004F5300, non interceptée	fonction
 00507fc0	parse_decimal	texte	documenté	lit un nombre décimal, puissances de dix en 0x0063BF1C ; 10 762 appels	fonction
 00508060	text_pointer_store_a	texte	documenté	range text_string_find dans 0x00F13A60 ; 44 appelants	fonction
 00508080	text_pointer_store_b	texte	documenté	range text_string_find dans 0x00F13A5C ; 11 appelants	fonction

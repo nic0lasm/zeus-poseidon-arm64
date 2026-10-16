@@ -507,4 +507,20 @@ constexpr uint32_t kFontGroups = 0x012AFBEC;  // pointeur vers les groupes de po
 constexpr uint32_t kLastFontGroup = 0x012BC820;  // rang du dernier groupe
 constexpr uint32_t kLineHeight = 0x00F13960;  // hauteur de ligne de la police courante
 
+// Textes des panneaux (FUN_00507bf0, FUN_004f5300, FUN_004f57a0, FUN_00507f20 ; docs/engine/interface.md §7).
+constexpr uint32_t kFindString = 0x00507BF0, kFindStringEnd = 0x00507C31;  // chaîne (groupe, rang)
+constexpr uint32_t kTextGroups = 0x00F27F30;  // décalage de chaque groupe de chaînes, 8 octets par groupe
+constexpr uint32_t kTextBase = 0x00F29F64;    // adresse de la zone des chaînes
+constexpr uint32_t kPanelText = 0x004F5300, kPanelTextEnd = 0x004F5791;  // mise en page d'un texte
+constexpr uint32_t kPanelLineClear = 0x004F536C;  // « MOV EBX,0x32 ; XOR EAX,EAX ; … REP STOSD »
+constexpr uint32_t kPanelLineClearEnd = 0x004F537C;
+constexpr uint32_t kPanelLineFill = 0x004F53B6;  // « MOV ESI,[ESP+0x48] ; CMP EBX,ESI » : mot suivant
+constexpr uint32_t kPanelLineDone = 0x004F554C, kPanelImageLine = 0x004F5548, kPanelImageCode = 0x004F5455;
+constexpr uint32_t kWordWidth = 0x004F57A0, kWordWidthEnd = 0x004F58B2;  // largeur du mot suivant
+constexpr uint32_t kCharWidth = 0x00507F20, kCharWidthEnd = 0x00507FB3;  // largeur d'un caractère
+constexpr uint32_t kGlyphTable = 0x0063BE0C;  // caractère -> glyphe, 256 octets (kCharTable - 0x20)
+constexpr uint32_t kLineBuffer = 0x00F27694;  // ligne en cours, 200 octets
+constexpr uint32_t kWordBytes = 0x00F13A58;   // octets pris par le dernier mot mesuré
+constexpr uint32_t kPanelFont = 0x00EF8C9C;   // police des textes des panneaux
+
 }  // namespace zeus::win32::gog

@@ -2055,8 +2055,8 @@ adresse	taille	nom	module	statut	preuve	type
 004f5200	86	FUN_004f5200	inconnu	inconnu	aucun indice	fonction
 004f5260	100	link_box_add	texte	documenté	enregistre un rectangle de lien @n (50 au plus, 20 octets chacun, 0x00EF8220)	fonction
 004f52d0	44	FUN_004f52d0	inconnu	inconnu	aucun indice	fonction
-004f5300	1169	text_layout	texte	documenté	mise en page d'un texte en lignes, modes 0 (dessin) et 1 (comptage), codes @P @L @G @n ; 2 280 appels	fonction
-004f57a0	274	word_width_panel	texte	documenté	largeur du mot suivant et octets lus (0x00F13A58) ; 2,2 M d'appels	fonction
+004f5300	1169	text_layout	texte	documenté	natif partiel : effacement et remplissage de la ligne dans native_text.cpp ; mise en page d'un texte en lignes, modes 0 (dessin) et 1 (comptage), codes @P @L @G @n ; 2 280 appels	fonction
+004f57a0	274	word_width_panel	texte	documenté	largeur du mot suivant et octets lus (0x00F13A58) ; 2,2 M d'appels ; réécrite dans native_text.cpp pour 0x004F5300, non interceptée	fonction
 004f58c0	229	text_line_draw	texte	documenté	dessine une ligne de texte de panneau, enregistre les liens ; 34 315 appels	fonction
 004f59b0	439	text_draw_panel	texte	documenté	texte de panneau ; soustrait une constante en 004f5a33	fonction
 004f5b70	52	FUN_004f5b70	inconnu	inconnu	aucun indice	fonction
@@ -2230,7 +2230,7 @@ adresse	taille	nom	module	statut	preuve	type
 00507560	367	FUN_00507560	inconnu	inconnu	aucun indice	fonction
 00507980	522	FUN_00507980	rendu	inconnu	hypothèse : appelants/appelés (poids 3 sur 3 en rendu)	fonction
 00507b90	27	FUN_00507b90	inconnu	inconnu	aucun indice	fonction
-00507bf0	65	text_string_find	texte	documenté	chaîne (groupe, rang) du fichier de textes ; 73 appelants, 64 286 appels	fonction
+00507bf0	65	text_string_find	texte	natif	chaîne (groupe, rang) du fichier de textes ; 73 appelants, 64 286 appels ; remplacée par native_text.cpp	fonction
 00507c40	83	FUN_00507c40	inconnu	inconnu	aucun indice	fonction
 00507ca0	36	FUN_00507ca0	inconnu	inconnu	aucun indice	fonction
 00507cd0	51	FUN_00507cd0	inconnu	inconnu	aucun indice	fonction
@@ -2240,7 +2240,7 @@ adresse	taille	nom	module	statut	preuve	type
 00507d80	27	FUN_00507d80	inconnu	inconnu	aucun indice	fonction
 00507da0	350	string_width	texte	documenté	largeur d'une chaîne selon la police (espaces 10, 4 ou 6) ; 76 861 appels	fonction
 00507f00	27	FUN_00507f00	inconnu	inconnu	aucun indice	fonction
-00507f20	147	char_width	texte	documenté	largeur d'un caractère : espace 4, sinon largeur du glyphe + 1 ; 9,98 M d'appels	fonction
+00507f20	147	char_width	texte	documenté	largeur d'un caractère : espace 4, sinon largeur du glyphe + 1 ; 9,98 M d'appels ; réécrite dans native_text.cpp pour 0x004F5300, non interceptée	fonction
 00507fc0	106	parse_decimal	texte	documenté	lit un nombre décimal, puissances de dix en 0x0063BF1C ; 10 762 appels	fonction
 00508030	42	FUN_00508030	inconnu	inconnu	aucun indice	fonction
 00508060	24	text_pointer_store_a	texte	documenté	range text_string_find dans 0x00F13A60 ; 44 appelants	fonction
