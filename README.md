@@ -31,7 +31,7 @@ rules, same save files — not a remake.
 ## Play
 
 **[⬇ Download Zeus-Poseidon-macos-arm64.zip](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest/download/Zeus-Poseidon-macos-arm64.zip)** — for a Mac with an **Apple Silicon** chip
-(M1 or later; it does not run on an Intel Mac). You also need your own copy of the game: the
+(M1 or later, macOS 14 or later; it does not run on an Intel Mac). You also need your own copy of the game: the
 GOG installer, see step 3.
 
 1. Open the downloaded zip (double-click it), then double-click **Zeus Poseidon**.
