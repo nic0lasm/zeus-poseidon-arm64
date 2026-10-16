@@ -900,6 +900,7 @@ void install_native_functions(Process& p) {
     installed += install_native_text(p);
     installed += install_native_frames(p);
     installed += install_native_strings(p);
+    installed += install_native_save(p);
     if (p.trace) std::fprintf(stderr, "[hôte] %d fonctions du jeu remplacées par des fonctions natives\n", installed);
 }
 

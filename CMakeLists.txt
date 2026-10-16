@@ -86,6 +86,7 @@ add_library(zeus_win32 STATIC
     src/win32/native_frames.cpp
     src/win32/native_blending.cpp
     src/win32/native_strings.cpp
+    src/win32/native_save.cpp
     src/win32/pe_image.cpp
     src/win32/process.cpp
     src/win32/text.cpp

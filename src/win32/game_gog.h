@@ -586,4 +586,23 @@ constexpr uint32_t kTextMarks = 0x00F13AE4;      // position du curseur de chaqu
 constexpr uint32_t kTextMarkFound = 0x00F13A80;  // 1 : curseur de saisie placé
 constexpr uint32_t kTextMarkWidth = 0x00F13A84, kTextMarkCursor = 0x00F13A88, kTextMarkLine = 0x00F13A8C;
 
+// --- Code : compression des sauvegardes et des cartes (native_save.cpp ; formats/sav.md) --------
+
+constexpr uint32_t kCompressBlock = 0x005C6300;  // FUN_005c6300(&crc, &longueur, données, sortie, taille)
+constexpr uint32_t kSaveRead = 0x005C61A0, kSaveWrite = 0x005C6240;  // lecture et écriture d'implode
+// FUN_005c61a0, FUN_005c6240, FUN_005c6300, FUN_005c9680 (CRC 32), FUN_005c96c0 à FUN_005ca0a0
+// (implode), FUN_005ca7e0 (copie), FUN_005cbcd0 (sondage de la pile), FUN_00401000 (vide) :
+// empreinte commune.
+constexpr uint32_t kImplodeCode[][2] = {{0x005C61A0, 0x005C6237}, {0x005C6240, 0x005C62FF}, {0x005C6300, 0x005C63C4},
+                                        {0x005C9680, 0x005C96BC}, {0x005C96C0, 0x005CA153}, {0x005CA7E0, 0x005CA817},
+                                        {0x005CBCD0, 0x005CBCFF}, {0x00401000, 0x00401001}};
+constexpr uint64_t kImplodeCodeHash = 0x8B7085BB7C3CE6B1ull;
+constexpr uint32_t kImplodeType = 0x0160ACC0;      // type passé à implode (0 : binaire)
+constexpr uint32_t kImplodeDictSize = 0x00661BB0;  // taille du dictionnaire passée à implode (0x1000)
+// Tables d'implode (StormLib : DistBits, DistCode, ExLenBits, LenBits, LenCode, ChBitsAsc, ChCodeAsc).
+constexpr uint32_t kImplodeDistBits = 0x00662438, kImplodeDistCodes = 0x00662478;
+constexpr uint32_t kImplodeExLenBits = 0x006624B8, kImplodeLenBits = 0x006624C8, kImplodeLenCode = 0x006624D8;
+constexpr uint32_t kImplodeAsciiBits = 0x006624E8, kImplodeAsciiCodes = 0x006625E8;
+constexpr uint32_t kImplodeCrcTable = 0x00662038;  // FUN_005c9680 : 256 mots de 32 bits
+
 }  // namespace zeus::win32::gog

@@ -62,6 +62,12 @@ flux du jeu à l'octet près : `tools/savefile.py check` réécrit les 219 sauve
 (7 008 blocs compressés) à l'identique. Avec une structure neuve à chaque bloc, 3 blocs sur 32
 diffèrent déjà dans une seule sauvegarde.
 
+L'hôte fait cette compression en natif (`src/win32/native_save.cpp`) : `0x005C6300` est
+remplacée entière, et la structure de travail est laissée sur la pile du jeu dans l'état exact où
+l'original la laisse, si bien que les flux suivants restent ceux du jeu. Émulée, elle prenait
+3,8 s par sauvegarde de la grande ville du dernier didacticiel ; l'écriture de la sauvegarde prend
+maintenant 0,2 à 0,3 s.
+
 Le jeu embarque aussi zlib (`inflate 1.0.7`) ; les sauvegardes ne l'utilisent pas.
 
 ## Lecture et anciennes versions
