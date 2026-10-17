@@ -5,6 +5,8 @@ pull request.
 
 ## Unreleased
 
+## 1.5 — 2026-10-17
+
 - **Steam edition.** SteamDB lists for the Steam depot (566051, 2 December 2016) the same files as the GOG folder: one `exe` of 2.41 MiB (GOG's `Zeus.exe` is 2,527,232 bytes), the same `DLL`, `dll`, `ico`, `inf`, `ini`, `555`, `pak`, `sg3`, `sav` and `map` counts and sizes, no GOG Galaxy files and no Steam library: very likely the same DRM-free build. The application now finds an installed Steam edition by itself (Steam's main library and those of `libraryfolders.vdf`, on Linux, in Flatpak and on a Mac) and accepts a Steam folder chosen with *Folder…*. At launch it checks `Zeus.exe` (SHA-256): any other build than GOG's still runs, after a warning shown once per checksum that asks for a report on #128. README and README.fr explain it. [#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128).
 
 ## 1.4 — 2026-10-16
