@@ -95,6 +95,31 @@ def merge(number):
     print(f"main poussée, branche {branch} supprimée")
 
 
+# Système le plus ancien sur lequel l'application doit démarrer (#139).
+MINIMUM_MACOS = (11, 0)
+MACHO = (b"\xcf\xfa\xed\xfe", b"\xce\xfa\xed\xfe", b"\xca\xfe\xba\xbe")
+
+
+def minimum_macos(app):
+    """Version de macOS la plus récente demandée par un binaire du paquet, et ce binaire."""
+    highest = ((0,), None)
+    for folder, _, names in os.walk(app):
+        for name in names:
+            path = os.path.join(folder, name)
+            if os.path.islink(path):
+                continue
+            with open(path, "rb") as f:
+                if f.read(4) not in MACHO:
+                    continue
+            words = run("otool", "-l", path).split()
+            # LC_BUILD_VERSION donne « minos X.Y », LC_VERSION_MIN_MACOSX « version X.Y ».
+            for i, word in enumerate(words[:-1]):
+                if word == "minos" or (word == "version" and "LC_VERSION_MIN_MACOSX" in words[max(0, i - 4):i]):
+                    value = tuple(int(x) for x in words[i + 1].split("."))
+                    highest = max(highest, (value, os.path.relpath(path, app)))
+    return highest
+
+
 def release(version):
     run("cmake", "--build", DIFFUSION, "--target", "zeus-run")
     run(sys.executable, os.path.join(ROOT, "tools", "make_app.py"), "--binary", os.path.join(DIFFUSION, "zeus-run"),
@@ -106,6 +131,11 @@ def release(version):
     if not os.path.exists(helper):
         sys.exit("innoextract absent du paquet : brew install innoextract, puis recommencer")
     inno = run(helper, "--version").splitlines()[0]
+    minos, culprit = minimum_macos(APP)
+    if minos > MINIMUM_MACOS:
+        sys.exit(f"{culprit} demande macOS {'.'.join(map(str, minos))} : il faut au plus "
+                 f"{'.'.join(map(str, MINIMUM_MACOS))} (tools/build_mac_deps.py, MACOSX_DEPLOYMENT_TARGET=11.0)")
+    print(f"macOS {'.'.join(map(str, minos))} minimum ({culprit})")
     print(f"application {version} construite, signature vérifiée, --selftest réussi, {inno} embarqué")
     # Suffixe selon le processeur de la machine qui construit : arm64 (Apple Silicon) ou intel.
     suffix = "macos-arm64" if platform.machine() == "arm64" else "macos-intel"

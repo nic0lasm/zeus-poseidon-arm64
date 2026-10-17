@@ -1,8 +1,9 @@
 name: release
 
 # Construit l'archive de l'application sur un Mac Apple Silicon et sur un Mac Intel de GitHub, comme
-# `tools/publish.py release` sur la machine du mainteneur : FFmpeg réduit (LGPL), Python autonome,
-# construction Release, paquet signé localement, autotest, recherche des mots interdits.
+# `tools/publish.py release` sur la machine du mainteneur : bibliothèques compilées pour macOS 11
+# (tools/build_mac_deps.py), FFmpeg réduit (LGPL), Python autonome, construction Release, paquet
+# signé localement, autotest, contrôle du macOS minimum, recherche des mots interdits.
 # À la publication d'une version GitHub, les deux archives (nom versionné et nom stable) y sont
 # jointes ; sur une PR qui touche à la chaîne de publication, l'archive reste un artefact du run.
 on:
@@ -21,6 +22,7 @@ on:
       - tools/make_app.py
       - tools/build_ffmpeg.py
       - tools/fetch_python.py
+      - tools/build_mac_deps.py
 
 permissions:
   contents: write
@@ -36,10 +38,20 @@ jobs:
           - runner: macos-15-intel
             suffix: macos-intel
     runs-on: ${{ matrix.runner }}
+    env:
+      # Tout ce qui est compilé ici (bibliothèques, FFmpeg, programme) doit démarrer sur macOS 11 (#139).
+      MACOSX_DEPLOYMENT_TARGET: "11.0"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Dependencies
-        run: brew install cmake ninja pkgconf sdl2 unicorn nasm innoextract
+        run: brew install cmake ninja pkgconf nasm
+      - name: Cache of the libraries built for macOS 11
+        uses: actions/cache@v4
+        with:
+          path: build/deps/mac
+          key: mac-deps-${{ matrix.suffix }}-${{ hashFiles('tools/build_mac_deps.py') }}
+      - name: SDL 2, Unicorn and innoextract for macOS 11
+        run: python3 tools/build_mac_deps.py
       - name: Version
         run: |
           tag="${{ inputs.tag || github.event.release.tag_name }}"
@@ -50,7 +62,12 @@ jobs:
           python3 tools/build_ffmpeg.py
           python3 tools/fetch_python.py
       - name: Configure
-        run: cmake -S . -B build/diffusion -G Ninja -DCMAKE_BUILD_TYPE=Release -DZEUS_FFMPEG=build/deps/ffmpeg
+        # Une fonction de macOS plus récente que 11.0 ferait planter l'application au lancement :
+        # c'est une erreur de compilation ici.
+        run: |
+          PKG_CONFIG_PATH="$PWD/build/deps/mac/lib/pkgconfig" cmake -S . -B build/diffusion -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$PWD/build/deps/mac" -DZEUS_FFMPEG=build/deps/ffmpeg \
+            -DCMAKE_CXX_FLAGS=-Werror=unguarded-availability-new
       - name: Package
         run: python3 tools/publish.py release "$VERSION"
       - name: Summary

@@ -94,14 +94,19 @@ differ from Unicorn's, so it must not be redistributed.
 ### A bundle that can be shared
 
 ```bash
+export MACOSX_DEPLOYMENT_TARGET=11.0
+python3 tools/build_mac_deps.py      # SDL 2, Unicorn, innoextract built for macOS 11, in build/deps/mac
 python3 tools/build_ffmpeg.py        # reduced FFmpeg (Bink only, LGPL), built in build/deps
 python3 tools/fetch_python.py        # standalone Python, for building language packs in the app
-cmake -S . -B build/diffusion -G Ninja -DCMAKE_BUILD_TYPE=Release -DZEUS_FFMPEG=build/deps/ffmpeg
+PKG_CONFIG_PATH=$PWD/build/deps/mac/lib/pkgconfig cmake -S . -B build/diffusion -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$PWD/build/deps/mac -DZEUS_FFMPEG=build/deps/ffmpeg
 cmake --build build/diffusion --target zeus-run
 python3 tools/make_app.py --binary build/diffusion/zeus-run "build/diffusion/Zeus Poseidon.app"
 ```
 
-The result (about 50 MB) carries its licence notices ([third-party.md](third-party.md)).
+The result (about 50 MB) carries its licence notices ([third-party.md](third-party.md)) and
+starts on macOS 11 or later: Homebrew's libraries are built for the Mac that built them (macOS 14
+or 15 on GitHub's), so the shared bundle takes its own (#139).
 The tool strips debugging information and checks that no file of the bundle mentions your home
 folder. It is signed locally only, not notarised by Apple: on another Mac, the first launch
 needs *System Settings → Privacy & Security → Open Anyway* (on macOS 15 and later, right-click → *Open* no longer works).
