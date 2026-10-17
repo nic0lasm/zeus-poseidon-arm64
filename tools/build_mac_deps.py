@@ -75,10 +75,9 @@ def mark(name):
 
 def cmake(name, source, *options):
     build = os.path.join(DEPS, f"build-{name}")
-    # CMAKE_POLICY_VERSION_MINIMUM : les CMakeLists d'innoextract demandent CMake 2.8, que CMake 4 refuse.
     run("cmake", "-S", source, "-B", build, "-G", "Ninja", "-DCMAKE_BUILD_TYPE=Release",
         f"-DCMAKE_INSTALL_PREFIX={PREFIX}", "-DCMAKE_INSTALL_LIBDIR=lib", f"-DCMAKE_PREFIX_PATH={PREFIX}",
-        f"-DCMAKE_OSX_DEPLOYMENT_TARGET={TARGET}", "-DCMAKE_POLICY_VERSION_MINIMUM=3.5", *options)
+        f"-DCMAKE_OSX_DEPLOYMENT_TARGET={TARGET}", *options)
     run("cmake", "--build", build)
     run("cmake", "--install", build)
 
@@ -86,6 +85,9 @@ def cmake(name, source, *options):
 def main():
     os.makedirs(PREFIX, exist_ok=True)
     os.environ["MACOSX_DEPLOYMENT_TARGET"] = TARGET
+    # innoextract demande CMake 2.8, que CMake 4 refuse, jusque dans les scripts lancés pendant
+    # la construction (cmake -P) : la variable d'environnement les couvre aussi.
+    os.environ["CMAKE_POLICY_VERSION_MINIMUM"] = "3.5"
     # Les chemins des sources (__FILE__ des assertions) deviennent relatifs : le paquet ne doit citer
     # aucun dossier de la machine de construction.
     flags = f"-O2 -ffile-prefix-map={DEPS}=deps"
