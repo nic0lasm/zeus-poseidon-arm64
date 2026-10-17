@@ -197,11 +197,18 @@ def main(argv):
     for binary_file in [program] + ([helper] if helper else []) + sorted(copied.values()):
         run("strip", "-S", "-x", binary_file)
 
-    for library in sorted(copied.values()):
-        listing = run("otool", "-l", library).splitlines()
+    def delete_rpaths(binary_file):
+        listing = run("otool", "-l", binary_file).splitlines()
         for i, line in enumerate(listing):
             if line.strip() == "cmd LC_RPATH":
-                run("install_name_tool", "-delete_rpath", listing[i + 2].split()[1], library)
+                run("install_name_tool", "-delete_rpath", listing[i + 2].split()[1], binary_file)
+
+    # Le programme cite ses bibliothèques par @executable_path : le chemin de recherche que CMake
+    # lui donne vers celles de tools/build_mac_deps.py (citées par @rpath) ne sert plus, et citerait
+    # le dossier de construction.
+    delete_rpaths(program)
+    for library in sorted(copied.values()):
+        delete_rpaths(library)
         run("install_name_tool", "-add_rpath", "@loader_path", library)
         run("codesign", "--force", "--sign", "-", library)
     if helper:
@@ -219,8 +226,12 @@ def main(argv):
             continue
         for name in files:
             with open(os.path.join(folder, name), "rb") as f:
-                if home in f.read():
-                    leaks.append(os.path.relpath(os.path.join(folder, name), app))
+                data = f.read()
+                at = data.find(home)
+                if at >= 0:
+                    end = data.find(b"\0", at)
+                    leaks.append(f"{os.path.relpath(os.path.join(folder, name), app)} "
+                                 f"({data[at:end if 0 <= end - at < 200 else at + 200].decode(errors='replace')})")
     if leaks:
         raise SystemExit("paquet à ne pas diffuser, il cite le dossier personnel : " + ", ".join(leaks))
 
