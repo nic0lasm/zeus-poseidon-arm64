@@ -26,8 +26,8 @@ Silicon ou Intel) ou sous Linux : le jeu d'origine, sans Windows, sans Wine et s
 | | |
 |---|---|
 | **Ce que c'est** | Le vrai *Zeus* + *Poséidon* (Impressions Games, 2000) : le code d'origine du jeu, non modifié, exécuté sur un Mac. Même simulation, mêmes règles, mêmes sauvegardes. Pas une réécriture. |
-| **État** | Jouable du début à la fin. Dernière version : **[1.6](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest)** (17 octobre 2026). |
-| **Fonctionne sur** | Mac à puce Apple Silicon (M1 ou plus récent), macOS 14 ou plus récent ; Mac à processeur Intel, macOS 15 ou plus récent ; Linux x86-64 et arm64. Voir [Télécharger](#télécharger). |
+| **État** | Jouable du début à la fin. Dernière version : **[1.7](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest)** (18 octobre 2026). |
+| **Fonctionne sur** | Mac à puce Apple Silicon (M1 ou plus récent) ou à processeur Intel, macOS 11 (Big Sur) ou plus récent ; Linux x86-64 et arm64. Voir [Télécharger](#télécharger). |
 | **Il vous faut** | Votre propre copie du jeu, édition GOG (ou Steam, [voir plus bas](#acheté-sur-steam-)). Ce dépôt ne contient aucun fichier du jeu ([Mentions légales](#mentions-légales)). |
 | **Fidèle** | Dix scénarios rejoués comparent chaque image et tout l'état de la partie, tour par tour, avec le jeu d'origine. |
 | **Léger** | Une petite ville occupe environ 23 % d'un cœur (51 à 60 % en 1.0.1). [Chiffres](#plus-léger-à-chaque-version). |
@@ -45,10 +45,13 @@ l'original. [Détails plus bas](#principe).
 
 | Votre ordinateur | Téléchargement | |
 |---|---|---|
-| Mac à puce Apple Silicon (M1 ou plus récent), macOS 14+ | **[⬇ Zeus-Poseidon-macos-arm64.zip](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest/download/Zeus-Poseidon-macos-arm64.zip)** | disponible |
-| Mac à processeur Intel, macOS 15+ | **[⬇ Zeus-Poseidon-macos-intel.zip](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest/download/Zeus-Poseidon-macos-intel.zip)** | disponible |
+| Mac à puce Apple Silicon (M1 ou plus récent), macOS 11+ | **[⬇ Zeus-Poseidon-macos-arm64.zip](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest/download/Zeus-Poseidon-macos-arm64.zip)** | disponible |
+| Mac à processeur Intel, macOS 11+ | **[⬇ Zeus-Poseidon-macos-intel.zip](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest/download/Zeus-Poseidon-macos-intel.zip)** | disponible |
 | Linux x86-64 (Ubuntu 22.04, Debian 12, Fedora 36 ou plus récents) | **[⬇ Zeus-Poseidon-linux-x86_64.AppImage](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest/download/Zeus-Poseidon-linux-x86_64.AppImage)** | disponible |
 | Linux arm64 (mêmes distributions) | **[⬇ Zeus-Poseidon-linux-aarch64.AppImage](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest/download/Zeus-Poseidon-linux-aarch64.AppImage)** | disponible |
+
+Sous macOS 11, 12 et 13, les archives Mac sont construites et contrôlées pour macOS 11 par la CI,
+mais pas encore essayées sur un vrai Mac de ces versions : si vous en avez un, un mot sur [#139](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/139) aide.
 
 Toutes les versions et leurs notes : [Releases](https://github.com/nic0lasm/zeus-poseidon-arm64/releases).
 
@@ -59,7 +62,8 @@ Toutes les versions et leurs notes : [Releases](https://github.com/nic0lasm/zeus
    Cliquez sur **OK**, puis ouvrez **menu Pomme → Réglages Système → Confidentialité et
    sécurité**, descendez jusqu'au message sur « Zeus Poseidon » et cliquez sur **Ouvrir quand
    même** ; confirmez avec votre mot de passe ou Touch ID, puis cliquez sur **Ouvrir**. Une seule
-   fois. *(Les libellés peuvent varier légèrement selon la version de macOS.)*
+   fois. *(Les libellés peuvent varier légèrement selon la version de macOS ; sous macOS 11 et 12, c'est **Préférences Système → Sécurité et
+   confidentialité → Général**.)*
 3. Désignez votre installateur GOG (`setup_zeus_and_poseidon_….exe` ; le sélecteur s'ouvre dans
    Téléchargements) ou déposez-le sur l'icône de l'application. Il est déballé une fois pour
    toutes (environ une minute, 800 Mo) ; ensuite, jouez. Pour l'obtenir depuis un Mac :
@@ -150,6 +154,7 @@ Julius l'a fait pour *Caesar III*) est en pause ; la carte du code, les fiches d
 
 | Version | Points forts |
 |---|---|
+| [**1.7**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.7) | Mac plus anciens : les deux archives Mac fonctionnent dès macOS 11 (Big Sur), Mac Intel de 2013 compris ([#139](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/139)) |
 | [**1.6**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.6) | les applications Mac déballent de nouveau seules l'installateur GOG (innoextract embarqué, [#134](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/134), merci à [@MohammadBnei](https://github.com/MohammadBnei)) |
 | [**1.5**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.5) | édition Steam trouvée seule (bibliothèques Linux, Flatpak, Mac) ; `Zeus.exe` contrôlé au lancement, avec un avertissement pour une version inconnue |
 | [**1.4**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.4) | affichage plus léger : images copiées sur place et texture de la fenêtre au format du rendu (7 à 12 % de calcul en moins fenêtre visible ; conversion des couleurs 4,1 → 0,65 ms par image) |
