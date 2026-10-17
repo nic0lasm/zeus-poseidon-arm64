@@ -1,13 +1,14 @@
-# Zeus + Poseidon on Apple Silicon
+# Zeus + Poseidon on Mac and Linux
 
 [![Latest release](https://img.shields.io/github/v/release/nic0lasm/zeus-poseidon-arm64?label=download&color=1f6feb)](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest)
-[![macOS 14+ Apple Silicon](https://img.shields.io/badge/macOS%2014%2B-Apple%20Silicon-333?logo=apple)](#download)
+[![Mac Apple Silicon and Intel](https://img.shields.io/badge/Mac-Apple%20Silicon%20%C2%B7%20Intel-333?logo=apple)](#download)
+[![Linux x86-64 and arm64](https://img.shields.io/badge/Linux-x86--64%20%C2%B7%20arm64-333?logo=linux)](#download)
 [![build](https://github.com/nic0lasm/zeus-poseidon-arm64/actions/workflows/build.yml/badge.svg)](https://github.com/nic0lasm/zeus-poseidon-arm64/actions/workflows/build.yml)
 [![Proven identical: 10 scenarios](https://img.shields.io/badge/proven%20identical-10%20scenarios-2ea043)](docs/equivalence.md)
 [![License: GPL-2.0-or-later](https://img.shields.io/badge/license-GPL--2.0--or--later-green)](LICENSE)
 
-**Play *Zeus: Master of Olympus* and its *Poseidon* expansion on an Apple Silicon Mac: the
-original game, with no Windows, no Wine and no virtual machine.**
+**Play *Zeus: Master of Olympus* and its *Poseidon* expansion on a Mac (Apple Silicon or Intel)
+or on Linux: the original game, with no Windows, no Wine and no virtual machine.**
 
 *[Version française](README.fr.md)*
 

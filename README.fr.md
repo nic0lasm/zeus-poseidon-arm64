@@ -1,13 +1,14 @@
-# Zeus + Poséidon sur Mac Apple Silicon
+# Zeus + Poséidon sur Mac et Linux
 
 [![Dernière version](https://img.shields.io/github/v/release/nic0lasm/zeus-poseidon-arm64?label=t%C3%A9l%C3%A9charger&color=1f6feb)](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest)
-[![macOS 14+ Apple Silicon](https://img.shields.io/badge/macOS%2014%2B-Apple%20Silicon-333?logo=apple)](#télécharger)
+[![Mac Apple Silicon et Intel](https://img.shields.io/badge/Mac-Apple%20Silicon%20%C2%B7%20Intel-333?logo=apple)](#télécharger)
+[![Linux x86-64 et arm64](https://img.shields.io/badge/Linux-x86--64%20%C2%B7%20arm64-333?logo=linux)](#télécharger)
 [![build](https://github.com/nic0lasm/zeus-poseidon-arm64/actions/workflows/build.yml/badge.svg)](https://github.com/nic0lasm/zeus-poseidon-arm64/actions/workflows/build.yml)
 [![Prouvé identique : 10 scénarios](https://img.shields.io/badge/prouv%C3%A9%20identique-10%20sc%C3%A9narios-2ea043)](docs/equivalence.md)
 [![Licence : GPL-2.0-or-later](https://img.shields.io/badge/licence-GPL--2.0--or--later-green)](LICENSE)
 
-**Jouer à *Zeus : Le Maître de l'Olympe* et à son extension *Poséidon* sur un Mac Apple
-Silicon : le jeu d'origine, sans Windows, sans Wine et sans machine virtuelle.**
+**Jouer à *Zeus : Le Maître de l'Olympe* et à son extension *Poséidon* sur un Mac (Apple
+Silicon ou Intel) ou sous Linux : le jeu d'origine, sans Windows, sans Wine et sans machine virtuelle.**
 
 *[English version](README.md)*
 

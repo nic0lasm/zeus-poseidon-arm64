@@ -3,7 +3,9 @@ name: publish
 # Publie une version au push d'une étiquette vX.Y : crée la version GitHub avec les notes de
 # docs/releases/X.Y.md, puis fait construire et joindre les archives Mac (release.yml) et les
 # AppImage Linux (release-linux.yml). Une version créée par le GITHUB_TOKEN ne déclenche pas
-# l'événement « release published », d'où l'appel direct des deux workflows.
+# l'événement « release published », d'où l'appel direct des deux workflows. Quand la version est
+# créée sur github.com (l'étiquette naît avec elle), release.yml et release-linux.yml partent
+# déjà de « release published » : ce workflow s'arrête alors sans erreur.
 on:
   push:
     tags: ['v*']
@@ -14,23 +16,34 @@ permissions:
 jobs:
   create:
     runs-on: ubuntu-latest
+    outputs:
+      created: ${{ steps.create.outputs.created }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Create the release
+        id: create
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           tag="${GITHUB_REF_NAME}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "::notice::La version $tag existe déjà : ses archives sont jointes par l'événement release published."
+            echo "created=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           notes="docs/releases/${tag#v}.md"
           test -f "$notes"
           gh release create "$tag" --verify-tag --title "Zeus Poseidon ${tag#v}" --notes-file "$notes"
+          echo "created=true" >> "$GITHUB_OUTPUT"
   macos:
     needs: create
+    if: needs.create.outputs.created == 'true'
     uses: ./.github/workflows/release.yml
     with:
       tag: ${{ github.ref_name }}
   linux:
     needs: create
+    if: needs.create.outputs.created == 'true'
     uses: ./.github/workflows/release-linux.yml
     with:
       tag: ${{ github.ref_name }}

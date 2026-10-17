@@ -4,7 +4,7 @@
 original game, unmodified in behaviour, on the machines people actually own, and proven identical
 to the original.**
 
-The game is playable today (version 1.3: Apple Silicon and Intel Macs, Linux). What follows replaces the original
+The game is playable today (version 1.6: Apple Silicon and Intel Macs, Linux x86-64 and arm64, GOG and Steam editions). What follows replaces the original
 code **piece by piece with an engine written by hand and documented**. The emulated original stays
 the reference and the judge: every rewritten part must prove, turn by turn, that it leaves the
 game in exactly the same state. No code is translated mechanically. The precedent is
@@ -14,7 +14,7 @@ No dates are promised: each step is done when it is proven, not before.
 
 ```mermaid
 flowchart LR
-    P["<b>1.x Playable</b><br/>today: 1.3<br/><i>released</i>"] --> A["<b>A Instruments</b><br/>equivalence harness,<br/>code map, counters"]
+    P["<b>1.x Playable</b><br/>today: 1.6<br/><i>released</i>"] --> A["<b>A Instruments</b><br/>equivalence harness,<br/>code map, counters"]
     A --> D["<b>B Data</b><br/>savegame, maps, images,<br/>texts, tables"]
     D --> C["<b>C Native engine</b><br/>subsystem by subsystem"]
     C --> N["<b>2.0 Native engine</b><br/>no emulator to play<br/><i>on hold</i>"]
@@ -24,7 +24,7 @@ flowchart LR
 
 | Step | Theme | State | Follow it |
 |---|---|---|---|
-| **1.x — Playable** | The game as it is: lighter on the machine, every language edition, a simpler first launch; Intel Macs and Linux with the same host | 1.3 (saves without a pause, Intel Macs, Linux); next: 1.4, a lighter display ([after 1.3](#after-13-review-of-16-october-2026-evening)) | [milestone 1.4](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/12) · [#117](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/117) · [#125](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/125) · [#126](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/126) · [#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24) · [#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128) |
+| **1.x — Playable** | The game as it is: lighter on the machine, every language edition, a simpler first launch; Intel Macs and Linux with the same host | 1.6 (Steam edition found on its own, innoextract inside the Mac application); next: 1.7, older Macs ([after 1.6](#after-16-review-of-17-october-2026)) | [milestone 1.7](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/13) · [#139](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/139) · [#140](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/140) · [#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24) · [#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128) |
 | **Phase A — Instruments** | Equivalence harness on the full game state; code map; two public counters (functions understood out of 4,872, share of the computation done natively) | done; counters kept current | [#26](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/26) · [#69](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/69) |
 | **Phase B — Data** | Savegame `.sav` described in full, then maps and adventures, images, texts, tables; each format read then written back byte for byte | done for what the engine reads | [#70](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/70) · [#30](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/30) |
 | **Phase C — Native engine** | Rendering, interface and texts, terrain, movement and walkers, housing and buildings, economy, gods, heroes and monsters, army, events and adventures, savegame | rendering largely native, simulation and interface in part; beyond that, only lots with a measured gain in real play | [#71](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/71) |
@@ -32,7 +32,70 @@ flowchart LR
 | **Modding (branch)** | Changes to the game, on a `modding` branch | later | [#72](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/72) |
 | exploration | The City Building Series: *Emperor*, *Pharaoh*, *Caesar III* | on hold | [#28](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/28) · [#29](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/29) |
 
+## After 1.6 (review of 17 October 2026)
+
+Since the last review, four versions shipped in two days: 1.3 (saves without a pause, Intel
+Macs, Linux), 1.4 (a lighter display), 1.5 (the Steam edition found on its own, its `Zeus.exe`
+checked at launch) and 1.6 (innoextract inside the Mac application, after the first report from
+a player, [#134](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/134)). Every step of
+[the plan after 1.3](#after-13-review-of-16-october-2026-evening) is done; the loading pause
+was measured at 0.16 s and closed ([#126](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/126)).
+
+### What the review shows
+
+1. **Almost nobody finds the project.** About fifteen downloads across every archive since 1.0,
+   112 page views from 5 visitors in two weeks, one star. The game is faster than players need;
+   what holds it back is that it is not where they look. The title, the description and the
+   badges still said *Apple Silicon* only, although Intel Macs and Linux are supported since 1.3:
+   fixed with this review.
+2. **The Macs that need it most are left out.** The Mac archives inherit their minimum system
+   from the Homebrew libraries they bundle: macOS 14 on Apple Silicon, macOS 15 on Intel. An
+   Intel Mac from 2013 to 2017 stops at macOS 11 or 12, exactly the kind of machine an old-game
+   player keeps. The Linux AppImage already builds its own libraries for an old system; the Mac
+   can do the same.
+3. **Player reports are what break.** The one outside report so far (#134) was a missing tool on
+   a clean Mac, not a game bug. Each report still goes before everything else.
+4. **Each release ended with a red mark.** The `publish` workflow failed on 1.3 to 1.6 because
+   the release was created on github.com before the tag reached it; the archives were attached
+   anyway by the `release published` event. Fixed with this review: the workflow now stops
+   without an error when the release already exists.
+
+### Next steps, in order
+
+| # | Step | Gain for players | What proves it | Done when |
+|---|---|---|---|---|
+| 1 | Older Macs ([#139](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/139)): SDL 2, Unicorn and innoextract built for macOS 11, the host too | every Mac on macOS 11 to 13, and Intel Macs from 2013 on | the release workflow reports `macOS 11.0 minimum` for both archives; `--selftest` in CI; the bundle refused above 11.0 | merged |
+| 2 | Release 1.7 ([milestone 1.7](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/13)) | step 1 | as for 1.3: the ten scenarios, `--selftest` on the three platforms | published |
+| 3 | Flathub ([#140](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/140)): a Flatpak manifest built and self-tested in CI, then submitted by the maintainer | Linux players find it where they look for games, as they find *Julius* and *Augustus* | `flatpak-builder` and `--selftest` in CI | listed on Flathub |
+
+### Alongside, open to contributions
+
+Unchanged: language packs ([#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24)),
+the first report from a real Steam installation ([#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128)),
+the CPU on a Mac ([#127](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/127)), the
+remaining file formats ([#30](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/30)).
+
+### For the maintainer
+
+These bring more players than any further step above.
+
+- **Telling players.** Drafts are ready for the GOG forum of the game, the Heaven Games *Zeus*
+  forum, the Mac and Linux gaming communities; they need a person to post them. One post where
+  players already are is worth more than another version.
+- **A signed and notarised application** removes the *Open Anyway* steps of the first launch
+  (paid Apple Developer membership).
+- **No game files in the downloads.** The game stays the player's own copy (GOG or Steam).
+
+### What no longer pays
+
+Everything in [the same section after 1.3](#what-no-longer-pays-1) and [Stopped, and why](#stopped-and-why)
+still holds: no more rewrites for speed, 2.0 on hold. New ones: the Intel Mac and Linux builds
+need nothing more than what the CI already checks; a Windows build is not needed (the game runs
+there as it is).
+
 ## After 1.3 (review of 16 October 2026, evening)
+
+*All four steps done; replaced by [the review after 1.6](#after-16-review-of-17-october-2026).*
 
 Version 1.3 is ready: saves without a pause (3.85 s → 0.33 s on the large city), an Intel Mac
 archive, Linux AppImages for x86-64 and arm64. Steps 1 to 3 of [the plan after 1.2](#after-12-review-of-16-october-2026)
@@ -362,7 +425,7 @@ and serves modders and tool makers.
 
 ## Decisions for the maintainer
 
-Listed in [After 1.3](#for-the-maintainer): a notarised application, the repository's
+Listed in [After 1.3](#for-the-maintainer-1): a notarised application, the repository's
 description and topics, telling players.
 
 ---
@@ -418,6 +481,9 @@ description and topics, telling players.
 
 | Version | Highlights |
 |---|---|
+| [1.6](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.6) | innoextract inside the Mac application: the GOG installer opens on a Mac with nothing else installed |
+| [1.5](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.5) | the Steam edition found on its own, its `Zeus.exe` checked at launch |
+| [1.4](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.4) | lighter display: frames copied in place on the host, 7 to 12 % less CPU with the window visible |
 | [1.3](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.3) | saves without a pause (3.85 s → 0.33 s on a large city); Intel Mac archive; Linux AppImages for x86-64 and arm64; one-line texts in native code |
 | [1.2](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.2) | lighter: second drawing pass, walkers, window frames and texts in native code; simulation tick of the large city about three times faster; ten scenarios checked tick by tick |
 | [1.1](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.1) | easier first launch; taller wide modes; native ground drawing; Linux build in CI |
