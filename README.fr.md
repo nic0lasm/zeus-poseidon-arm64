@@ -25,7 +25,7 @@ Silicon : le jeu d'origine, sans Windows, sans Wine et sans machine virtuelle.**
 | | |
 |---|---|
 | **Ce que c'est** | Le vrai *Zeus* + *Poséidon* (Impressions Games, 2000) : le code d'origine du jeu, non modifié, exécuté sur un Mac. Même simulation, mêmes règles, mêmes sauvegardes. Pas une réécriture. |
-| **État** | Jouable du début à la fin. Dernière version : **[1.5](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest)** (17 octobre 2026). |
+| **État** | Jouable du début à la fin. Dernière version : **[1.6](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest)** (17 octobre 2026). |
 | **Fonctionne sur** | Mac à puce Apple Silicon (M1 ou plus récent), macOS 14 ou plus récent ; Mac à processeur Intel, macOS 15 ou plus récent ; Linux x86-64 et arm64. Voir [Télécharger](#télécharger). |
 | **Il vous faut** | Votre propre copie du jeu, édition GOG (ou Steam, [voir plus bas](#acheté-sur-steam-)). Ce dépôt ne contient aucun fichier du jeu ([Mentions légales](#mentions-légales)). |
 | **Fidèle** | Dix scénarios rejoués comparent chaque image et tout l'état de la partie, tour par tour, avec le jeu d'origine. |
@@ -149,6 +149,7 @@ Julius l'a fait pour *Caesar III*) est en pause ; la carte du code, les fiches d
 
 | Version | Points forts |
 |---|---|
+| [**1.6**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.6) | les applications Mac déballent de nouveau seules l'installateur GOG (innoextract embarqué, [#134](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/134), merci à [@MohammadBnei](https://github.com/MohammadBnei)) |
 | [**1.5**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.5) | édition Steam trouvée seule (bibliothèques Linux, Flatpak, Mac) ; `Zeus.exe` contrôlé au lancement, avec un avertissement pour une version inconnue |
 | [**1.4**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.4) | affichage plus léger : images copiées sur place et texture de la fenêtre au format du rendu (7 à 12 % de calcul en moins fenêtre visible ; conversion des couleurs 4,1 → 0,65 ms par image) |
 | [**1.3**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.3) | sauvegardes sans pause (3,85 s → 0,33 s sur une grande ville) ; archive pour Mac Intel (macOS 15+) ; AppImage Linux (x86-64, arm64) ; textes d'une ligne en natif (7 à 9 % de calcul en moins) |
@@ -236,6 +237,16 @@ L'aide la plus utile aujourd'hui :
   ([#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24)).
 - **Du code :** voir les [tickets ouverts](https://github.com/nic0lasm/zeus-poseidon-arm64/issues) et
   [CONTRIBUTING.md](CONTRIBUTING.md).
+
+### Merci
+
+Les retours des joueurs font avancer ce projet. Merci à :
+
+- [**@MohammadBnei**](https://github.com/MohammadBnei), qui a découvert sur un Mac neuf que
+  l'application ne savait pas déballer l'installateur GOG, en a trouvé la cause (innoextract
+  manquant) et proposé la correction livrée dans la 1.6 ([#134](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/134)).
+
+Votre nom peut être le suivant : chaque retour, essai ou pull request compte.
 
 ## Mentions légales
 

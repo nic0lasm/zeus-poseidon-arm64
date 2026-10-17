@@ -101,7 +101,12 @@ def release(version):
         "--version", version, APP)
     run("codesign", "--verify", "--deep", "--strict", APP)
     run(os.path.join(APP, "Contents", "MacOS", "zeus-poseidon"), "--selftest")
-    print(f"application {version} construite, signature vérifiée, --selftest réussi")
+    # Sans innoextract embarqué, l'application ne sait pas ouvrir un installateur GOG (#134).
+    helper = os.path.join(APP, "Contents", "Helpers", "innoextract")
+    if not os.path.exists(helper):
+        sys.exit("innoextract absent du paquet : brew install innoextract, puis recommencer")
+    inno = run(helper, "--version").splitlines()[0]
+    print(f"application {version} construite, signature vérifiée, --selftest réussi, {inno} embarqué")
     # Suffixe selon le processeur de la machine qui construit : arm64 (Apple Silicon) ou intel.
     suffix = "macos-arm64" if platform.machine() == "arm64" else "macos-intel"
     name = f"Zeus-Poseidon-{version}-{suffix}.zip"

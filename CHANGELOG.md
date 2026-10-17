@@ -5,6 +5,11 @@ pull request.
 
 ## Unreleased
 
+## 1.6 — 2026-10-17
+
+- **The Mac applications unpack the GOG installer again.** Since 1.2 the archives built by the `release` workflow carried no innoextract: the GitHub Macs did not install it, and `tools/make_app.py` only warned. On a Mac without Homebrew's innoextract, picking the GOG installer stopped at "innoextract is not installed". The workflow now installs it, `make_app.py` puts it with its libraries in `Contents/Helpers`, and `tools/publish.py release` refuses an application without it and runs it (`--version`) before making the archive. The Linux AppImages always had it. Reported, with the cause and the fix, by [@MohammadBnei](https://github.com/MohammadBnei): thank you! Fixes [#134](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/134).
+- **A game placed inside the application starts without a question.** For one's own use with one's own game: `tools/make_app.py --game FOLDER` puts it in `Contents/Resources/Jeu` (`usr/share/zeus-poseidon/jeu` in an AppImage), and the application launches it without asking for a folder. The published archives still contain no game file.
+
 ## 1.5 — 2026-10-17
 
 - **Steam edition.** SteamDB lists for the Steam depot (566051, 2 December 2016) the same files as the GOG folder: one `exe` of 2.41 MiB (GOG's `Zeus.exe` is 2,527,232 bytes), the same `DLL`, `dll`, `ico`, `inf`, `ini`, `555`, `pak`, `sg3`, `sav` and `map` counts and sizes, no GOG Galaxy files and no Steam library: very likely the same DRM-free build. The application now finds an installed Steam edition by itself (Steam's main library and those of `libraryfolders.vdf`, on Linux, in Flatpak and on a Mac) and accepts a Steam folder chosen with *Folder…*. At launch it checks `Zeus.exe` (SHA-256): any other build than GOG's still runs, after a warning shown once per checksum that asks for a report on #128. README and README.fr explain it. [#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128).

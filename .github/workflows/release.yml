@@ -39,7 +39,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Dependencies
-        run: brew install cmake ninja pkgconf sdl2 unicorn nasm
+        run: brew install cmake ninja pkgconf sdl2 unicorn nasm innoextract
       - name: Version
         run: |
           tag="${{ inputs.tag || github.event.release.tag_name }}"

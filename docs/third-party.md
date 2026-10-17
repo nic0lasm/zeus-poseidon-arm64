@@ -10,7 +10,7 @@ It contains no file from the game.
 | Unicorn Engine | x86 emulation | GPL-2.0 | https://github.com/unicorn-engine/unicorn |
 | SDL 3 and sdl2-compat (macOS), SDL 2 (Linux) | window, input, audio output | zlib | https://github.com/libsdl-org |
 | innoextract | unpacking the GOG installer (separate helper program) | zlib | https://constexpr.org/innoextract/ |
-| Boost, liblzma, zstd, bzip2 (Linux) | used by innoextract | BSL-1.0, 0BSD, BSD-3-Clause, bzip2-1.0.6 | https://www.boost.org, https://tukaani.org/xz/, https://github.com/facebook/zstd, https://sourceware.org/bzip2/ |
+| Boost, liblzma, zstd, bzip2 | used by innoextract | BSL-1.0, 0BSD, BSD-3-Clause, bzip2-1.0.6 | https://www.boost.org, https://tukaani.org/xz/, https://github.com/facebook/zstd, https://sourceware.org/bzip2/ |
 | CPython (python-build-standalone) | runs the project's pack-building tools inside the application | PSF-2.0 | https://github.com/astral-sh/python-build-standalone |
 | FFmpeg | Bink video and audio, MP3 decoding | LGPL-2.1-or-later (reduced build: Bink and MP3 demuxers, Bink and MP3 decoders, libswscale, libswresample) | https://ffmpeg.org |
 
