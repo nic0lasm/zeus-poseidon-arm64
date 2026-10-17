@@ -27,7 +27,7 @@ Silicon : le jeu d'origine, sans Windows, sans Wine et sans machine virtuelle.**
 | **Ce que c'est** | Le vrai *Zeus* + *Poséidon* (Impressions Games, 2000) : le code d'origine du jeu, non modifié, exécuté sur un Mac. Même simulation, mêmes règles, mêmes sauvegardes. Pas une réécriture. |
 | **État** | Jouable du début à la fin. Dernière version : **[1.4](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest)** (16 octobre 2026). |
 | **Fonctionne sur** | Mac à puce Apple Silicon (M1 ou plus récent), macOS 14 ou plus récent ; Mac à processeur Intel, macOS 15 ou plus récent ; Linux x86-64 et arm64. Voir [Télécharger](#télécharger). |
-| **Il vous faut** | Votre propre copie du jeu, édition GOG. Ce dépôt ne contient aucun fichier du jeu ([Mentions légales](#mentions-légales)). |
+| **Il vous faut** | Votre propre copie du jeu, édition GOG (ou Steam, [voir plus bas](#acheté-sur-steam-)). Ce dépôt ne contient aucun fichier du jeu ([Mentions légales](#mentions-légales)). |
 | **Fidèle** | Dix scénarios rejoués comparent chaque image et tout l'état de la partie, tour par tour, avec le jeu d'origine. |
 | **Léger** | Une petite ville occupe environ 23 % d'un cœur (51 à 60 % en 1.0.1). [Chiffres](#plus-léger-à-chaque-version). |
 
@@ -74,6 +74,20 @@ propres CD ([détails](docs/languages.md), en anglais).
 l'exécution*) et lancez-la. Elle demande l'installateur GOG de la même façon (avec zenity ou
 kdialog s'ils sont installés, sinon dans le terminal) ; lancez-la avec `ZEUS_ASK_LANGUAGE=1` pour
 choisir la langue.
+
+### Acheté sur Steam ?
+
+D'après SteamDB, l'édition Steam contient les mêmes fichiers que celle de GOG (mêmes noms et
+tailles, `Zeus.exe` compris, et aucune bibliothèque Steam), mais personne ne l'a encore essayée
+([#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128)).
+- **Sous Linux**, installez-la avec Steam (Proton) : l'application la trouve seule dans vos
+  bibliothèques Steam, rien à désigner.
+- **Sur Mac**, Steam ne sait pas installer ce jeu réservé à Windows : copiez le dossier
+  `Zeus + Poseidon` depuis un PC Windows (`Steam\steamapps\common`), puis choisissez-le avec
+  **Dossier…**.
+
+Si son `Zeus.exe` n'est pas celui de GOG, l'application le signale une fois et affiche son
+empreinte : merci de la signaler sur [#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128).
 
 ## Ce que vous obtenez
 

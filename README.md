@@ -27,7 +27,7 @@ original game, with no Windows, no Wine and no virtual machine.**
 | **What it is** | The real *Zeus* + *Poseidon* (Impressions Games, 2000): the original, unmodified game code, run on a Mac. Same simulation, same rules, same save files. Not a remake. |
 | **Status** | Playable from start to finish. Latest version: **[1.4](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest)** (16 October 2026). |
 | **Runs on** | Mac with Apple Silicon (M1 or later), macOS 14 or later; Mac with an Intel processor, macOS 15 or later; Linux x86-64 and arm64. See [Download](#download). |
-| **You need** | Your own copy of the game, GOG edition. This repository contains no game files ([Legal](#legal)). |
+| **You need** | Your own copy of the game, GOG edition (or Steam, [see below](#bought-it-on-steam)). This repository contains no game files ([Legal](#legal)). |
 | **Faithful** | Ten replayable scenarios compare every frame and the whole game state, tick by tick, with the original game. |
 | **Light** | A small city uses about 23 % of one core (51 to 60 % in 1.0.1). [Figures](#lighter-with-every-version). |
 
@@ -72,6 +72,18 @@ CDs…*: the application builds a French pack from the images of your own CDs
 **On Linux:** make the AppImage executable (`chmod +x`, or *Properties → Allow executing*) and run
 it. It asks for the GOG installer the same way (with zenity or kdialog if installed, otherwise in
 the terminal); start it with `ZEUS_ASK_LANGUAGE=1` for the language choice.
+
+### Bought it on Steam?
+
+According to SteamDB, the Steam edition holds the same files as GOG's (same names and sizes,
+`Zeus.exe` included, and no Steam library), but nobody has tried it yet ([#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128)).
+- **On Linux**, install it with Steam (Proton): the application finds it by itself in your Steam
+  libraries, nothing to pick.
+- **On a Mac**, Steam cannot install this Windows-only game: copy the `Zeus + Poseidon` folder
+  from a Windows PC (`Steam\steamapps\common`), then choose it with **Folder…**.
+
+If its `Zeus.exe` is not GOG's, the application says so once and shows its checksum: please
+report it on [#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128).
 
 ## What you get
 
