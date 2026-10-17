@@ -3,9 +3,11 @@
 
 Le paquet embarque les bibliothèques dont le programme dépend (Unicorn, SDL, ffmpeg…), copiées
 depuis Homebrew et rendues relatives au paquet, puis signe le tout localement. Il ne contient
-aucun fichier du jeu : le dossier du jeu est demandé au premier lancement.
+aucun fichier du jeu : le dossier du jeu est demandé au premier lancement. Avec --game DOSSIER,
+pour son propre usage avec son propre jeu, le jeu est mis dans Contents/Resources/Jeu et l'application
+démarre sans rien demander.
 
-Usage : python3 tools/make_app.py [--binary PROGRAMME] [--version X.Y] [SORTIE.app]
+Usage : python3 tools/make_app.py [--binary PROGRAMME] [--version X.Y] [--game DOSSIER] [SORTIE.app]
         (défauts : build/zeus-run et build/Zeus Poseidon.app)
 
 Pour un paquet redistribuable, donner un programme compilé avec le FFmpeg réduit de
@@ -55,6 +57,11 @@ def main(argv):
         binary, args = os.path.abspath(args[1]), args[2:]
     if args[:1] == ["--version"]:
         version, args = args[1], args[2:]
+    game = None
+    if args[:1] == ["--game"]:
+        game, args = args[1], args[2:]
+    if game and not os.path.isfile(os.path.join(game, "Zeus.exe")):
+        raise SystemExit(f"{game} : Zeus.exe absent")
     app = args[0] if args else os.path.join(ROOT, "build", "Zeus Poseidon.app")
     if not os.path.exists(binary):
         raise SystemExit(f"{binary} est absent : compiler d'abord")
@@ -174,6 +181,12 @@ def main(argv):
     shutil.copy2(os.path.join(ROOT, "LICENSE"), os.path.join(resources, "LICENSE.txt"))
     shutil.copy2(os.path.join(ROOT, "docs", "third-party.md"), os.path.join(resources, "THIRD-PARTY.md"))
 
+    # Jeu compris, pour son propre usage avec son propre jeu. Save (sauvegardes de celui
+    # qui a déballé le jeu) n'est pas copié.
+    if game:
+        shutil.copytree(game, os.path.join(resources, "Jeu"),
+                        ignore=lambda folder, names: ["Save"] if os.path.samefile(folder, game) else [])
+
     # Les informations de mise au point contiennent les chemins de compilation, donc le nom du
     # dossier personnel de celui qui a compilé : on les retire de tout ce qui a été copié.
     for binary_file in [program] + ([helper] if helper else []) + sorted(copied.values()):
@@ -195,7 +208,10 @@ def main(argv):
     # Dernier contrôle : aucun fichier du paquet ne doit citer le dossier personnel.
     home = os.path.expanduser("~").encode()
     leaks = []
-    for folder, _, files in os.walk(app):
+    for folder, dirs, files in os.walk(app):
+        if game and os.path.samefile(folder, os.path.join(resources, "Jeu")):
+            dirs[:] = []  # fichiers du jeu : pas les nôtres, rien à y chercher
+            continue
         for name in files:
             with open(os.path.join(folder, name), "rb") as f:
                 if home in f.read():
@@ -204,7 +220,7 @@ def main(argv):
         raise SystemExit("paquet à ne pas diffuser, il cite le dossier personnel : " + ", ".join(leaks))
 
     size = sum(os.path.getsize(os.path.join(d, f)) for d, _, files in os.walk(app) for f in files)
-    print(f"{app} : {len(copied)} bibliothèques embarquées, {size / 1e6:.0f} Mo")
+    print(f"{app} : {len(copied)} bibliothèques embarquées{', jeu compris' if game else ''}, {size / 1e6:.0f} Mo")
 
 
 if __name__ == "__main__":

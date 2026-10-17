@@ -32,6 +32,17 @@ std::string find_game(const std::filesystem::path& folder) {
     return {};
 }
 
+// Jeu livré dans l'application (édition complète) : Contents/Resources/Jeu dans le paquet Mac,
+// usr/share/zeus-poseidon/jeu dans l'AppImage. Vide pour une application sans le jeu.
+std::string find_bundled_game() {
+    const std::filesystem::path base = program_dir().parent_path();
+    for (const auto& dir : {base / "Resources" / "Jeu", base / "share" / "zeus-poseidon" / "jeu"}) {
+        const std::string exe = find_game(dir);
+        if (!exe.empty()) return exe;
+    }
+    return {};
+}
+
 // Dossiers d'installation de Steam : la bibliothèque principale et celles de libraryfolders.vdf.
 std::vector<std::filesystem::path> steam_libraries() {
     namespace fs = std::filesystem;
@@ -185,6 +196,13 @@ int run_app(const std::string& installer) {
         if (exe.empty()) return 1;
         folder = unpacked.string();
     }
+    // Jeu livré avec l'application : pris sans rien demander, et pas retenu (le paquet peut être
+    // déplacé, et l'AppImage est montée à un endroit différent à chaque lancement).
+    bool bundled = false;
+    if (exe.empty()) {
+        exe = find_bundled_game();
+        bundled = !exe.empty();
+    }
     // Sans installateur : l'édition Steam déjà installée est prise sans rien demander.
     if (exe.empty()) {
         exe = find_steam_game();
@@ -218,7 +236,7 @@ int run_app(const std::string& installer) {
             return 0;  // Quitter, ou dialogue fermé
         }
     }
-    std::ofstream(memo) << folder << "\n";
+    if (!bundled) std::ofstream(memo) << folder << "\n";
     check_edition(exe, support);
     RunOptions o;
     o.exe = exe;
