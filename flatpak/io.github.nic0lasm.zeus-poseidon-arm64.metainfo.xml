@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.nic0lasm.zeus-poseidon-arm64</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-2.0-or-later</project_license>
+  <name>Zeus + Poseidon</name>
+  <summary>Play Zeus: Master of Olympus from your own copy of the game</summary>
+  <summary xml:lang="fr">Jouer au Maître de l'Olympe : Zeus depuis votre exemplaire du jeu</summary>
+  <developer id="io.github.nic0lasm">
+    <name>nic0lasm</name>
+  </developer>
+  <description>
+    <p>
+      Runs the original Windows game Zeus: Master of Olympus and its expansion Poseidon natively,
+      without Wine: the game's x86 code is emulated and its drawing, sound and windows are
+      rewritten for Linux.
+    </p>
+    <p>
+      No game files are included. On first launch, pick the GOG installer of the game
+      (setup_zeus_and_poseidon_….exe), which is unpacked once, or a folder where the game is
+      already unpacked, or installed by Steam.
+    </p>
+    <p>
+      This is an independent project, not affiliated with the publisher of the game.
+    </p>
+    <p xml:lang="fr">
+      Lance le jeu Windows d'origine Le Maître de l'Olympe : Zeus et son extension Poséidon sans
+      Wine : le code x86 du jeu est émulé, son affichage, son son et ses fenêtres sont réécrits
+      pour Linux.
+    </p>
+    <p xml:lang="fr">
+      Aucun fichier du jeu n'est fourni. Au premier lancement, indiquez l'installateur GOG du jeu
+      (setup_zeus_and_poseidon_….exe), déballé une fois, ou un dossier où le jeu est déjà déballé,
+      ou installé par Steam.
+    </p>
+    <p xml:lang="fr">
+      Projet indépendant, sans lien avec l'éditeur du jeu.
+    </p>
+  </description>
+  <launchable type="desktop-id">io.github.nic0lasm.zeus-poseidon-arm64.desktop</launchable>
+  <url type="homepage">https://github.com/nic0lasm/zeus-poseidon-arm64</url>
+  <url type="bugtracker">https://github.com/nic0lasm/zeus-poseidon-arm64/issues</url>
+  <url type="vcs-browser">https://github.com/nic0lasm/zeus-poseidon-arm64</url>
+  <screenshots>
+    <screenshot type="default">
+      <caption>The main menu</caption>
+      <image>https://raw.githubusercontent.com/nic0lasm/zeus-poseidon-arm64/61aa3e9/docs/images/menu.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>The tutorials</caption>
+      <image>https://raw.githubusercontent.com/nic0lasm/zeus-poseidon-arm64/61aa3e9/docs/images/tutorials.png</image>
+    </screenshot>
+  </screenshots>
+  <categories>
+    <category>Game</category>
+    <category>StrategyGame</category>
+  </categories>
+  <requires>
+    <display_length compare="ge">768</display_length>
+  </requires>
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </supports>
+  <content_rating type="oars-1.1">
+    <content_attribute id="violence-fantasy">mild</content_attribute>
+  </content_rating>
+  <releases>
+    <release version="1.7" date="2026-10-18">
+      <description>
+        <p>Macs from macOS 11 on. First Flatpak package.</p>
+      </description>
+    </release>
+  </releases>
+</component>

@@ -1,0 +1,68 @@
+name: flatpak
+
+# Construit le paquet Flatpak (flatpak/, celui qui est proposé à Flathub) pour x86-64 et arm64,
+# lance --selftest dans le bac à sable, vérifie le manifeste et les métadonnées AppStream avec
+# l'outil de Flathub (flatpak-builder-lint) et garde le paquet en artefact du run.
+on:
+  pull_request:
+    paths:
+      - .github/workflows/flatpak.yml
+      - flatpak/**
+      - CMakeLists.txt
+      - src/**
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/flatpak.yml
+      - flatpak/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  flatpak:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x86_64
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+    runs-on: ${{ matrix.runner }}
+    env:
+      APP: io.github.nic0lasm.zeus-poseidon-arm64
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install flatpak-builder
+        run: |
+          sudo apt-get update -qq
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq flatpak flatpak-builder ostree
+          flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user -y --noninteractive flathub org.flatpak.Builder
+      - name: Build
+        run: |
+          flatpak-builder --user --install-deps-from=flathub --force-clean --repo=repo \
+            --default-branch=test --mirror-screenshots-url=https://dl.flathub.org/media build flatpak/$APP.yml
+          # Captures d'écran rangées dans le dépôt, comme sur les machines de Flathub.
+          ostree commit --repo=repo --canonical-permissions --branch=screenshots/${{ matrix.arch }} build/files/share/app-info/media
+      - name: Self-test in the sandbox
+        run: flatpak-builder --run build flatpak/$APP.yml zeus-poseidon --selftest
+      - name: Flathub checks
+        run: |
+          flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest flatpak/$APP.yml
+          # Captures d'écran et icône sont recopiées vers dl.flathub.org/media par les machines de
+          # Flathub seulement : ces deux remarques ne peuvent tomber qu'une fois là-bas.
+          flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo > lint.json || true
+          cat lint.json
+          jq -e '[.errors[]? | select(. != "appstream-external-screenshot-url" and
+                                       . != "appstream-remote-icon-not-mirrored")] | length == 0' lint.json
+      - name: Bundle
+        run: |
+          flatpak build-bundle repo Zeus-Poseidon-${{ matrix.arch }}.flatpak $APP test
+          echo "::notice::$(stat -c %s Zeus-Poseidon-${{ matrix.arch }}.flatpak) octets"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Zeus-Poseidon-flatpak-${{ matrix.arch }}
+          path: Zeus-Poseidon-${{ matrix.arch }}.flatpak

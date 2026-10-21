@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Zeus + Poseidon
+Comment=Zeus: Master of Olympus and Poseidon, from your own copy of the game
+Comment[fr]=Le Maître de l'Olympe : Zeus et Poséidon, depuis votre exemplaire du jeu
+Exec=zeus-poseidon
+Icon=io.github.nic0lasm.zeus-poseidon-arm64
+Categories=Game;StrategyGame;
+Keywords=city;builder;greek;olympus;
+Terminal=false
