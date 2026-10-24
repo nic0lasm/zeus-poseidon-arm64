@@ -130,14 +130,16 @@ game's computation on `working-city`, plus 17.1 % in functions that are partly n
 
 ## What's next
 
-The speed lots that a player could feel in the emulated code are done; what is left there weighs
-about 1 % of the run per piece. The next steps go to what players notice
-([full plan](docs/roadmap.md#after-13-review-of-16-october-2026-evening), [1.4 milestone](https://github.com/nic0lasm/zeus-poseidon-arm64/milestone/12)):
+The game runs on every Mac from macOS 11 and on Linux, with the GOG or the Steam edition, and is
+proven identical to the original. The project is now maintained rather than extended: reports
+from players come first, and a fix ships as a 1.7.x release
+([full plan](docs/roadmap.md#after-17-review-of-24-october-2026)).
 
-Done in 1.4: **a lighter display** ([#125](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/125)); **loading a game** measured at
-0.16 s, nothing to speed up ([#126](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/126)). Next:
-
-1. **More editions**: language packs ([#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24)) and the Steam edition ([#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128)). If you own one, your report helps more than any new feature.
+What helps most now is a word from you: a report from the Steam edition
+([#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128)), from a Mac on macOS 11 to 13
+([#139](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/139)), from another language
+edition ([#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24)), or anything that goes
+wrong ([issues](https://github.com/nic0lasm/zeus-poseidon-arm64/issues)).
 
 Longer term, the aim stays the same: keep *Zeus* and *Poseidon* playable for as long as people
 want to play them. A fully native engine (2.0, no emulator, the way Julius did for
