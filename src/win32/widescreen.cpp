@@ -31,6 +31,11 @@
 //     choisit le haut ou le bas selon un seuil de 396 (0x00F2A734) : ces deux valeurs suivent la hauteur, comme
 //     elles le font entre 600 et 768.
 //
+// Les fonds JPEG des menus (FUN_00504fa0) sont des images de 1024 x 768 que le jeu place en
+// (0, 0) en mode 3. Sa comparaison portant sur la nouvelle taille, le fond était placé comme pour
+// un menu de 800 x 600, décalé et rogné, alors que les boutons se centrent ((largeur − 640) / 2) :
+// l'hôte le centre aussi (kBackdropPlaced).
+//
 // Le reste de la mise en page se calcule depuis la hauteur (la vue de la carte, le liseré du bas
 // en hauteur - 9) ou se centre (les fenêtres) : vérifié par captures en 1444x903 et 1324x1023.
 //
@@ -131,6 +136,10 @@ bool apply_wide_mode(Process& p, int& width, int& height) {
         std::fprintf(stderr, "[hôte] écran large : exécutable inconnu (%#x), mode non modifié\n", kWorldWindowRowsSet);
         return false;
     }
+    if (!matches(cpu, kBackdropPlaced, {0x8B, 0x15, 0xB4, 0xA6, 0xF2, 0x00})) {  // MOV EDX,[0x00F2A6B4]
+        std::fprintf(stderr, "[hôte] écran large : exécutable inconnu (%#x), mode non modifié\n", kBackdropPlaced);
+        return false;
+    }
     for (uint32_t address : {kTopBarDrawn, kPanelDrawn, kPanelOverlayDrawn, kWorldPanelDrawn}) {
         if (!matches(cpu, address - 5, {0xE8})) {  // CALL
             std::fprintf(stderr, "[hôte] écran large : exécutable inconnu (%#x), mode non modifié\n", address);
@@ -138,6 +147,12 @@ bool apply_wide_mode(Process& p, int& width, int& height) {
         }
     }
     for (const auto& [site, value] : changes) write(cpu, site, value);
+    // Fond JPEG de 1024 x 768 en mode 3 : centré dans l'écran large, au lieu de (0, 0).
+    cpu.add_code_hook(kBackdropPlaced, [width, height](Cpu& c) {
+        if (c.read_u32(kDisplayMode) != 3 || c.reg(Cpu::Reg::ESI) != 1024 || c.reg(Cpu::Reg::EBX) != 768) return;
+        c.write_u32(c.reg(Cpu::Reg::ESP) + 0xA8, static_cast<uint32_t>((width - 1024) / 2));
+        c.set_reg(Cpu::Reg::EBP, static_cast<uint32_t>((height - 768) / 2));
+    });
     cpu.add_code_hook(kTopBarDrawn, [width](Cpu& c) {
         // Le tampon d'affichage du jeu fait la taille de l'écran, deux octets par pixel.
         const uint32_t buffer = c.read_u32(kFrameBuffer), pitch = static_cast<uint32_t>(width) * 2;
