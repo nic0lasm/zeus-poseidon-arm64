@@ -391,6 +391,12 @@ constexpr uint32_t kWorldPanelDrawn = 0x00597ECF;  // FUN_00597e60 : même fond,
 constexpr uint32_t kWorldWindowRowsSet = 0x00599E20, kWorldWindowRowsChecked = 0x00599E26;
 constexpr uint32_t kWindowRows = 0x00F139D0;     // lignes de la fenêtre copiée d'un bloc
 constexpr uint32_t kWorldImageHeight = 0x005FB7B0;  // hauteur de l'image de la carte du monde
+// FUN_00504fa0, fonds JPEG (menus) : en mode 3, une image de 1024 x 768 est placée en (0, 0)
+// (comparaisons de sa taille en 0x005051F8 et 0x00505210, que kWidthCompares et kHeightCompares
+// font porter sur la taille de l'écran large). En 0x00505228 (MOV EDX,[0x00F2A6B4]), la position
+// est choisie : x en [ESP+0xA8], y dans EBP ; l'image fait ESI x EBX.
+constexpr uint32_t kBackdropPlaced = 0x00505228;
+constexpr uint32_t kDisplayMode = 0x00F2A770;  // mode d'affichage : 1 (640x480), 2 (800x600), 3 (1024x768)
 // FUN_005715a0, fenêtre d'information en mode 1024x768 : ouverte en bas de l'écran (y = 760 - 16 n,
 // MOV ECX,0x2F8) si la valeur en 0x00F2A734 (ordonnée du clic, hypothèse) vaut au plus 396
 // (CMP [0x00F2A734],0x18C), sinon en haut. Le mode 800x600 suit la même règle : 592 - 16 n et 312.

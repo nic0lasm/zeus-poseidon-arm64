@@ -5,6 +5,8 @@ pull request.
 
 ## Unreleased
 
+- **Main menu centred in wide mode.** The menus' JPEG backdrops are 1024×768 images that `FUN_00504fa0` places at (0, 0) in mode 3, after comparing their size with 1024 and 768 (`0x005051F8`, `0x00505210`). The wide mode turns those two compares into the new screen size, so a 1024×768 backdrop no longer matched and was placed like an 800×600 menu, at ((width − 800)/2, (height − 600)/2): shifted to the bottom right and cut at the bottom (in 1324×873, at (262, 136), its last 31 rows lost), while the buttons stay centred with (width − 640)/2. The host now centres it at ((width − 1024)/2, (height − 768)/2) when the position is chosen (`kBackdropPlaced`, `0x00505228`). It showed on the main menu when the game starts in a wide mode chosen in an earlier session.
+
 ## 1.7 — 2026-10-18
 
 - **Older Macs: macOS 11 and later.** The Mac archives took their minimum macOS from the Homebrew libraries they embedded, built for the GitHub Mac that built them: macOS 14 on Apple Silicon, 15 on Intel. `tools/build_mac_deps.py` now builds SDL 2.32.10, Unicorn 2.1.4 (x86 only) and innoextract 1.9 (with liblzma and the part of Boost it needs, linked statically) from their sources, checksums verified, with `MACOSX_DEPLOYMENT_TARGET=11.0`; the `release` workflow builds them (kept in its cache), FFmpeg and the program for macOS 11, makes any macOS API newer than the target a compile error, and `tools/publish.py release` refuses an application in which any binary asks for more than macOS 11.0. The application's `Info.plist` says 11.0. GitHub has no Mac older than macOS 14: anyone with a Mac on macOS 11, 12 or 13 can help by trying the archive and reporting on [#139](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/139).
