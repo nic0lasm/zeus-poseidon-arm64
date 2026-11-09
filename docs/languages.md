@@ -61,3 +61,31 @@ the vertical placement of accented letters is tuned for Polish. With French text
 `à` shows the wrong glyph and accented letters float above the line. The host therefore
 adjusts three things in memory when a pack is loaded, without touching any file; details are in
 [reverse-engineering.md](reverse-engineering.md).
+
+## Translating into a new language
+
+A language that never had an edition of its own can be added from the English texts: see
+[tools/examples/lang/uk](../tools/examples/lang/uk/README.md), the Ukrainian pack made that way.
+`tools/translate.py` writes the game's texts into PO files and builds a pack's text files from
+the translated ones; `tools/alphabet.py` draws new letters into the fonts from one-pixel skeletons
+and writes the character table. The PO files and the pack hold the game's text: like any pack
+they stay on the translator's computer.
+
+## Packs for another alphabet
+
+A pack may also bring its own fonts, for a language whose letters the original fonts do not have
+(Cyrillic, for instance: new glyphs drawn in place of the accented Western letters of
+`Zeus_Fonts.sg3`, with a character table that maps the code page's letters to them). Two optional
+files then tell the host how to treat it:
+
+- `codage.txt`: the code page of the pack's texts, `1251` for Cyrillic (default `1252`). Typed
+  text (a leader's name) is converted to it, and so are the names of the files the game writes.
+- `remontee.txt` containing `ancre`: the vertical lift of each glyph of the characters `0x80` to
+  `0xFF` is read from its image (the anchor y field, `+0x24`, zero in the original fonts) instead
+  of being worked out from the image height. Letters with a descender (Д, Ц, Щ) can then go below
+  the line, and a mark above a letter (Й, Ї) sits at the same place in both text routines
+  (`0x00508C84` and `0x004F5AD4`, where the computed lift is in ECX).
+
+Two things to know when rebuilding `Zeus_Fonts.sg3` / `.555`: the pixel data of the images must
+stay contiguous, in record order (the game does not tolerate data appended at the end), and each
+row of a compressed image is encoded on its own, with runs of at most 16 pixels.
