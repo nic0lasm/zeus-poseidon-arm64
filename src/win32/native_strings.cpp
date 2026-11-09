@@ -121,6 +121,8 @@ struct Render {
         if (lift < 0) lift = 0;
         if (ch < 0x60 || ch == 0xC7 || ch == 0xE7) lift = 0;
         if (!pack && polish(ch + 0x20)) lift = 2;
+        // A pack whose fonts set the lift themselves (language.cpp, hook at 0x00508C84).
+        if (pack && glyph_lift_from_anchor()) lift = glyph_anchor_lift(cpu, static_cast<uint32_t>(id), ch + 0x20);
         glyphs.push_back({id, x, y - 3 - lift, colour});
         return s16(cpu, entry + 0x14);
     }

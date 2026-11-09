@@ -156,6 +156,11 @@ void Vfs::add_language_pack(const fs::path& pack) {
         while (!line.empty() && (line.back() == '\r' || line.back() == ' ')) line.pop_back();
         if (!line.empty()) replaced_dirs_.insert(lower(line));
     }
+    // Code page of the pack's texts (1252 by default): it also applies to typed text and to the
+    // names of the files the game writes (a leader's name, for instance).
+    std::ifstream code_page_file(pack / "codage.txt");
+    int code = 1252;
+    if (code_page_file >> code) set_code_page(code);
 }
 
 bool Vfs::replaced(const std::vector<std::string>& parts) const {
