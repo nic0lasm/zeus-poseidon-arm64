@@ -31,6 +31,8 @@ bool ground_known();
 // FUN_004377b0 / FUN_00438a90 sans surimpression : losange rogné à gauche (`left`) ou à droite.
 void draw_ground_half(Cpu& cpu, uint32_t image, uint8_t clip_y, bool left);
 bool ground_halves_known();
+// Smooth scrolling (smooth_scroll.cpp): while on, clipped diamonds are clipped to the pixel.
+void set_precise_ground(bool on);
 bool bases_known();  // FUN_0043ff10 à FUN_00441e50, socles de 2 à 6 cases (native.cpp)
 
 // Une boucle de dessin des personnages d'une case, celle de FUN_0045a5a0 et des deux boucles du

@@ -42,6 +42,7 @@
 //     --time-span A:R,…        temps passé de l'entrée A d'une fonction à son retour R (hexadécimal)
 //     --counts                 affiche à la fin le nombre d'appels et le temps passé dans chaque fonction
 //     --headless               fenêtre cachée, son coupé
+//     --smooth-scroll          smooth scrolling of the city map (on in the application)
 //     --mute                   son coupé
 //     --fullscreen             plein écran dès l'ouverture (⌘F ou ⌘Entrée pour basculer)
 //     --frames N, --seconds S  arrête après N images affichées ou S secondes
@@ -77,6 +78,7 @@ int main(int argc, char** argv) {
                 else if (a == "--trace-only") o.trace_only = value();
                 else if (a == "--break-on") o.break_on = value();
                 else if (a == "--headless") o.headless = true;
+                else if (a == "--smooth-scroll") o.smooth_scroll = true;
                 else if (a == "--counts") o.counts = true;
                 else if (a == "--mute") o.mute = true;
                 else if (a == "--fullscreen") o.fullscreen = true;

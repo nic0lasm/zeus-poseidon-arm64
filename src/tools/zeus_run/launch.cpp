@@ -83,6 +83,9 @@ int run(const RunOptions& o) {
     std::shared_ptr<zeus::win32::Verifier> verifier;
     if (!o.verify.empty()) verifier = zeus::win32::install_verifier(process, o.verify, o.verify_every);
     if (o.native) zeus::win32::install_native_functions(process);
+    // Smooth scrolling relies on the native drawing of the ground, which can clip a diamond to the
+    // pixel; the game's own code only clips halves.
+    if (o.smooth_scroll && o.native) zeus::win32::install_smooth_scroll(process);
     if (!o.language.empty()) zeus::win32::apply_language_pack(process, o.language);
     // Compteurs de passages, posés en dernier : ils s'ajoutent aux interceptions déjà en place.
     std::vector<std::pair<uint32_t, std::shared_ptr<uint64_t>>> counters;

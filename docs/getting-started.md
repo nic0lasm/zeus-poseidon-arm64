@@ -137,6 +137,7 @@ needs *System Settings → Privacy & Security → Open Anyway* (on macOS 15 and 
 | `--headless` | hidden window, sound muted |
 | `--mute` | sound muted |
 | `--fullscreen` | start in full screen |
+| `--smooth-scroll` | scroll the city map smoothly instead of a tile at a time (always on in the application; `ZEUS_SMOOTH_SCROLL=0` turns it off there) |
 | `--wide auto` or `--wide WxH` | turn the game's 1024×768 mode into a wide mode |
 | `--frames N`, `--seconds S` | stop after N displayed frames or S seconds |
 | `--screenshot FILE.bmp` | save the last displayed frame |

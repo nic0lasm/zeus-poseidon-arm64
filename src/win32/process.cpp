@@ -86,6 +86,12 @@ Mixer* Process::mixer() {
     return mixer_.get();
 }
 
+uint32_t Process::peek_ticks() const {
+    if (fixed_clock) return 100000 + fixed_ticks_;
+    using namespace std::chrono;
+    return static_cast<uint32_t>(100000 + duration_cast<milliseconds>(steady_clock::now() - start_).count());
+}
+
 uint32_t Process::ticks() const {
     if (fixed_clock) return 100000 + ++fixed_ticks_;
     using namespace std::chrono;

@@ -63,6 +63,8 @@ public:
     Mixer* mixer();
     // Millisecondes écoulées, base commune de GetTickCount et timeGetTime.
     uint32_t ticks() const;
+    // The same clock as ticks(), read without advancing it (the fixed clock advances at every call of ticks()).
+    uint32_t peek_ticks() const;
 
     // Tas du programme émulé.
     uint32_t alloc(uint32_t size, bool zero = true);
@@ -124,6 +126,9 @@ void apply_language_pack(Process& process, const std::filesystem::path& pack);
 // Remplace le mode 1024x768 du jeu par un mode large ; à appeler après le chargement. La taille
 // est arrondie à ce que le jeu sait afficher ; renvoie faux si rien n'a été modifié.
 bool apply_wide_mode(Process& process, int& width, int& height);
+
+// Smooth scrolling of the city map (smooth_scroll.cpp); to call after loading, with the native functions.
+void install_smooth_scroll(Process& process);
 
 // Remplace les fonctions du jeu réécrites pour l'hôte ; à appeler après le chargement.
 void install_native_functions(Process& process);
