@@ -137,6 +137,17 @@ Above 768 lines (checked at 1444×903 and 1324×1023):
   `0x005AD6D1`): `[0x00F139D4]` columns, `[0x00F139D0]` rows, from (`[0x00F139CC]`,
   `[0x00F139C8]`). Columns are capped to the image width (`0x005FB7AC`), rows are not: buffer
   height − 30, written at `0x00599E20`. The image is 838×738, so a taller screen read past it.
+- The world map's top-left corner on screen is (`[0x005FB7B4]`, `[0x005FB7B8]`), set to (0, 30)
+  at every draw (`0x00599DB8`–`0x00599DEA`, both branches joining at `0x00599DF4`), with a bottom
+  margin `[0x005FB7BC]` = 0. The image is copied there, and the cities and routes are drawn from
+  it (`0x004625D0`, `0x00465740`). `0x00407360` turns the mouse into a point of the map: mouse −
+  corner + scroll (`[0x008F9838]`, `[0x008F9834]`, 0 when the image fits). The mouse counts as
+  over the map for x in [x0, width − 2 x0) (`screen_input` at `0x00515D17` and `0x00515D9C`,
+  `0x00407140`, `0x00462A50`) or [x0, panel x) (`0x00406CA0`), and y in
+  [y0, height − margin − y0): even in 1024×768, the last 30 rows of the map do not react to the
+  mouse. Nothing else writes the corner. In a wide mode the host centres the map by rewriting it
+  at `0x00599DF4` (x0 capped at (width − 838) / 3 for the first bound) and fills the room around
+  it after the copy returns (`0x00599EBF`).
 - The full-screen backgrounds drawn the same way (`0x00420020`, `0x00422270`, `0x00422C60`,
   `0x0042F380`) are centred with (1024 − width) / 2 and (768 − height) / 2; they belong to menus,
   which always run in 800×600.
