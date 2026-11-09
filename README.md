@@ -98,9 +98,14 @@ report it on [#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128).
   editor, gods, heroes, monsters and disasters, save and load.
 - **Sound and video:** music, ambience, 3D sound, effects and the intro video.
 - **A modern window:** window or full screen (⌘F), sharp at any size, and a wide mode fitted to
-  your screen (pick the largest resolution in the game's display options).
+  your screen (pick the largest resolution in the game's display options), with the main menu
+  and the world map centred in it. The game's own cursors (shovel, sword, magnifier), sharp on
+  a Retina screen.
 - **Your language:** English out of the box, French (and other editions, see
   [#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24)) built from your own CDs.
+- **Smooth scrolling:** the city glides instead of jumping a tile at a time; scroll it with the
+  arrows or with W A S D (Z Q S D on a French keyboard), held keys scroll steadily, and holding a
+  letter no longer opens macOS's accent menu.
 - **Small comforts:** mouse wheel in lists, pause when you switch to another application, start
   in under a second.
 - **Faithful by proof:** ten replayable scenarios compare every frame and the whole game state,
@@ -137,8 +142,15 @@ proven identical to the original. The project is now maintained rather than exte
 from players come first, and a fix ships as a 1.7.x release
 ([full plan](docs/roadmap.md#after-17-review-of-24-october-2026)).
 
-What helps most now is a word from you: a report from the Steam edition
-([#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128)), from a Mac on macOS 11 to 13
+**Coming in the next version**, all contributed by
+[@northdakota](https://github.com/northdakota): smooth scrolling of the city, W A S D and steady
+held keys, the game's own cursors, the main menu and the world map centred in wide modes, and the
+Steam edition found by itself in CrossOver, Whisky or Wine bottles on a Mac
+([#148](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/148) to
+[#153](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/153); details in the
+[changelog](CHANGELOG.md#unreleased)).
+
+What helps most now is a word from you: from a Mac on macOS 11 to 13
 ([#139](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/139)), from another language
 edition ([#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24)), or anything that goes
 wrong ([issues](https://github.com/nic0lasm/zeus-poseidon-arm64/issues)).
@@ -257,8 +269,21 @@ The most useful help right now:
 
 ### Thank you
 
-Reports from players make this project better. Thank you to:
+Reports and contributions from players make this project better. Thank you to:
 
+- [**@northdakota**](https://github.com/northdakota) (Volodymyr Polishchuk), who sent the first
+  report from a real Steam installation, proving its `Zeus.exe` is GOG's
+  ([#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128)), then six pull requests
+  that make the game much nicer to play on a Mac: smooth scrolling of the city
+  ([#152](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/152)), keyboard scrolling with
+  W A S D and steady held keys ([#151](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/151)),
+  the game's own cursors, sharp on Retina ([#149](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/149)),
+  the world map ([#150](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/150)) and the main
+  menu ([#148](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/148)) centred in wide modes,
+  and the Steam edition found in CrossOver, Whisky and Wine bottles
+  ([#153](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/153)). Each one came traced to
+  the game's own code, checked against the ten reference scenarios and explained with before
+  and after pictures: a model of what a contribution can be.
 - [**@MohammadBnei**](https://github.com/MohammadBnei), who found on a clean Mac that the
   application could not unpack the GOG installer, traced it to the missing innoextract and
   proposed the fix that shipped in 1.6 ([#134](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/134)).

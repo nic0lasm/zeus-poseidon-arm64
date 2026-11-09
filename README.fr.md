@@ -82,14 +82,16 @@ choisir la langue.
 
 ### Acheté sur Steam ?
 
-D'après SteamDB, l'édition Steam contient les mêmes fichiers que celle de GOG (mêmes noms et
-tailles, `Zeus.exe` compris, et aucune bibliothèque Steam), mais personne ne l'a encore essayée
+L'édition Steam contient les mêmes fichiers que celle de GOG, sans bibliothèque Steam, et son
+`Zeus.exe` est celui de GOG : même empreinte SHA-256, relevée sur une vraie installation
 ([#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128)).
 - **Sous Linux**, installez-la avec Steam (Proton) : l'application la trouve seule dans vos
   bibliothèques Steam, rien à désigner.
-- **Sur Mac**, Steam ne sait pas installer ce jeu réservé à Windows : copiez le dossier
-  `Zeus + Poseidon` depuis un PC Windows (`Steam\steamapps\common`), puis choisissez-le avec
-  **Dossier…**.
+- **Sur Mac**, Steam pour Mac ne sait pas installer ce jeu réservé à Windows. Si vous l'avez
+  installé avec Steam pour Windows dans CrossOver, Whisky ou Wine, l'application le trouve seule
+  dans la bouteille (dans le dossier de Steam ou dans l'une de ses bibliothèques). Sinon, copiez
+  le dossier `Zeus + Poseidon` depuis un PC Windows (`Steam\steamapps\common`), puis
+  choisissez-le avec **Dossier…**.
 
 Si son `Zeus.exe` n'est pas celui de GOG, l'application le signale une fois et affiche son
 empreinte : merci de la signaler sur [#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128).
@@ -100,9 +102,14 @@ empreinte : merci de la signaler sur [#128](https://github.com/nic0lasm/zeus-pos
   d'aventures, dieux, héros, monstres et catastrophes, sauvegarde et chargement.
 - **Le son et l'image :** musiques, ambiances, son 3D, bruitages et vidéo d'introduction.
 - **Une fenêtre moderne :** fenêtre ou plein écran (⌘F), nette à toute taille, et un mode large
-  adapté à votre écran (prenez la plus grande résolution dans les options d'affichage du jeu).
+  adapté à votre écran (prenez la plus grande résolution dans les options d'affichage du jeu),
+  où le menu principal et la carte du monde sont centrés. Les curseurs du jeu (pelle, épée,
+  loupe), nets sur un écran Retina.
 - **Votre langue :** l'anglais d'emblée, le français (et d'autres éditions, voir
   [#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24)) depuis vos propres CD.
+- **Un défilement fluide :** la ville glisse au lieu de sauter d'une case à la fois ; faites-la
+  défiler avec les flèches ou avec Z Q S D (W A S D sur un clavier QWERTY), une touche maintenue
+  défile régulièrement, et maintenir une lettre n'ouvre plus le menu des accents de macOS.
 - **Le confort :** molette dans les listes, pause quand vous passez à une autre application,
   démarrage en moins d'une seconde.
 - **La fidélité prouvée :** dix scénarios rejoués comparent chaque image et tout l'état de la
@@ -141,8 +148,15 @@ est prouvé identique à l'original. Le projet est désormais entretenu plutôt 
 des joueurs passent d'abord, et un correctif sort en version 1.7.x
 ([plan complet](docs/roadmap.md#after-17-review-of-24-october-2026) en anglais).
 
-Ce qui aide le plus maintenant, c'est votre retour : avec l'édition Steam
-([#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128)), sur un Mac sous macOS 11 à 13
+**Dans la prochaine version**, tout cela apporté par
+[@northdakota](https://github.com/northdakota) : le défilement fluide de la ville, Z Q S D et les
+touches maintenues, les curseurs du jeu, le menu principal et la carte du monde centrés en mode
+large, et l'édition Steam trouvée seule dans les bouteilles CrossOver, Whisky ou Wine sur Mac
+([#148](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/148) à
+[#153](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/153) ; détails dans le
+[journal des changements](CHANGELOG.md#unreleased), en anglais).
+
+Ce qui aide le plus maintenant, c'est votre retour : sur un Mac sous macOS 11 à 13
 ([#139](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/139)), avec une autre langue
 ([#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24)), ou pour tout ce qui ne marche
 pas ([issues](https://github.com/nic0lasm/zeus-poseidon-arm64/issues)).
@@ -248,8 +262,21 @@ L'aide la plus utile aujourd'hui :
 
 ### Merci
 
-Les retours des joueurs font avancer ce projet. Merci à :
+Les retours et les contributions des joueurs font avancer ce projet. Merci à :
 
+- [**@northdakota**](https://github.com/northdakota) (Volodymyr Polishchuk), qui a envoyé le
+  premier retour d'une vraie installation Steam, prouvant que son `Zeus.exe` est celui de GOG
+  ([#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128)), puis six pull requests
+  qui rendent le jeu bien plus agréable sur Mac : le défilement fluide de la ville
+  ([#152](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/152)), le défilement au clavier
+  avec Z Q S D et les touches maintenues ([#151](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/151)),
+  les curseurs du jeu, nets sur Retina ([#149](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/149)),
+  la carte du monde ([#150](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/150)) et le
+  menu principal ([#148](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/148)) centrés en
+  mode large, et l'édition Steam trouvée dans les bouteilles CrossOver, Whisky et Wine
+  ([#153](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/153)). Chacune remonte au code du
+  jeu, passe les dix scénarios de référence et montre l'avant et l'après en images : un modèle
+  de contribution.
 - [**@MohammadBnei**](https://github.com/MohammadBnei), qui a découvert sur un Mac neuf que
   l'application ne savait pas déballer l'installateur GOG, en a trouvé la cause (innoextract
   manquant) et proposé la correction livrée dans la 1.6 ([#134](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/134)).
