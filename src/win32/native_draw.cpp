@@ -19,6 +19,7 @@
 // Adresses : win32/game_gog.h. Le code n'est modifié que si tous les octets réécrits ici sont
 // ceux attendus (empreinte FNV-1a, comparée avant toute modification).
 
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
 #include <iterator>
@@ -740,15 +741,43 @@ uint64_t fingerprint(Cpu& cpu, const uint32_t (*ranges)[2], size_t count) {
 
 bool ground_code = false;    // FUN_00435070 vérifiée
 bool ground_halves = false;  // FUN_004377b0 et FUN_00438a90 vérifiées
+bool precise_ground = false;  // smooth scrolling in progress: diamonds clipped to the pixel
+
+// A diamond clipped to the pixel, from the clipping state that FUN_00509c20 and FUN_00509cd0 write
+// (pixels hidden on the left, end of the visible part, rows hidden at the top, last row). The game
+// itself only draws a fixed half (FUN_004377b0, FUN_00438a90, and FUN_00435070 clipped at the top
+// or at the bottom): its view always moves by 30 pixels in x and 15 in y, which hides exactly one
+// half. Smooth scrolling (smooth_scroll.cpp) shifts the view by any number of pixels: it asks for
+// this drawing while it shifts.
+void draw_ground_clipped(Cpu& cpu, uint32_t image) {
+    const uint32_t row_bytes = u32(cpu, kRowBytes), buffer = u32(cpu, kFrameBuffer);
+    const int32_t skip = i32(cpu, kSkipLeft), end = i32(cpu, kRight);
+    const int32_t first_row = i32(cpu, kSkippedRows), last_row = i32(cpu, kVisibleRows);
+    const int32_t x = i32(cpu, kTargetX) - skip, y = i32(cpu, kTargetY) - first_row;
+    uint32_t start = 0;  // offset of the row in the image, in bytes
+    for (int32_t r = 0; r < 30; ++r) {
+        const int32_t width = r < 15 ? 4 * r + 2 : 58 - 4 * (r - 15), first = (58 - width) / 2;
+        if (r >= first_row && r < last_row) {
+            const int32_t a = std::max(first, skip), b = std::min(first + width, end);
+            if (a < b)
+                std::memcpy(cpu.host(buffer + static_cast<uint32_t>(y + r) * row_bytes + static_cast<uint32_t>(x + a) * 2),
+                            cpu.host(image + start + static_cast<uint32_t>(a - first) * 2), static_cast<size_t>(b - a) * 2);
+        }
+        start += static_cast<uint32_t>(width) * 2;
+    }
+}
 bool base_code = false;      // FUN_0043ff10 à FUN_00441e50 vérifiées
 
 }  // namespace
+
+void set_precise_ground(bool on) { precise_ground = on; }
 
 // FUN_00435070 : le losange a 15 lignes qui s'élargissent de 4 pixels (2, 6… 58), centrées dans
 // les 58 pixels de l'image, puis 15 qui rétrécissent d'autant ; l'image les range bout à bout,
 // soit 450 mots de 32 bits. Rognée en haut (3), seule la moitié basse est dessinée, à partir de
 // la première ligne ; rognée en bas (4), seule la moitié haute.
 void draw_ground(Cpu& cpu, uint32_t image, uint8_t clip_y) {
+    if (precise_ground && clip_y != 0) return draw_ground_clipped(cpu, image);
     const uint32_t row_bytes = u32(cpu, kRowBytes);
     const uint32_t origin = u32(cpu, kFrameBuffer) + u32(cpu, kTargetX) * 2 + u32(cpu, kTargetY) * row_bytes;
     const uint8_t* source = cpu.host(image);
@@ -779,6 +808,7 @@ void draw_ground(Cpu& cpu, uint32_t image, uint8_t clip_y) {
 // haute d'EAX restée du mot précédent après « MOV AX », 0x00437FFE). Rognage vertical comme
 // draw_ground.
 void draw_ground_half(Cpu& cpu, uint32_t image, uint8_t clip_y, bool left) {
+    if (precise_ground) return draw_ground_clipped(cpu, image);
     const uint32_t row_bytes = u32(cpu, kRowBytes);
     const uint32_t origin = u32(cpu, kFrameBuffer) + u32(cpu, kTargetX) * 2 + u32(cpu, kTargetY) * row_bytes;
     uint32_t start = 0;  // octet de la ligne dans l'image

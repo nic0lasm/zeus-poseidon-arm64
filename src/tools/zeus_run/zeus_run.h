@@ -12,7 +12,7 @@ namespace zeus::run {
 struct RunOptions {
     std::string exe, write_dir = "run/zeus", profile, frame_log, memory_dump, wide, watch, language, screenshot, window_shot, script, trace_only, break_on, count, state_log, verify, call_graph, time_span;
     bool trace = false, ticks = false, headless = false, counts = false, mute = false, fullscreen = false, deterministic = false,
-         native = true;
+         native = true, smooth_scroll = false;
     int frames = 0;
     uint32_t verify_every = 1;
     double seconds = 0;
