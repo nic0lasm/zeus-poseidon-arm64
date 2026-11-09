@@ -103,6 +103,8 @@ report it on [#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128).
   a Retina screen.
 - **Your language:** English out of the box, French (and other editions, see
   [#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24)) built from your own CDs.
+- **Smooth motion:** walkers, animals and animations move at every step of the simulation, up
+  to about 60 frames per second instead of 15.
 - **Smooth scrolling:** the city glides instead of jumping a tile at a time; scroll it with the
   arrows or with W A S D (Z Q S D on a French keyboard), held keys scroll steadily, and holding a
   letter no longer opens macOS's accent menu.
@@ -143,11 +145,12 @@ from players come first, and a fix ships as a 1.7.x release
 ([full plan](docs/roadmap.md#after-17-review-of-24-october-2026)).
 
 **Coming in the next version**, all contributed by
-[@northdakota](https://github.com/northdakota): smooth scrolling of the city, W A S D and steady
+[@northdakota](https://github.com/northdakota): smoother motion (a frame for every simulation
+tick), smooth scrolling of the city, W A S D and steady
 held keys, the game's own cursors, the main menu and the world map centred in wide modes, and the
 Steam edition found by itself in CrossOver, Whisky or Wine bottles on a Mac
 ([#148](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/148) to
-[#153](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/153); details in the
+[#155](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/155); details in the
 [changelog](CHANGELOG.md#unreleased)).
 
 What helps most now is a word from you: from a Mac on macOS 11 to 13
@@ -273,8 +276,10 @@ Reports and contributions from players make this project better. Thank you to:
 
 - [**@northdakota**](https://github.com/northdakota) (Volodymyr Polishchuk), who sent the first
   report from a real Steam installation, proving its `Zeus.exe` is GOG's
-  ([#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128)), then six pull requests
-  that make the game much nicer to play on a Mac: smooth scrolling of the city
+  ([#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128)), then seven pull requests
+  that make the game much nicer to play on a Mac: a presented frame for every simulation tick,
+  so that walkers and animations move smoothly ([#155](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/155)),
+  smooth scrolling of the city
   ([#152](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/152)), keyboard scrolling with
   W A S D and steady held keys ([#151](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/151)),
   the game's own cursors, sharp on Retina ([#149](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/149)),

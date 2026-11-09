@@ -107,6 +107,8 @@ empreinte : merci de la signaler sur [#128](https://github.com/nic0lasm/zeus-pos
   loupe), nets sur un écran Retina.
 - **Votre langue :** l'anglais d'emblée, le français (et d'autres éditions, voir
   [#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24)) depuis vos propres CD.
+- **Des mouvements fluides :** marcheurs, animaux et animations avancent à chaque pas de la
+  simulation, jusqu'à environ 60 images par seconde au lieu de 15.
 - **Un défilement fluide :** la ville glisse au lieu de sauter d'une case à la fois ; faites-la
   défiler avec les flèches ou avec Z Q S D (W A S D sur un clavier QWERTY), une touche maintenue
   défile régulièrement, et maintenir une lettre n'ouvre plus le menu des accents de macOS.
@@ -149,11 +151,12 @@ des joueurs passent d'abord, et un correctif sort en version 1.7.x
 ([plan complet](docs/roadmap.md#after-17-review-of-24-october-2026) en anglais).
 
 **Dans la prochaine version**, tout cela apporté par
-[@northdakota](https://github.com/northdakota) : le défilement fluide de la ville, Z Q S D et les
+[@northdakota](https://github.com/northdakota) : des mouvements plus fluides (une image à
+chaque tour de simulation), le défilement fluide de la ville, Z Q S D et les
 touches maintenues, les curseurs du jeu, le menu principal et la carte du monde centrés en mode
 large, et l'édition Steam trouvée seule dans les bouteilles CrossOver, Whisky ou Wine sur Mac
 ([#148](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/148) à
-[#153](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/153) ; détails dans le
+[#155](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/155) ; détails dans le
 [journal des changements](CHANGELOG.md#unreleased), en anglais).
 
 Ce qui aide le plus maintenant, c'est votre retour : sur un Mac sous macOS 11 à 13
@@ -266,8 +269,10 @@ Les retours et les contributions des joueurs font avancer ce projet. Merci à :
 
 - [**@northdakota**](https://github.com/northdakota) (Volodymyr Polishchuk), qui a envoyé le
   premier retour d'une vraie installation Steam, prouvant que son `Zeus.exe` est celui de GOG
-  ([#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128)), puis six pull requests
-  qui rendent le jeu bien plus agréable sur Mac : le défilement fluide de la ville
+  ([#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128)), puis sept pull requests
+  qui rendent le jeu bien plus agréable sur Mac : une image affichée à chaque tour de
+  simulation, pour des marcheurs et des animations fluides
+  ([#155](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/155)), le défilement fluide de la ville
   ([#152](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/152)), le défilement au clavier
   avec Z Q S D et les touches maintenues ([#151](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/151)),
   les curseurs du jeu, nets sur Retina ([#149](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/149)),
