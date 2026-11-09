@@ -43,6 +43,13 @@ int run(const RunOptions& o) {
     desktop.max_presents = o.frames;
     desktop.max_seconds = o.seconds;
     desktop.add_script(o.script);
+    // City screens (docs/engine/interface.md, section 4: 0x01, 0x20, 0x48, 0x56, 0x58): W A S D
+    // scroll the map there like the arrows, elsewhere they are letters; held scrolling keys are
+    // repeated there by the host.
+    desktop.city_screen = [&process] {
+        const uint8_t screen = process.cpu().read_u8(zeus::win32::gog::kScreen);
+        return screen == 0x01 || screen == 0x20 || screen == 0x48 || screen == 0x56 || screen == 0x58;
+    };
     zeus::win32::install_kernel32(process);
     zeus::win32::install_user32(process);
     zeus::win32::install_ddraw(process);
