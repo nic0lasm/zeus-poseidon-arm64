@@ -130,6 +130,9 @@ bool apply_wide_mode(Process& process, int& width, int& height);
 // Smooth scrolling of the city map (smooth_scroll.cpp); to call after loading, with the native functions.
 void install_smooth_scroll(Process& process);
 
+// Frame pacing (frame_pacing.cpp): every simulation tick gets a presented frame; to call after loading.
+void install_frame_pacing(Process& process);
+
 // Remplace les fonctions du jeu réécrites pour l'hôte ; à appeler après le chargement.
 void install_native_functions(Process& process);
 

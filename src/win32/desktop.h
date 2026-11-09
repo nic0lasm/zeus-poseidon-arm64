@@ -81,6 +81,7 @@ public:
     // Affiche une image 16 bits (5-5-5 ou 5-6-5) de `pitch` octets par ligne.
     void present(const uint8_t* pixels, int width, int height, int pitch, bool rgb565);
     int presents() const { return presents_; }
+    double last_present_ms() const { return last_present_ms_; }  // time the last present() took
     void save_screenshot();
     // Boîte de message de l'hôte (sans effet si la fenêtre est cachée).
     void alert(const std::string& title, const std::string& text);
@@ -129,6 +130,7 @@ private:
     std::vector<uint32_t> colors_;
     int width_ = kScreenWidth, height_ = kScreenHeight, texture_w_ = 0, texture_h_ = 0;
     int presents_ = 0;
+    double last_present_ms_ = 0;
     bool stop_ = false, screenshot_wanted_ = false;
     uint32_t mouse_buttons_ = 0;
     std::vector<uint8_t> last_frame_;  // RGB24 de la dernière image, pour la capture

@@ -216,6 +216,12 @@ void Desktop::set_mode(int width, int height) {
 }
 
 void Desktop::present(const uint8_t* pixels, int width, int height, int pitch, bool rgb565) {
+    const uint64_t started = SDL_GetPerformanceCounter();
+    struct Timer {  // measures the whole of present(), whichever way it returns
+        double& out;
+        uint64_t start;
+        ~Timer() { out = 1000.0 * static_cast<double>(SDL_GetPerformanceCounter() - start) / static_cast<double>(SDL_GetPerformanceFrequency()); }
+    } timer{last_present_ms_, started};
     if (!window_) create_window("Zeus", width, height);
     if (!texture_ || texture_w_ != width || texture_h_ != height || texture_565_ != rgb565) {
         if (texture_) SDL_DestroyTexture(texture_);

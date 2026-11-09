@@ -293,6 +293,9 @@ int run_app(const std::string& installer) {
     // Smooth scrolling of the city map; ZEUS_SMOOTH_SCROLL=0 turns it off for one launch.
     const char* smooth = std::getenv("ZEUS_SMOOTH_SCROLL");
     o.smooth_scroll = !(smooth && std::string(smooth) == "0");
+    // A presented frame for every simulation tick; ZEUS_FRAME_PACING=0 turns it off for one launch.
+    const char* pacing = std::getenv("ZEUS_FRAME_PACING");
+    o.frame_pacing = !(pacing && std::string(pacing) == "0");
 
     // Langue : demandée au premier lancement, puis retenue dans langue.txt (ligne vide : l'anglais
     // de l'édition GOG). Sans aucun pack, on ne demande rien : l'anglais. Garder la touche Option
