@@ -80,12 +80,14 @@ the terminal); start it with `ZEUS_ASK_LANGUAGE=1` for the language choice.
 
 ### Bought it on Steam?
 
-According to SteamDB, the Steam edition holds the same files as GOG's (same names and sizes,
-`Zeus.exe` included, and no Steam library), but nobody has tried it yet ([#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128)).
+The Steam edition holds the same files as GOG's, with no Steam library, and its `Zeus.exe` is
+GOG's: same SHA-256, reported from a real installation on [#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128).
 - **On Linux**, install it with Steam (Proton): the application finds it by itself in your Steam
   libraries, nothing to pick.
-- **On a Mac**, Steam cannot install this Windows-only game: copy the `Zeus + Poseidon` folder
-  from a Windows PC (`Steam\steamapps\common`), then choose it with **Folder…**.
+- **On a Mac**, Steam for Mac cannot install this Windows-only game. If you installed it with
+  Steam for Windows in CrossOver, Whisky or Wine, the application finds it by itself in the bottle
+  (in Steam's folder or in any of its libraries). Otherwise copy the `Zeus + Poseidon` folder from
+  a Windows PC (`Steam\steamapps\common`), then choose it with **Folder…**.
 
 If its `Zeus.exe` is not GOG's, the application says so once and shows its checksum: please
 report it on [#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128).
