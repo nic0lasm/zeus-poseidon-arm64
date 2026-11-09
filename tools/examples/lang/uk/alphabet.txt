@@ -1,0 +1,24 @@
+# Ukrainian alphabet for the fonts of Zeus + Poseidon (read by tools/alphabet.py and
+# tools/translate.py). Lines are "key: value"; lines starting with "#" are comments.
+
+# Code page of the pack's texts (the host reads it from codage.txt).
+code_page: 1251
+
+# Alphabetical order, used to sort the help's table of contents.
+order: абвгґдеєжзиіїйклмнопрстуфхцчшщьюя
+
+# Letters drawn from skeletons.txt, in the order they take the free glyph slots 81 to 134 (the
+# accented Western letters; slot 130, the degree sign, is kept). Upper case first, then the
+# same letters in lower case (small capitals in these fonts), then the signs.
+new_upper: БГҐДЕЄЖЗИЙЛПУФЦЧШЩЬЮЯЇ
+signs: «»—
+
+# Letters that look like a Latin letter of the fonts take its glyph (lower case derived).
+same_as_latin: А=A В=B К=K М=M Н=H О=O Р=P С=C Т=T Х=X І=I
+
+# Letters with steep diagonals, drawn two pixels wide in the 9 and 11 pt fonts like Latin A and V.
+thick: ЛДУ
+
+# Other entries of the character table, set last: a code takes the glyph of a character (looked
+# up in the table built so far) or, with "#", a glyph number.
+table: 0x91=' 0x92=' 0x93=" 0x94=" 0x84=" 0x96=— 0xB0=#130
