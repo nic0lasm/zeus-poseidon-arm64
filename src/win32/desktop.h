@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <deque>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -22,10 +23,11 @@ struct Message {
 
 // Action de diagnostic déclenchée à un instant donné, à la place du joueur.
 struct ScriptEvent {
-    enum class Kind { Move, LeftDown, LeftUp, RightDown, RightUp, Wheel, KeyDown, KeyUp, Char, Blur, Focus, Shot };
+    enum class Kind { Move, LeftDown, LeftUp, RightDown, RightUp, Wheel, KeyDown, KeyUp, Char, Blur, Focus, Shot,
+                      ScanDown, ScanUp };
     double at = 0;  // secondes depuis le lancement
     Kind kind = Kind::Move;
-    int x = 0, y = 0, key = 0;  // key : touche, caractère ou crans de molette
+    int x = 0, y = 0, key = 0;  // key : touche, caractère ou crans de molette (ScanDown, ScanUp: SDL scancode)
     std::string path;  // pour Shot : fichier BMP à écrire
 };
 
@@ -60,6 +62,9 @@ public:
     // « 5:click 400,300; 7:rclick 10,10; 8:move 5,5; 9:key 27; 9.5:char 65; 10:shot f.bmp ».
     // Autres actions : down X,Y et up X,Y (glissement), wheel N (crans de molette), blur et
     // focus (fenêtre à l'arrière-plan puis de retour).
+    // Also keydown CODE and keyup CODE (a Windows key held down, without repeat), and scan CODE,
+    // scandown CODE and scanup CODE (a physical key by SDL scancode, handled by the host like a
+    // real key press: W A S D and the host's repeat of held scrolling keys apply).
     void add_script(const std::string& text);
 
     // Taille de l'écran annoncée au programme tant qu'il n'a pas choisi de mode d'affichage.
@@ -90,6 +95,9 @@ public:
     int mouse_x = 0, mouse_y = 0;
     bool key_down(int virtual_key) const;
     bool should_stop() const { return stop_; }
+    // True on the city screens: W A S D act there as the arrows, and the host repeats held
+    // scrolling keys itself. Without an answer, neither happens.
+    std::function<bool()> city_screen;
 
     // Cursors of the program: add_cursor keeps an image and returns its number; set_cursor shows it
     // at the scale of the game's picture (kSystemCursor: the system's arrow).
@@ -125,6 +133,17 @@ private:
     uint32_t mouse_buttons_ = 0;
     std::vector<uint8_t> last_frame_;  // RGB24 de la dernière image, pour la capture
     std::vector<bool> keys_;
+    bool wasd_arrow_[4] = {};  // W A S D: arrow chosen when the key goes down, kept until it is released
+    // Arrows (and W A S D) held on the city screens: the game takes one scrolling step per
+    // WM_KEYDOWN, and the system's repeat starts only after a long delay (a step, a pause, then the
+    // scrolling). The host therefore repeats these keys itself, after 120 ms and then every 50 ms
+    // (the pace of the game's own scrolling when the mouse is at the edge), and ignores the
+    // system's repeat for them.
+    struct HeldScroll {
+        bool on = false;
+        uint32_t next = 0;  // time of the next repeated WM_KEYDOWN
+    };
+    HeldScroll held_scroll_[4];  // left, up, right and down arrows (0x25 to 0x28)
     uint64_t start_ticks_ = 0;
     uint32_t first_now_ = 0;
     bool has_first_now_ = false;

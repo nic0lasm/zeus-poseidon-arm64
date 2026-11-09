@@ -6,6 +6,7 @@
 #ifdef __APPLE__
 #include <dlfcn.h>
 #include <mach-o/dyld.h>
+#include <CoreFoundation/CoreFoundation.h>
 #endif
 
 #include <algorithm>
@@ -27,6 +28,7 @@ constexpr uint32_t WM_ACTIVATE = 0x0006, WM_SETFOCUS = 0x0007, WM_KILLFOCUS = 0x
                    WM_MBUTTONUP = 0x0208, WM_MOUSEWHEEL = 0x020A;
 constexpr int kWheelDelta = 120;  // un cran de molette, pour Windows
 constexpr uint64_t kFocusDelayMs = 400;
+constexpr uint32_t kScrollFirstRepeatMs = 120, kScrollRepeatMs = 50;  // repeat of the arrows on the city screens
 constexpr uint32_t MK_LBUTTON = 1, MK_RBUTTON = 2, MK_MBUTTON = 0x10;
 
 // Cursors. SDL2 gives a cursor a single image, measured in points: on a Retina screen macOS
@@ -156,6 +158,13 @@ int virtual_key(SDL_Keycode key) {
 }  // namespace
 
 Desktop::Desktop() : keys_(256, false) {
+#ifdef __APPLE__
+    // A letter key held down: macOS opens its accent menu (à, á, â…) instead of repeating the key,
+    // which stops W A S D scrolling and leaves a popup over the game. A setting of this application
+    // only, made before SDL starts text input.
+    CFPreferencesSetAppValue(CFSTR("ApplePressAndHoldEnabled"), kCFBooleanFalse, kCFPreferencesCurrentApplication);
+    CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication);
+#endif
     SDL_SetMainReady();
     if (SDL_Init(SDL_INIT_VIDEO) != 0) throw std::runtime_error(SDL_GetError());
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
@@ -438,6 +447,11 @@ std::vector<ScriptEvent> parse_script(const std::string& text) {
         else if (verb == "focus") push(Kind::Focus, 0);
         else if (verb == "key") { rest >> e.key; push(Kind::KeyDown, 0); push(Kind::KeyUp, 0.15); }
         else if (verb == "char") { rest >> e.key; push(Kind::Char, 0); }
+        else if (verb == "keydown") { rest >> e.key; push(Kind::KeyDown, 0); }  // a key held down
+        else if (verb == "keyup") { rest >> e.key; push(Kind::KeyUp, 0); }
+        else if (verb == "scan") { rest >> e.key; push(Kind::ScanDown, 0); push(Kind::ScanUp, 0.15); }
+        else if (verb == "scandown") { rest >> e.key; push(Kind::ScanDown, 0); }
+        else if (verb == "scanup") { rest >> e.key; push(Kind::ScanUp, 0); }
         else if (verb == "shot") { rest >> e.path; push(Kind::Shot, 0); }
         else throw std::runtime_error("action inconnue : " + item);
     }
@@ -544,6 +558,15 @@ bool Desktop::pump(uint32_t now) {
             case Kind::KeyUp: if (vk < 256) keys_[vk] = false; post(WM_KEYUP, vk, 0xC0000001u); break;
             case Kind::Char: post(WM_CHAR, vk, 1); break;
             case Kind::Shot: save_screenshot_to(s.path); break;
+            case Kind::ScanDown:
+            case Kind::ScanUp: {  // picked up below by SDL_PollEvent, like a real key press
+                SDL_Event k{};
+                k.type = s.kind == Kind::ScanDown ? SDL_KEYDOWN : SDL_KEYUP;
+                k.key.keysym.scancode = static_cast<SDL_Scancode>(s.key);
+                k.key.keysym.sym = SDL_GetKeyFromScancode(k.key.keysym.scancode);
+                SDL_PushEvent(&k);
+                break;
+            }
         }
     }
     SDL_Event e;
@@ -582,6 +605,8 @@ bool Desktop::pump(uint32_t now) {
                 if (e.wheel.y) wheel(e.wheel.y);
                 break;
             case SDL_WINDOWEVENT:
+                if (e.window.event == SDL_WINDOWEVENT_FOCUS_LOST)
+                    for (HeldScroll& held : held_scroll_) held.on = false;  // the release may never come
                 if (headless || virtual_time) break;
                 if (e.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
                     focus_lost_ = true;
@@ -599,9 +624,32 @@ bool Desktop::pump(uint32_t now) {
                     if (e.type == SDL_KEYDOWN && !e.key.repeat && (key == SDLK_f || key == SDLK_RETURN)) toggle_fullscreen();
                     break;
                 }
-                const int vk = virtual_key(e.key.keysym.sym);
-                if (!vk) break;
+                int vk = virtual_key(e.key.keysym.sym);
                 const bool down = e.type == SDL_KEYDOWN;
+                // W A S D (by key position, whatever the keyboard layout): the arrows on the city
+                // screens. The choice is made when the key goes down and kept until it is released,
+                // so that the game always sees the same key on both sides. With Ctrl or Alt held
+                // they stay letters: Ctrl+A is a shortcut of the game (docs/engine/interface.md).
+                const SDL_Scancode scan = e.key.keysym.scancode;
+                const int wasd = scan == SDL_SCANCODE_W ? 0 : scan == SDL_SCANCODE_A ? 1
+                               : scan == SDL_SCANCODE_S ? 2 : scan == SDL_SCANCODE_D ? 3 : -1;
+                if (wasd >= 0) {
+                    if (down && !e.key.repeat)
+                        wasd_arrow_[wasd] = city_screen && city_screen() && !(e.key.keysym.mod & (KMOD_CTRL | KMOD_ALT));
+                    static constexpr int kArrows[4] = {0x26, 0x25, 0x28, 0x27};  // up, left, down, right
+                    if (wasd_arrow_[wasd]) vk = kArrows[wasd];
+                    if (!down) wasd_arrow_[wasd] = false;
+                }
+                if (!vk) break;
+                if (vk >= 0x25 && vk <= 0x28) {  // arrows: repeated by the host on the city screens
+                    HeldScroll& held = held_scroll_[vk - 0x25];
+                    if (down && e.key.repeat && held.on) break;  // replaced by the host's own repeat
+                    if (down && !e.key.repeat) {
+                        held.on = city_screen && city_screen();
+                        held.next = now + kScrollFirstRepeatMs;
+                    }
+                    if (!down) held.on = false;
+                }
                 keys_[static_cast<size_t>(vk)] = down;
                 post(down ? WM_KEYDOWN : WM_KEYUP, static_cast<uint32_t>(vk), down ? 1u : 0xC0000001u);
                 // Touches de contrôle : Windows envoie aussi un WM_CHAR.
@@ -623,6 +671,18 @@ bool Desktop::pump(uint32_t now) {
             default:
                 break;
         }
+    }
+    // Repeat of the held scrolling keys (HeldScroll): one WM_KEYDOWN at a time, at most one per
+    // pass; away from the city screens, the system's repeat takes over again.
+    for (int i = 0; i < 4; ++i) {
+        HeldScroll& held = held_scroll_[i];
+        if (!held.on || static_cast<int32_t>(now - held.next) < 0) continue;
+        if (!(city_screen && city_screen())) {
+            held.on = false;
+            continue;
+        }
+        post(WM_KEYDOWN, static_cast<uint32_t>(0x25 + i), 0x40000001u);  // bit 30: the key was already down
+        held.next = now + kScrollRepeatMs;
     }
     if (focus_lost_ && !inactive_told_ && SDL_GetTicks64() - focus_lost_at_ >= kFocusDelayMs) tell_active(false, now);
     return !stop_;

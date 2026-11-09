@@ -72,7 +72,9 @@ application always does), that mode becomes a wide one fitted to your screen (ta
 shows its real size. Saves and settings are written to `run/zeus/`.
 
 The intro video plays first; press Esc to skip it. The mouse wheel, or a two-finger swipe,
-scrolls the game's lists and texts. When you switch to another application the game pauses and
+scrolls the game's lists and texts. On the city, W A S D scroll the map like the arrow keys
+(by key position, so ZQSD on a French keyboard), and a held arrow or W A S D key scrolls steadily
+from the start. When you switch to another application the game pauses and
 goes quiet, as it did under Windows; it carries on when you come back.
 
 ## Build the application
@@ -141,7 +143,7 @@ needs *System Settings → Privacy & Security → Open Anyway* (on macOS 15 and 
 | `--frames N`, `--seconds S` | stop after N displayed frames or S seconds |
 | `--screenshot FILE.bmp` | save the last displayed frame |
 | `--window-shot FILE.bmp` | save what the window shows, scaling included |
-| `--script "T:ACTION; …"` | replay input at T seconds: `click X,Y`, `rclick X,Y`, `move X,Y`, `down X,Y` and `up X,Y` (press and release separately, to drag), `wheel N`, `blur` and `focus` (window sent to the background and back), `key CODE` (Windows virtual key), `char CODE`, `shot FILE.bmp` |
+| `--script "T:ACTION; …"` | replay input at T seconds: `click X,Y`, `rclick X,Y`, `move X,Y`, `down X,Y` and `up X,Y` (press and release separately, to drag), `wheel N`, `blur` and `focus` (window sent to the background and back), `key CODE` (Windows virtual key), `keydown CODE` and `keyup CODE` (a key held down, without repeat), `scan CODE`, `scandown CODE` and `scanup CODE` (a physical key by SDL scancode, handled like a real key press: W A S D and the repeat of held scrolling keys apply), `char CODE`, `shot FILE.bmp` |
 
 Example — reach the main menu without a window and capture it:
 
