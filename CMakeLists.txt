@@ -93,7 +93,8 @@ add_library(zeus_win32 STATIC
     src/win32/user32.cpp
     src/win32/vfs.cpp
     src/win32/widescreen.cpp
-    src/win32/smooth_scroll.cpp)
+    src/win32/smooth_scroll.cpp
+    src/win32/frame_pacing.cpp)
 target_include_directories(zeus_win32 PUBLIC src)
 target_link_libraries(zeus_win32 PUBLIC PkgConfig::UNICORN PkgConfig::FFMPEG SDL2::SDL2)
 if(APPLE)

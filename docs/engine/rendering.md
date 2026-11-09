@@ -81,6 +81,12 @@ Creation is in `0x00433E20` (display depth, window or full screen) and `0x004343
   presented when it reaches `0x32` or when the flag `0x00F2A6CC` forces it (argument 1 forces it
   too). Then the accumulator and the flag are cleared. **verified**; that the unit is the
   millisecond (20 frames per second) is a **hypothesis**.
+- Measured with the host (`ZEUS_PACE_LOG=1`, `src/win32/frame_pacing.cpp`): frames are presented
+  50 ms apart or at the next turn after that, so the unit is the millisecond; at 90 % game speed
+  the host runs a turn when a tick is due (22 ms), and the frame comes every third tick
+  (15 per second, three ticks of movement each). With `--frame-pacing` (on in the application) the
+  host sets `0x00F2A6CC` at `0x0050C1EC` when a tick has happened since the last frame and 15 ms
+  have passed: one frame per tick.
 - Full screen (`0x00F2A764 != 0`): `BltFast(primary, 0, 0, back buffer, &0x00F2AB08, 0)`.
 - Window (`0x00F2A764 == 0`): if the desktop is not 16-bit (`0x00F2A760`, bits per pixel), lock
   `0x00F2AB4C` and the back buffer, convert with `0x004139B0` (24-bit, from 555),
