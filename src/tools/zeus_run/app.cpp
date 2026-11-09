@@ -43,22 +43,70 @@ std::string find_bundled_game() {
     return {};
 }
 
+// Wine prefixes ("bottles") where Steam for Windows may be installed on a Mac or under Linux: the
+// default Wine prefix, every bottle of CrossOver (Mac, then Linux), of Whisky (Mac) and of Bottles
+// (Flatpak). Steam for Mac cannot install this Windows-only game, so on a Mac the Steam edition
+// lives in one of these.
+std::vector<std::filesystem::path> wine_prefixes(const std::filesystem::path& home) {
+    namespace fs = std::filesystem;
+    std::vector<fs::path> prefixes{home / ".wine"};
+    for (const fs::path& parent : {home / "Library/Application Support/CrossOver/Bottles", home / ".cxoffice",
+                                   home / "Library/Containers/com.isaacmarovitz.Whisky/Bottles",
+                                   home / ".var/app/com.usebottles.bottles/data/bottles/bottles"}) {
+        std::vector<fs::path> bottles;
+        std::error_code error;
+        for (const auto& entry : fs::directory_iterator(parent, error))
+            if (entry.is_directory(error)) bottles.push_back(entry.path());
+        std::sort(bottles.begin(), bottles.end());
+        prefixes.insert(prefixes.end(), bottles.begin(), bottles.end());
+    }
+    return prefixes;
+}
+
+// A Windows path of a Wine prefix ("D:\\Games\\SteamLibrary") as a path of this system: each drive
+// letter is a link in the prefix's dosdevices folder (c: points to drive_c). Empty if it is not
+// an absolute Windows path.
+std::filesystem::path from_wine(const std::filesystem::path& prefix, const std::string& windows) {
+    namespace fs = std::filesystem;
+    if (windows.size() < 3 || !std::isalpha(static_cast<unsigned char>(windows[0])) || windows[1] != ':' ||
+        windows[2] != '\\')
+        return {};
+    const std::string drive{static_cast<char>(std::tolower(static_cast<unsigned char>(windows[0]))), ':'};
+    fs::path path = prefix / "dosdevices" / drive;
+    std::error_code error;
+    if (drive == "c:" && !fs::exists(path, error)) path = prefix / "drive_c";
+    std::string rest = windows.substr(3);
+    std::replace(rest.begin(), rest.end(), '\\', '/');
+    return rest.empty() ? path : path / rest;
+}
+
 // Dossiers d'installation de Steam : la bibliothèque principale et celles de libraryfolders.vdf.
+// Steam for Windows installed in a Wine prefix counts too; its libraryfolders.vdf holds Windows
+// paths, read through the prefix's drives.
 std::vector<std::filesystem::path> steam_libraries() {
     namespace fs = std::filesystem;
     const char* home = std::getenv("HOME");
     if (!home) return {};
     const fs::path h = home;
-    std::vector<fs::path> roots{h / "Library/Application Support/Steam", h / ".steam/steam", h / ".local/share/Steam",
-                                h / ".var/app/com.valvesoftware.Steam/.local/share/Steam"};
-    std::vector<fs::path> libraries = roots;
+    struct Root {
+        fs::path steam, prefix;  // prefix: the Wine prefix holding this Steam, empty for a native one
+    };
+    std::vector<Root> roots{{h / "Library/Application Support/Steam", {}}, {h / ".steam/steam", {}},
+                            {h / ".local/share/Steam", {}}, {h / ".var/app/com.valvesoftware.Steam/.local/share/Steam", {}}};
+    for (const fs::path& prefix : wine_prefixes(h))
+        for (const char* dir : {"drive_c/Program Files (x86)/Steam", "drive_c/Program Files/Steam"})
+            roots.push_back({prefix / dir, prefix});
+    std::vector<fs::path> libraries;
+    for (const Root& root : roots) libraries.push_back(root.steam);
     const std::regex path_line("\"path\"\\s+\"([^\"]*)\"");
-    for (const fs::path& root : roots) {
-        std::ifstream in(root / "steamapps" / "libraryfolders.vdf");
+    for (const Root& root : roots) {
+        std::ifstream in(root.steam / "steamapps" / "libraryfolders.vdf");
         for (std::string line; std::getline(in, line);) {
             std::smatch m;
-            if (std::regex_search(line, m, path_line))  // « \\ » échappe chaque barre oblique inverse
-                libraries.push_back(std::regex_replace(m[1].str(), std::regex("\\\\\\\\"), "\\"));
+            if (!std::regex_search(line, m, path_line)) continue;
+            const std::string path = std::regex_replace(m[1].str(), std::regex("\\\\\\\\"), "\\");  // « \\ » échappe chaque barre oblique inverse
+            if (root.prefix.empty()) libraries.push_back(path);
+            else if (fs::path converted = from_wine(root.prefix, path); !converted.empty()) libraries.push_back(converted);
         }
     }
     return libraries;
