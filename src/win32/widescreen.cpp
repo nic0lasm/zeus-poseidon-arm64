@@ -31,6 +31,16 @@
 //     choisit le haut ou le bas selon un seuil de 396 (0x00F2A734) : ces deux valeurs suivent la hauteur, comme
 //     elles le font entre 600 et 768.
 //
+// World map. Its image is 838 x 738, the room the 1024 x 768 mode leaves it, and the game puts it
+// at (0, 30) (kWorldOriginX, kWorldOriginY): in a larger screen the city stayed visible to its
+// right and below it. The host centres it between the top bar and the control panel
+// (kWorldOriginSet); the cities, the routes and the mouse all follow that origin. The game's mouse
+// bounds assume the map is at least x0 away from the right edge of the screen (x < width − 2 x0)
+// and y0 away from its bottom (y < height − y0): centred vertically, the band at the bottom of the
+// map that the mouse does not reach keeps the 30 rows it has in the original mode; horizontally,
+// x0 is capped at (width − image) / 3. The room around the map gets the texture of the control
+// panel's background, with a short shadow along the map's edges (kWorldImageCopied).
+//
 // Le reste de la mise en page se calcule depuis la hauteur (la vue de la carte, le liseré du bas
 // en hauteur - 9) ou se centre (les fenêtres) : vérifié par captures en 1444x903 et 1324x1023.
 //
@@ -40,6 +50,7 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -88,6 +99,71 @@ void extend_panel(Cpu& c, int width, int height) {
     }
 }
 
+// Texture of the control panel's background: its last kPanelTexture rows, without the left border.
+constexpr int kTextureWidth = kPanelWidth - kPanelBorder;
+using Texture = std::vector<uint16_t>;
+
+// Saved right after the panel's background is drawn, while those rows are known to be fresh.
+void capture_texture(Cpu& c, int width, int height, Texture& texture) {
+    const uint32_t buffer = c.read_u32(kFrameBuffer), pitch = static_cast<uint32_t>(width) * 2;
+    const int x0 = static_cast<int32_t>(c.read_u32(kPanelPosition));
+    if (!buffer || c.read_u32(kScreenWidth) != static_cast<uint32_t>(width) ||
+        c.read_u32(kScreenHeight) != static_cast<uint32_t>(height) || height < kPanelHeight || x0 < 0 ||
+        x0 + kPanelWidth > width)
+        return;
+    texture.resize(static_cast<size_t>(kPanelTexture * kTextureWidth));
+    for (int r = 0; r < kPanelTexture; ++r) {
+        const auto* from = reinterpret_cast<const uint16_t*>(
+                               c.host(buffer + static_cast<uint32_t>(kPanelHeight - kPanelTexture + r) * pitch)) +
+                           x0 + kPanelBorder;
+        std::copy(from, from + kTextureWidth, texture.begin() + r * kTextureWidth);
+    }
+}
+
+// Fills the room around the world map, between the top bar and the panel, with that texture.
+void frame_world_map(Cpu& c, int width, int height, Texture& texture) {
+    const uint32_t buffer = c.read_u32(kFrameBuffer), pitch = static_cast<uint32_t>(width) * 2;
+    if (!buffer || c.read_u32(kScreenWidth) != static_cast<uint32_t>(width) ||
+        c.read_u32(kScreenHeight) != static_cast<uint32_t>(height))
+        return;
+    if (texture.empty()) capture_texture(c, width, height, texture);
+    if (texture.empty()) return;
+    const int x0 = static_cast<int32_t>(c.read_u32(kWorldOriginX)), y0 = static_cast<int32_t>(c.read_u32(kWorldOriginY));
+    const int w = static_cast<int32_t>(c.read_u32(kWorldImageWidth)), h = static_cast<int32_t>(c.read_u32(kWorldImageHeight));
+    const int right = std::min<int>(width, static_cast<int32_t>(c.read_u32(kPanelPosition)));
+    for (int y = kTopBarHeight; y < height; ++y) {
+        uint16_t* row = reinterpret_cast<uint16_t*>(c.host(buffer + static_cast<uint32_t>(y) * pitch));
+        const uint16_t* from = texture.data() + static_cast<int>(mix(3 * y) % kPanelTexture) * kTextureWidth;
+        const int shift = static_cast<int>(mix(3 * y + 1) % kTextureWidth);
+        const bool beside = y >= y0 && y < y0 + h;  // a row of the map: only its two sides
+        for (int x = 0; x < right; ++x) {
+            if (beside && x == x0) x = x0 + w;
+            if (x >= right) break;
+            row[x] = from[(x + shift) % kTextureWidth];
+        }
+    }
+    // A shadow a few pixels wide around the map, so that its edge stands out from the texture.
+    const bool rgb565 = c.read_u32(kPixelFormat) == 0x565;
+    auto darken = [rgb565](uint16_t p, int percent) {
+        const int gbits = rgb565 ? 6 : 5, gmask = (1 << gbits) - 1;
+        const int r = (p >> (5 + gbits)) & 31, g = (p >> 5) & gmask, b = p & 31;
+        return static_cast<uint16_t>(((r * percent / 100) << (5 + gbits)) | ((g * percent / 100) << 5) | (b * percent / 100));
+    };
+    constexpr int kShadow[] = {45, 60, 75, 88};  // brightness kept, from the map's edge outwards
+    for (int d = 1; d <= 4; ++d) {
+        const int left = x0 - d, top = y0 - d, rgt = x0 + w - 1 + d, bottom = y0 + h - 1 + d;
+        for (int y = std::max(top, kTopBarHeight); y <= std::min(bottom, height - 1); ++y) {
+            uint16_t* row = reinterpret_cast<uint16_t*>(c.host(buffer + static_cast<uint32_t>(y) * pitch));
+            if (y == top || y == bottom) {  // above or below the map
+                for (int x = std::max(left, 0); x <= std::min(rgt, right - 1); ++x) row[x] = darken(row[x], kShadow[d - 1]);
+            } else {  // on its left and right, when there is room
+                if (left >= 0) row[left] = darken(row[left], kShadow[d - 1]);
+                if (rgt < right) row[rgt] = darken(row[rgt], kShadow[d - 1]);
+            }
+        }
+    }
+}
+
 void write(Cpu& cpu, const Site& s, uint32_t value) {
     if (s.size == 4) cpu.write_u32(s.address, value);
     else cpu.write_u8(s.address, static_cast<uint8_t>(value));
@@ -131,6 +207,14 @@ bool apply_wide_mode(Process& p, int& width, int& height) {
         std::fprintf(stderr, "[hôte] écran large : exécutable inconnu (%#x), mode non modifié\n", kWorldWindowRowsSet);
         return false;
     }
+    if (!matches(cpu, kWorldOriginSet, {0xA1, 0x34, 0xFF, 0x0D, 0x01})) {  // MOV EAX,[0x010DFF34]
+        std::fprintf(stderr, "[hôte] écran large : exécutable inconnu (%#x), mode non modifié\n", kWorldOriginSet);
+        return false;
+    }
+    if (!matches(cpu, kWorldImageCopied, {0x6A, 0x01})) {  // PUSH 1
+        std::fprintf(stderr, "[hôte] écran large : exécutable inconnu (%#x), mode non modifié\n", kWorldImageCopied);
+        return false;
+    }
     for (uint32_t address : {kTopBarDrawn, kPanelDrawn, kPanelOverlayDrawn, kWorldPanelDrawn}) {
         if (!matches(cpu, address - 5, {0xE8})) {  // CALL
             std::fprintf(stderr, "[hôte] écran large : exécutable inconnu (%#x), mode non modifié\n", address);
@@ -152,12 +236,28 @@ bool apply_wide_mode(Process& p, int& width, int& height) {
             }
         }
     });
+    auto texture = std::make_shared<Texture>();
+    for (uint32_t address : {kPanelDrawn, kPanelOverlayDrawn, kWorldPanelDrawn})
+        cpu.add_code_hook(address, [width, height, texture](Cpu& c) {
+            capture_texture(c, width, height, *texture);
+            if (height > kPanelHeight) extend_panel(c, width, height);
+        });
+    // World map centred between the top bar and the panel, with its surroundings filled.
+    cpu.add_code_hook(kWorldOriginSet, [width, height](Cpu& c) {
+        if (c.read_u32(kScreenWidth) != static_cast<uint32_t>(width) || c.read_u32(kScreenHeight) != static_cast<uint32_t>(height))
+            return;
+        const int w = static_cast<int32_t>(c.read_u32(kWorldImageWidth)), h = static_cast<int32_t>(c.read_u32(kWorldImageHeight));
+        const int area = static_cast<int32_t>(c.read_u32(kPanelPosition));
+        if (w <= 0 || h <= 0 || area <= 0 || area > width) return;
+        const int x0 = std::max(0, std::min((area - w) / 2, (width - w) / 3));
+        const int y0 = kTopBarHeight + std::max(0, (height - kTopBarHeight - h) / 2);
+        c.write_u32(kWorldOriginX, static_cast<uint32_t>(x0));
+        c.write_u32(kWorldOriginY, static_cast<uint32_t>(y0));
+    });
+    cpu.add_code_hook(kWorldImageCopied, [width, height, texture](Cpu& c) { frame_world_map(c, width, height, *texture); });
     if (height > kPanelHeight) {
-        for (uint32_t address : {kPanelDrawn, kPanelOverlayDrawn, kWorldPanelDrawn})
-            cpu.add_code_hook(address, [width, height](Cpu& c) { extend_panel(c, width, height); });
         // La carte du monde ne copie pas plus de lignes que son image n'en a (738) : au-delà, la
-        // copie lisait hors de l'image. Le dessous reste ce qui y était dessiné (la ville), comme
-        // la droite de l'écran au-delà de la largeur de l'image.
+        // copie lisait hors de l'image.
         cpu.add_code_hook(kWorldWindowRowsChecked, [](Cpu& c) {
             const int32_t image = static_cast<int32_t>(c.read_u32(kWorldImageHeight));
             if (image > 0 && static_cast<int32_t>(c.read_u32(kWindowRows)) > image) c.write_u32(kWindowRows, static_cast<uint32_t>(image));

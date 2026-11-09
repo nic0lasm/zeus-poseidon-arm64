@@ -600,8 +600,6 @@ them. Every release and pull request is listed in [CHANGELOG.md](../CHANGELOG.md
 - The game's *Windowed screen* option is refused by the game itself (it compares the screen
   with the mode, and the host reports a screen the size of the mode); ⌘F switches between
   window and full screen instead.
-- The world map image is 838×738: in a wide mode, wider or taller than 1024×768, the city stays
-  visible to its right and below it ([#23](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/23)).
 
 ### Native code: how it works
 

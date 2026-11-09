@@ -391,6 +391,15 @@ constexpr uint32_t kWorldPanelDrawn = 0x00597ECF;  // FUN_00597e60 : même fond,
 constexpr uint32_t kWorldWindowRowsSet = 0x00599E20, kWorldWindowRowsChecked = 0x00599E26;
 constexpr uint32_t kWindowRows = 0x00F139D0;     // lignes de la fenêtre copiée d'un bloc
 constexpr uint32_t kWorldImageHeight = 0x005FB7B0;  // hauteur de l'image de la carte du monde
+constexpr uint32_t kWorldImageWidth = 0x005FB7AC;   // its width
+// Top-left corner of the world map on screen: FUN_00599da0 sets it to (0, 30) every time it draws
+// (its two branches join at 0x00599DF4), and everything that draws on the map or aims the mouse at
+// it reads it (FUN_00407360: mouse → point of the map; FUN_004625d0, FUN_00465740: cities and
+// routes; FUN_00406ca0, FUN_00407140, FUN_00462a50, screen_input: mouse bounds, x in
+// [x0, width − 2 x0) or [x0, panel x), y in [y0, height − y0)).
+constexpr uint32_t kWorldOriginX = 0x005FB7B4, kWorldOriginY = 0x005FB7B8;
+constexpr uint32_t kWorldOriginSet = 0x00599DF4;    // MOV EAX,[0x010DFF34]
+constexpr uint32_t kWorldImageCopied = 0x00599EBF;  // return from the copy of the image (FUN_005acf50)
 // FUN_005715a0, fenêtre d'information en mode 1024x768 : ouverte en bas de l'écran (y = 760 - 16 n,
 // MOV ECX,0x2F8) si la valeur en 0x00F2A734 (ordonnée du clic, hypothèse) vaut au plus 396
 // (CMP [0x00F2A734],0x18C), sinon en haut. Le mode 800x600 suit la même règle : 592 - 16 n et 312.

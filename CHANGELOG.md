@@ -5,6 +5,8 @@ pull request.
 
 ## Unreleased
 
+- **World map centred in wide modes.** The world map is an 838×738 image, the room left by the 1024×768 mode, and the game draws it at (0, 30): in a wider or taller mode the city stayed visible to its right and below it. The host now rewrites the map's corner (`0x005FB7B4`, `0x005FB7B8`), which the cities, the routes and the mouse all follow, to centre it between the top bar and the control panel, and fills the room around it with the panel's background texture and a short shadow (`src/win32/widescreen.cpp`). Clicking a city still selects it. Removes the last known limit noted in [#23](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/23).
+
 ## 1.7 — 2026-10-18
 
 - **Older Macs: macOS 11 and later.** The Mac archives took their minimum macOS from the Homebrew libraries they embedded, built for the GitHub Mac that built them: macOS 14 on Apple Silicon, 15 on Intel. `tools/build_mac_deps.py` now builds SDL 2.32.10, Unicorn 2.1.4 (x86 only) and innoextract 1.9 (with liblzma and the part of Boost it needs, linked statically) from their sources, checksums verified, with `MACOSX_DEPLOYMENT_TARGET=11.0`; the `release` workflow builds them (kept in its cache), FFmpeg and the program for macOS 11, makes any macOS API newer than the target a compile error, and `tools/publish.py release` refuses an application in which any binary asks for more than macOS 11.0. The application's `Info.plist` says 11.0. GitHub has no Mac older than macOS 14: anyone with a Mac on macOS 11, 12 or 13 can help by trying the archive and reporting on [#139](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/139).
