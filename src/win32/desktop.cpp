@@ -3,12 +3,17 @@
 #include "win32/text.h"
 
 #include <SDL.h>
+#ifdef __APPLE__
+#include <dlfcn.h>
+#include <mach-o/dyld.h>
+#endif
 
 #include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <sstream>
 #include <stdexcept>
+#include <type_traits>
 
 namespace zeus::win32 {
 namespace {
@@ -23,6 +28,93 @@ constexpr uint32_t WM_ACTIVATE = 0x0006, WM_SETFOCUS = 0x0007, WM_KILLFOCUS = 0x
 constexpr int kWheelDelta = 120;  // un cran de molette, pour Windows
 constexpr uint64_t kFocusDelayMs = 400;
 constexpr uint32_t MK_LBUTTON = 1, MK_RBUTTON = 2, MK_MBUTTON = 0x10;
+
+// Cursors. SDL2 gives a cursor a single image, measured in points: on a Retina screen macOS
+// enlarges it and blurs it. When SDL2 is sdl2-compat (SDL2 implemented on top of SDL3, as Homebrew
+// installs it), SDL3 also takes one image per screen density: its functions are then taken from
+// the SDL3 library already loaded, and everything about cursors goes through them.
+struct CursorApi {
+    struct Surface3 {  // start of SDL3's SDL_Surface (a public structure)
+        uint32_t flags, format;
+        int w, h, pitch;
+        void* pixels;
+    };
+    Surface3* (*create_surface)(int, int, uint32_t) = nullptr;
+    bool (*add_alternate_image)(Surface3*, Surface3*) = nullptr;
+    void (*destroy_surface)(Surface3*) = nullptr;
+    SDL_Cursor* (*create_color_cursor)(Surface3*, int, int) = nullptr;
+    bool (*set_cursor)(SDL_Cursor*) = nullptr;
+    SDL_Cursor* (*default_cursor)() = nullptr;
+    void (*destroy_cursor)(SDL_Cursor*) = nullptr;
+    bool sdl3 = false;
+
+    CursorApi() {
+#ifdef __APPLE__
+        SDL_version version;
+        SDL_GetVersion(&version);
+        if (version.patch < 50) return;  // a real SDL2 (sdl2-compat numbers itself 2.32.50 and later)
+        void* library = nullptr;
+        for (uint32_t i = 0, n = _dyld_image_count(); i < n && !library; ++i) {
+            const char* name = _dyld_get_image_name(i);
+            if (name && std::strstr(name, "libSDL3")) library = dlopen(name, RTLD_LAZY | RTLD_NOLOAD);
+        }
+        if (!library) return;
+        auto take = [library](auto& fn, const char* name) {
+            fn = reinterpret_cast<std::remove_reference_t<decltype(fn)>>(dlsym(library, name));
+            return fn != nullptr;
+        };
+        sdl3 = take(create_surface, "SDL_CreateSurface") && take(add_alternate_image, "SDL_AddSurfaceAlternateImage") &&
+               take(destroy_surface, "SDL_DestroySurface") && take(create_color_cursor, "SDL_CreateColorCursor") &&
+               take(set_cursor, "SDL_SetCursor") && take(default_cursor, "SDL_GetDefaultCursor") &&
+               take(destroy_cursor, "SDL_DestroyCursor");
+#endif
+    }
+    static const CursorApi& get() {
+        static const CursorApi api;
+        return api;
+    }
+    void set(SDL_Cursor* cursor) const {
+        if (sdl3) set_cursor(cursor ? cursor : default_cursor());
+        else SDL_SetCursor(cursor ? cursor : SDL_GetDefaultCursor());
+    }
+    void destroy(SDL_Cursor* cursor) const {
+        if (!cursor) return;
+        if (sdl3) destroy_cursor(cursor);
+        else SDL_FreeCursor(cursor);
+    }
+};
+
+// The cursor's image brought to w x h pixels: each pixel gets the average of the image pixels it
+// covers, weighted by area (premultiplied alpha). Sharp at whole factors, with softened edges
+// otherwise, like the game's picture.
+std::vector<uint32_t> resample_cursor(const CursorImage& image, int w, int h) {
+    std::vector<uint32_t> out(static_cast<size_t>(w) * h, 0);
+    const double sx = static_cast<double>(image.width) / w, sy = static_cast<double>(image.height) / h;
+    for (int y = 0; y < h; ++y) {
+        const double y0 = y * sy, y1 = (y + 1) * sy;
+        for (int x = 0; x < w; ++x) {
+            const double x0 = x * sx, x1 = (x + 1) * sx;
+            double a = 0, r = 0, g = 0, b = 0;
+            for (int j = static_cast<int>(y0); j < image.height && j < y1; ++j) {
+                const double wy = std::min(y1, j + 1.0) - std::max(y0, static_cast<double>(j));
+                for (int i = static_cast<int>(x0); i < image.width && i < x1; ++i) {
+                    const double wx = std::min(x1, i + 1.0) - std::max(x0, static_cast<double>(i));
+                    const uint32_t p = image.argb[static_cast<size_t>(j) * image.width + i];
+                    const double weight = (p >> 24) * wx * wy;
+                    a += weight;
+                    r += ((p >> 16) & 255) * weight;
+                    g += ((p >> 8) & 255) * weight;
+                    b += (p & 255) * weight;
+                }
+            }
+            if (a <= 0) continue;
+            const auto channel = [](double v) { return static_cast<uint32_t>(std::clamp(std::lround(v), 0L, 255L)); };
+            out[static_cast<size_t>(y) * w + x] =
+                channel(a / (sx * sy)) << 24 | channel(r / a) << 16 | channel(g / a) << 8 | channel(b / a);
+        }
+    }
+    return out;
+}
 
 // Code de touche virtuelle Windows pour une touche SDL, ou 0.
 int virtual_key(SDL_Keycode key) {
@@ -72,6 +164,10 @@ Desktop::Desktop() : keys_(256, false) {
 
 Desktop::~Desktop() {
     if (frame_log_) std::fclose(frame_log_);
+    if (std::any_of(cursors_.begin(), cursors_.end(), [](SDL_Cursor* c) { return c != nullptr; })) {
+        CursorApi::get().set(nullptr);
+        for (SDL_Cursor* c : cursors_) CursorApi::get().destroy(c);
+    }
     if (upscaled_) SDL_DestroyTexture(upscaled_);
     if (texture_) SDL_DestroyTexture(texture_);
     if (renderer_) SDL_DestroyRenderer(renderer_);
@@ -163,6 +259,15 @@ void Desktop::present(const uint8_t* pixels, int width, int height, int pitch, b
         view_scale_ = scale / density;
         view_x_ = target.x / density;
         view_y_ = target.y / density;
+        if (view_scale_ != cursor_scale_ || density != cursor_density_) {
+            // A new scale: the cursors are rebuilt, the one shown first.
+            std::vector<SDL_Cursor*> old(cursors_.size(), nullptr);
+            old.swap(cursors_);
+            cursor_scale_ = view_scale_;
+            cursor_density_ = density;
+            apply_cursor();
+            for (SDL_Cursor* c : old) CursorApi::get().destroy(c);
+        }
         const int factor = static_cast<int>(std::ceil(scale - 1e-6));
         SDL_RenderClear(renderer_);
         if (factor <= 1 || std::abs(scale - factor) < 1e-6) {
@@ -212,6 +317,69 @@ void Desktop::present(const uint8_t* pixels, int width, int height, int pitch, b
         }
     }
     if (max_presents && presents_ >= max_presents) stop_ = true;
+}
+
+int Desktop::add_cursor(CursorImage image) {
+    cursor_images_.push_back(std::move(image));
+    cursors_.push_back(nullptr);
+    return static_cast<int>(cursor_images_.size()) - 1;
+}
+
+void Desktop::set_cursor(int index) {
+    if (index < 0 || index >= static_cast<int>(cursor_images_.size())) index = kSystemCursor;
+    if (index == cursor_) return;
+    cursor_ = index;
+    apply_cursor();
+}
+
+// Shows the chosen cursor; it waits for the scale to be known (the first frame shown).
+void Desktop::apply_cursor() {
+    if (headless || !window_ || cursor_scale_ <= 0) return;
+    SDL_Cursor* cursor = nullptr;
+    if (cursor_ != kSystemCursor) {
+        SDL_Cursor*& made = cursors_[static_cast<size_t>(cursor_)];
+        if (!made) made = make_cursor(cursor_images_[static_cast<size_t>(cursor_)]);
+        cursor = made;
+    }
+    CursorApi::get().set(cursor);  // null: the system's arrow
+}
+
+// A cursor at the scale of the game's picture: cursor_scale_ points per game pixel, and one image
+// per screen density when SDL3 allows it.
+SDL_Cursor* Desktop::make_cursor(const CursorImage& image) const {
+    const CursorApi& api = CursorApi::get();
+    const int w = std::max(1, static_cast<int>(std::lround(image.width * cursor_scale_)));
+    const int h = std::max(1, static_cast<int>(std::lround(image.height * cursor_scale_)));
+    const int hot_x = std::clamp(static_cast<int>(std::lround(image.hot_x * cursor_scale_)), 0, w - 1);
+    const int hot_y = std::clamp(static_cast<int>(std::lround(image.hot_y * cursor_scale_)), 0, h - 1);
+    const auto fill = [&image](uint8_t* pixels, int pitch, int width, int height) {
+        const std::vector<uint32_t> argb = resample_cursor(image, width, height);
+        for (int y = 0; y < height; ++y)
+            std::memcpy(pixels + static_cast<size_t>(y) * pitch, &argb[static_cast<size_t>(y) * width], static_cast<size_t>(width) * 4);
+    };
+    if (api.sdl3) {
+        CursorApi::Surface3* surface = api.create_surface(w, h, SDL_PIXELFORMAT_ARGB8888);
+        if (!surface) return nullptr;
+        fill(static_cast<uint8_t*>(surface->pixels), surface->pitch, w, h);
+        const int dense_w = static_cast<int>(std::lround(image.width * cursor_scale_ * cursor_density_));
+        const int dense_h = static_cast<int>(std::lround(image.height * cursor_scale_ * cursor_density_));
+        if (dense_w > w && dense_h > h) {
+            if (CursorApi::Surface3* dense = api.create_surface(dense_w, dense_h, SDL_PIXELFORMAT_ARGB8888)) {
+                fill(static_cast<uint8_t*>(dense->pixels), dense->pitch, dense_w, dense_h);
+                api.add_alternate_image(surface, dense);
+                api.destroy_surface(dense);
+            }
+        }
+        SDL_Cursor* cursor = api.create_color_cursor(surface, hot_x, hot_y);
+        api.destroy_surface(surface);
+        return cursor;
+    }
+    SDL_Surface* surface = SDL_CreateRGBSurfaceWithFormat(0, w, h, 32, SDL_PIXELFORMAT_ARGB8888);
+    if (!surface) return nullptr;
+    fill(static_cast<uint8_t*>(surface->pixels), surface->pitch, w, h);
+    SDL_Cursor* cursor = SDL_CreateColorCursor(surface, hot_x, hot_y);
+    SDL_FreeSurface(surface);
+    return cursor;
 }
 
 // Position de la souris dans l'image du jeu, à partir de sa position dans la fenêtre.

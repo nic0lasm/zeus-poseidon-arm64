@@ -10,6 +10,7 @@
 struct SDL_Window;
 struct SDL_Renderer;
 struct SDL_Texture;
+struct SDL_Cursor;
 
 namespace zeus::win32 {
 
@@ -26,6 +27,13 @@ struct ScriptEvent {
     Kind kind = Kind::Move;
     int x = 0, y = 0, key = 0;  // key : touche, caractère ou crans de molette
     std::string path;  // pour Shot : fichier BMP à écrire
+};
+
+// A cursor of the program (a CURSOR resource of the executable), decoded: non-premultiplied
+// ARGB8888, rows from top to bottom; hot spot in pixels of the image.
+struct CursorImage {
+    int width = 0, height = 0, hot_x = 0, hot_y = 0;
+    std::vector<uint32_t> argb;
 };
 
 // Actions décrites par un texte de scénario (voir Desktop::add_script), dans l'ordre du texte.
@@ -83,6 +91,12 @@ public:
     bool key_down(int virtual_key) const;
     bool should_stop() const { return stop_; }
 
+    // Cursors of the program: add_cursor keeps an image and returns its number; set_cursor shows it
+    // at the scale of the game's picture (kSystemCursor: the system's arrow).
+    static constexpr int kSystemCursor = -1;
+    int add_cursor(CursorImage image);
+    void set_cursor(int index);
+
 private:
     SDL_Window* window_ = nullptr;
     SDL_Renderer* renderer_ = nullptr;
@@ -93,6 +107,14 @@ private:
     double view_x_ = 0, view_y_ = 0, view_scale_ = 1;
     void to_game(int window_x, int window_y);
     void toggle_fullscreen();
+    // Cursors: built on demand for the current scale (screen points per game pixel, screen pixels
+    // per point), rebuilt when it changes.
+    std::vector<CursorImage> cursor_images_;
+    std::vector<SDL_Cursor*> cursors_;  // one per image, null until built
+    int cursor_ = kSystemCursor;
+    double cursor_scale_ = 0, cursor_density_ = 0;  // 0: no frame shown yet, scale unknown
+    void apply_cursor();
+    SDL_Cursor* make_cursor(const CursorImage& image) const;
     bool texture_565_ = false;
     // Couleur ARGB8888 de chaque pixel 16 bits du jeu (555 ou 565) : la texture se remplit en un
     // passage au format du rendu, sans la conversion générale de SDL à chaque image.

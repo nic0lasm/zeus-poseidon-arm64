@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <map>
 #include <memory>
@@ -26,6 +27,10 @@ struct State {
     std::map<int32_t, uint32_t> window_longs;
     bool shown = false;
     int cursor_count = 0;
+    uint32_t cursor = 0x00030001;             // handle given to the last SetCursor (first the arrow)
+    bool cursor_set = false;                  // SetCursor already called
+    std::map<uint32_t, uint32_t> cursors;     // resource number -> handle returned by LoadCursorA
+    bool log_cursors = std::getenv("ZEUS_CURSOR_LOG") != nullptr;  // diagnostics: traces the cursors
     uint32_t next_message_id = 0xC000;
     uint32_t last_idle_poll = 0;  // instant de la dernière interrogation d'une file vide
     std::optional<bool> knows_turns;  // vrai si le code de FUN_005168a0 est celui attendu
@@ -46,6 +51,78 @@ void write_message(Cpu& cpu, uint32_t address, const Message& m) {
     const uint32_t fields[7] = {m.hwnd, m.message, m.wparam, m.lparam, m.time,
                                 static_cast<uint32_t>(m.x), static_cast<uint32_t>(m.y)};
     for (int i = 0; i < 7; ++i) cpu.write_u32(address + 4 * static_cast<uint32_t>(i), fields[i]);
+}
+
+// Cursor handles: the system's arrow, and kGameCursor + the Desktop's image number for the
+// executable's own cursors.
+constexpr uint32_t kArrowCursor = 0x00030001, kGameCursor = 0x00031000, kGameCursorEnd = 0x00032000;
+
+// Data of the resource `type` / `id` (numbers; first language) of the executable loaded at `base`,
+// read from its copy in memory, headers included: address and size, or nothing.
+std::optional<std::pair<uint32_t, uint32_t>> find_resource(Cpu& cpu, uint32_t base, uint32_t type, uint32_t id) {
+    const uint32_t directory = base + cpu.read_u32(base + 0x3C) + 24 + 96 + 2 * 8;  // IMAGE_DIRECTORY_ENTRY_RESOURCE
+    const uint32_t rva = cpu.read_u32(directory);
+    if (!rva || !cpu.read_u32(directory + 4)) return std::nullopt;
+    const uint32_t root = base + rva;
+    // A table: a 16-byte header (number of named entries at +12, of numbered ones at +14), then
+    // 8 bytes per entry: name or number, then offset (high bit: a subtable).
+    const auto entry = [&cpu, root](uint32_t table, std::optional<uint32_t> key) -> std::optional<uint32_t> {
+        const uint32_t count = cpu.read_u16(table + 12) + cpu.read_u16(table + 14);
+        for (uint32_t i = 0; i < count; ++i) {
+            const uint32_t name = cpu.read_u32(table + 16 + 8 * i);
+            if (!key || name == *key) return root + (cpu.read_u32(table + 20 + 8 * i) & 0x7FFFFFFF);
+        }
+        return std::nullopt;
+    };
+    const auto names = entry(root, type);
+    const auto languages = names ? entry(*names, id) : std::nullopt;
+    const auto data = languages ? entry(*languages, std::nullopt) : std::nullopt;
+    if (!data) return std::nullopt;
+    return std::make_pair(base + cpu.read_u32(*data), cpu.read_u32(*data + 4));
+}
+
+// Cursor `id` of the executable (GROUP_CURSOR, then the CURSOR of its first entry), decoded. A
+// CURSOR is a hot spot (2 words) followed by a DIB of doubled height: colours (1, 4 or 8 bits,
+// palette), then a 1-bit AND mask, rows from bottom to top. A mask bit of 1 is transparent (or
+// inverts the screen when its colour is not zero: drawn black).
+std::optional<CursorImage> load_cursor_resource(Cpu& cpu, uint32_t base, uint32_t id) {
+    const auto group = find_resource(cpu, base, 12, id);  // RT_GROUP_CURSOR
+    if (!group || group->second < 6 + 14 || cpu.read_u16(group->first + 4) == 0) return std::nullopt;
+    const auto data = find_resource(cpu, base, 1, cpu.read_u16(group->first + 6 + 12));  // RT_CURSOR
+    if (!data || data->second < 4 + 40) return std::nullopt;
+    std::vector<uint8_t> bytes(data->second);
+    cpu.read(data->first, bytes.data(), bytes.size());
+    const auto u16 = [&bytes](size_t at) { return static_cast<uint32_t>(bytes[at] | bytes[at + 1] << 8); };
+    const auto u32 = [&](size_t at) { return u16(at) | u16(at + 2) << 16; };
+    CursorImage image;
+    image.hot_x = static_cast<int>(u16(0));
+    image.hot_y = static_cast<int>(u16(2));
+    const size_t header = u32(4);
+    image.width = static_cast<int>(u32(8));
+    image.height = static_cast<int>(u32(12)) / 2;
+    const uint32_t bits = u16(18), compression = u32(20), used = u32(36);
+    if ((bits != 1 && bits != 4 && bits != 8) || compression != 0 || image.width <= 0 || image.width > 256 ||
+        image.height <= 0 || image.height > 256)
+        return std::nullopt;
+    const size_t colors = used ? used : size_t{1} << bits;
+    const size_t palette = 4 + header, pixels = palette + 4 * colors;
+    const size_t stride = (static_cast<size_t>(image.width) * bits + 31) / 32 * 4, mask_stride = (static_cast<size_t>(image.width) + 31) / 32 * 4;
+    const size_t mask = pixels + stride * image.height;
+    if (mask + mask_stride * image.height > bytes.size()) return std::nullopt;
+    image.argb.resize(static_cast<size_t>(image.width) * image.height);
+    for (int y = 0; y < image.height; ++y) {
+        const size_t row = static_cast<size_t>(image.height - 1 - y);
+        for (int x = 0; x < image.width; ++x) {
+            const size_t bit = static_cast<size_t>(x) * bits;
+            const uint32_t index = (bytes[pixels + row * stride + bit / 8] >> (8 - bits - bit % 8)) & ((1u << bits) - 1);
+            const bool transparent = (bytes[mask + row * mask_stride + x / 8] >> (7 - x % 8)) & 1;
+            uint32_t& out = image.argb[static_cast<size_t>(y) * image.width + x];
+            if (transparent) out = index ? 0xFF000000u : 0;
+            else if (index < colors) out = 0xFF000000u | (u32(palette + 4 * index) & 0xFFFFFF);  // BGRx -> ARGB
+            else out = 0xFF000000u;
+        }
+    }
+    return image;
 }
 
 void write_rect(Cpu& cpu, uint32_t address, int left, int top, int right, int bottom) {
@@ -206,9 +283,35 @@ void install_user32(Process& p) {
         }
     });
     def("SystemParametersInfoA", 4, [] { return 1u; });
-    def("LoadCursorA", 2, [] { return 0x00030001u; });
+    // Cursors: the executable's own (the land-clearing shovel, the sword, the magnifier, the arrow)
+    // are shown at the scale of the picture; the system's cursors (IDC_…) give the arrow.
+    def("LoadCursorA", 2, [&p, &cpu, st] {
+        const uint32_t module = p.arg(0), name = p.arg(1);
+        if (module == 0 || name >= 0x10000) return kArrowCursor;
+        if (const auto known = st->cursors.find(name); known != st->cursors.end()) return known->second;
+        uint32_t handle = kArrowCursor;
+        if (auto image = load_cursor_resource(cpu, p.image().image_base, name)) {
+            const int index = p.desktop().add_cursor(std::move(*image));
+            handle = kGameCursor + static_cast<uint32_t>(index);
+            // The game's window class has no cursor: until its first SetCursor, Windows showed its
+            // own arrow, which the game's arrow (the first cursor it loads, resource 102) imitates.
+            // Rather than macOS's arrow, of another design, the host shows the game's from the start.
+            if (!st->cursor_set && index == 0) p.desktop().set_cursor(index);
+        }
+        st->cursors[name] = handle;
+        if (st->log_cursors) std::fprintf(stderr, "[hôte] cursor %u -> %#x\n", name, handle);
+        return handle;
+    });
     def("LoadIconA", 2, [] { return 0x00030002u; });
-    def("SetCursor", 1, [] { return 0x00030001u; });
+    def("SetCursor", 1, [&p, st] {
+        const uint32_t previous = st->cursor, handle = p.arg(0);
+        if (st->log_cursors && handle != previous) std::fprintf(stderr, "[hôte] SetCursor %#x\n", handle);
+        st->cursor = handle;
+        st->cursor_set = true;
+        p.desktop().set_cursor(handle >= kGameCursor && handle < kGameCursorEnd ? static_cast<int>(handle - kGameCursor)
+                                                                                : Desktop::kSystemCursor);
+        return previous;
+    });
     def("ShowCursor", 1, [&p, st] {
         st->cursor_count += p.arg(0) ? 1 : -1;
         return static_cast<uint32_t>(st->cursor_count);
