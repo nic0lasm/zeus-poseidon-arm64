@@ -5,6 +5,8 @@ pull request.
 
 ## Unreleased
 
+- **The game's own cursors.** The host answered every `LoadCursorA` and `SetCursor` with the system's arrow, so the game always showed macOS's arrow, where Windows shows the shovel of the land-clearing tool, the sword of the military tools, the magnifier and the game's own arrow. `LoadCursorA` now reads the executable's `GROUP_CURSOR` and `CURSOR` resources from its image in memory (102 arrow, 130 shovel, 136 sword, 166 magnifier: 32×32, one bit per pixel), and `SetCursor` shows them through SDL at the scale of the game's picture; with sdl2-compat (SDL2 on SDL3, as Homebrew installs it) a second, denser image keeps them sharp on a Retina screen. `ZEUS_CURSOR_LOG=1` traces the cursors loaded and set (`src/win32/user32.cpp`, `src/win32/desktop.cpp`).
+
 ## 1.7 — 2026-10-18
 
 - **Older Macs: macOS 11 and later.** The Mac archives took their minimum macOS from the Homebrew libraries they embedded, built for the GitHub Mac that built them: macOS 14 on Apple Silicon, 15 on Intel. `tools/build_mac_deps.py` now builds SDL 2.32.10, Unicorn 2.1.4 (x86 only) and innoextract 1.9 (with liblzma and the part of Boost it needs, linked statically) from their sources, checksums verified, with `MACOSX_DEPLOYMENT_TARGET=11.0`; the `release` workflow builds them (kept in its cache), FFmpeg and the program for macOS 11, makes any macOS API newer than the target a compile error, and `tools/publish.py release` refuses an application in which any binary asks for more than macOS 11.0. The application's `Info.plist` says 11.0. GitHub has no Mac older than macOS 14: anyone with a Mac on macOS 11, 12 or 13 can help by trying the archive and reporting on [#139](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/139).
