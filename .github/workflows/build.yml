@@ -22,7 +22,7 @@ jobs:
         run: ./build/zeus-run --selftest
 
   macos-arm64:
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v7
       - name: Dependencies
