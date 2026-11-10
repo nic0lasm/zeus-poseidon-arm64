@@ -259,16 +259,29 @@ for anyone building tools for the *Zeus* / *Poseidon* community:
 
 ## Community
 
-This is a project by and for the players of the game. Say how it runs on your Mac, ask questions
-or share ideas in the [Discussions](https://github.com/nic0lasm/zeus-poseidon-arm64/discussions);
-bugs go to the [issue tracker](https://github.com/nic0lasm/zeus-poseidon-arm64/issues).
+This is a project by and for the players of the game. Come and say hello in the
+[Discussions](https://github.com/nic0lasm/zeus-poseidon-arm64/discussions):
 
-The most useful help right now:
+- **[Works on my computer](https://github.com/nic0lasm/zeus-poseidon-arm64/discussions/categories/works-on-my-computer):** tell us which Mac or Linux
+  you play on. Every report helps the next player, and goes into the list of computers the game
+  is known to run on.
+- **[Q&A](https://github.com/nic0lasm/zeus-poseidon-arm64/discussions/categories/q-a):** installing, Steam, languages, saves. No question is too small.
+- **[Show your city](https://github.com/nic0lasm/zeus-poseidon-arm64/discussions/categories/show-your-city):** your Athens, your Atlantis, your
+  20,000-people polis.
+- **[Translations](https://github.com/nic0lasm/zeus-poseidon-arm64/discussions/categories/translations):** a pack from your own CDs, or a new language:
+  Ukrainian is already playable ([how it was made](tools/examples/lang/uk/README.md)).
+
+Bugs go to the [issue tracker](https://github.com/nic0lasm/zeus-poseidon-arm64/issues), so they can
+be followed until they are fixed. The most useful help right now:
 
 - **Play and report:** an adventure played through, on your Mac model.
 - **Another language edition?** Try a pack from your CDs and tell us ([#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24)).
+- **Puzzles for tool makers:** a few file formats of the game are still undocumented
+  ([#30](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/30), good first issues).
 - **Code:** see the [open issues](https://github.com/nic0lasm/zeus-poseidon-arm64/issues) and
   [CONTRIBUTING.md](CONTRIBUTING.md).
+
+If this brought back a game of your childhood, a ⭐ on the repository helps other players find it.
 
 ### Thank you
 
@@ -288,10 +301,16 @@ Reports and contributions from players make this project better. Thank you to:
   and the Steam edition found in CrossOver, Whisky and Wine bottles
   ([#153](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/153)). Each one came traced to
   the game's own code, checked against the ten reference scenarios and explained with before
-  and after pictures: a model of what a contribution can be.
+  and after pictures: a model of what a contribution can be. Then the game's fonts documented
+  ([#157](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/157)) and the tools to translate
+  it into a new language, another alphabet included, with a Ukrainian translation as the first
+  one ([#158](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/158)).
 - [**@MohammadBnei**](https://github.com/MohammadBnei), who found on a clean Mac that the
   application could not unpack the GOG installer, traced it to the missing innoextract and
   proposed the fix that shipped in 1.6 ([#134](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/134)).
+
+- [**@enkhamar17**](https://github.com/enkhamar17), who reported the menus out of place in wide
+  mode on a MacBook Air M5, with screenshots ([#159](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/159)).
 
 Your name can be next: every report, test or pull request counts.
 
