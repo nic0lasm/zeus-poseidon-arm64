@@ -264,13 +264,13 @@ for anyone building tools for the *Zeus* / *Poseidon* community:
 This is a project by and for the players of the game. Come and say hello in the
 [Discussions](https://github.com/nic0lasm/zeus-poseidon-arm64/discussions):
 
-- **[Works on my computer](https://github.com/nic0lasm/zeus-poseidon-arm64/discussions/categories/works-on-my-computer):** tell us which Mac or Linux
+- **[General](https://github.com/nic0lasm/zeus-poseidon-arm64/discussions/categories/general):** tell us which Mac or Linux
   you play on. Every report helps the next player, and goes into the list of computers the game
   is known to run on.
 - **[Q&A](https://github.com/nic0lasm/zeus-poseidon-arm64/discussions/categories/q-a):** installing, Steam, languages, saves. No question is too small.
-- **[Show your city](https://github.com/nic0lasm/zeus-poseidon-arm64/discussions/categories/show-your-city):** your Athens, your Atlantis, your
+- **[Show and tell](https://github.com/nic0lasm/zeus-poseidon-arm64/discussions/categories/show-and-tell):** your Athens, your Atlantis, your
   20,000-people polis.
-- **[Translations](https://github.com/nic0lasm/zeus-poseidon-arm64/discussions/categories/translations):** a pack from your own CDs, or a new language:
+- **[Translations](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24):** a pack from your own CDs, or a new language:
   Ukrainian is already playable ([how it was made](tools/examples/lang/uk/README.md)).
 
 Bugs go to the [issue tracker](https://github.com/nic0lasm/zeus-poseidon-arm64/issues), so they can

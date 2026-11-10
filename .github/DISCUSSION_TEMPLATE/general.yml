@@ -1,9 +1,8 @@
-title: "Works on "
 body:
   - type: markdown
     attributes:
       value: |
-        Thank you! Your report goes into the list of computers the game is known to run on.
+        Telling us which computer you play on? Fill in the fields below: your report goes into the list of computers the game is known to run on. Something else? Only the last field is needed.
         Something wrong? Please open an [issue](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/new/choose) instead.
   - type: input
     id: computer
@@ -11,16 +10,12 @@ body:
       label: Computer
       description: Mac model and chip, or PC and processor
       placeholder: MacBook Air M2, 2022
-    validations:
-      required: true
   - type: input
     id: system
     attributes:
       label: System
       description: macOS version, or Linux distribution and version
       placeholder: macOS 14.6, or Fedora 41 (arm64)
-    validations:
-      required: true
   - type: dropdown
     id: edition
     attributes:
@@ -29,8 +24,6 @@ body:
         - GOG
         - Steam
         - Original CDs
-    validations:
-      required: true
   - type: input
     id: version
     attributes:
@@ -44,5 +37,7 @@ body:
   - type: textarea
     id: notes
     attributes:
-      label: Anything worth knowing
-      description: How it ran, a setting you changed, a small glitch
+      label: Your message
+      description: How it ran, a setting you changed, or anything you want to say
+    validations:
+      required: true

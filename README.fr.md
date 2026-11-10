@@ -255,14 +255,14 @@ quiconque fabrique des outils pour la communauté *Zeus* / *Poséidon* :
 C'est un projet de joueurs, pour les joueurs. Venez dire bonjour dans les
 [Discussions](https://github.com/nic0lasm/zeus-poseidon-arm64/discussions) :
 
-- **[Works on my computer](https://github.com/nic0lasm/zeus-poseidon-arm64/discussions/categories/works-on-my-computer) :** dites-nous sur quel Mac ou
+- **[General](https://github.com/nic0lasm/zeus-poseidon-arm64/discussions/categories/general) :** dites-nous sur quel Mac ou
   quel Linux vous jouez. Chaque retour aide le joueur suivant et rejoint la liste des ordinateurs
   sur lesquels le jeu tourne.
 - **[Q&A](https://github.com/nic0lasm/zeus-poseidon-arm64/discussions/categories/q-a) :** installation, Steam, langues, sauvegardes. Aucune question n'est
   trop petite.
-- **[Show your city](https://github.com/nic0lasm/zeus-poseidon-arm64/discussions/categories/show-your-city) :** votre Athènes, votre Atlantide, votre
+- **[Show and tell](https://github.com/nic0lasm/zeus-poseidon-arm64/discussions/categories/show-and-tell) :** votre Athènes, votre Atlantide, votre
   cité de 20 000 habitants.
-- **[Translations](https://github.com/nic0lasm/zeus-poseidon-arm64/discussions/categories/translations) :** un pack depuis vos CD, ou une nouvelle langue :
+- **[Traductions](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24) :** un pack depuis vos CD, ou une nouvelle langue :
   l'ukrainien est déjà jouable ([comment il a été fait](tools/examples/lang/uk/README.md)).
 
 On peut y écrire en français. Les bugs vont dans les

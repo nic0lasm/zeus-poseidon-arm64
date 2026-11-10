@@ -1,11 +1,11 @@
 blank_issues_enabled: true
 contact_links:
   - name: It works on my computer
-    url: https://github.com/nic0lasm/zeus-poseidon-arm64/discussions/new?category=works-on-my-computer
+    url: https://github.com/nic0lasm/zeus-poseidon-arm64/discussions/new?category=general
     about: Tell us which Mac or Linux you play on. Every report helps the next player.
   - name: A question
     url: https://github.com/nic0lasm/zeus-poseidon-arm64/discussions/new?category=q-a
     about: Installing, Steam, languages, saves… Ask in the Discussions.
   - name: Show your city
-    url: https://github.com/nic0lasm/zeus-poseidon-arm64/discussions/new?category=show-your-city
+    url: https://github.com/nic0lasm/zeus-poseidon-arm64/discussions/new?category=show-and-tell
     about: A screenshot of your city, a victory, a disaster.
