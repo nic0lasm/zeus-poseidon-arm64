@@ -26,7 +26,7 @@ Silicon ou Intel) ou sous Linux : le jeu d'origine, sans Windows, sans Wine et s
 | | |
 |---|---|
 | **Ce que c'est** | Le vrai *Zeus* + *Poséidon* (Impressions Games, 2000) : le code d'origine du jeu, non modifié, exécuté sur un Mac. Même simulation, mêmes règles, mêmes sauvegardes. Pas une réécriture. |
-| **État** | Jouable du début à la fin. Dernière version : **[1.7](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest)** (18 octobre 2026). |
+| **État** | Jouable du début à la fin. Dernière version : **[1.7.1](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest)** (10 novembre 2026). |
 | **Fonctionne sur** | Mac à puce Apple Silicon (M1 ou plus récent) ou à processeur Intel, macOS 11 (Big Sur) ou plus récent ; Linux x86-64 et arm64. Voir [Télécharger](#télécharger). |
 | **Il vous faut** | Votre propre copie du jeu, édition GOG (ou Steam, [voir plus bas](#acheté-sur-steam-)). Ce dépôt ne contient aucun fichier du jeu ([Mentions légales](#mentions-légales)). |
 | **Fidèle** | Dix scénarios rejoués comparent chaque image et tout l'état de la partie, tour par tour, avec le jeu d'origine. |
@@ -150,14 +150,14 @@ est prouvé identique à l'original. Le projet est désormais entretenu plutôt 
 des joueurs passent d'abord, et un correctif sort en version 1.7.x
 ([plan complet](docs/roadmap.md#after-17-review-of-24-october-2026) en anglais).
 
-**Dans la prochaine version**, tout cela apporté par
+**Nouveau dans la 1.7.1**, tout cela apporté par
 [@northdakota](https://github.com/northdakota) : des mouvements plus fluides (une image à
 chaque tour de simulation), le défilement fluide de la ville, Z Q S D et les
 touches maintenues, les curseurs du jeu, le menu principal et la carte du monde centrés en mode
 large, et l'édition Steam trouvée seule dans les bouteilles CrossOver, Whisky ou Wine sur Mac
 ([#148](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/148) à
 [#155](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/155) ; détails dans le
-[journal des changements](CHANGELOG.md#unreleased), en anglais).
+[journal des changements](CHANGELOG.md#171--2026-11-10), en anglais).
 
 Ce qui aide le plus maintenant, c'est votre retour : sur un Mac sous macOS 11 à 13
 ([#139](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/139)), avec une autre langue
@@ -173,6 +173,7 @@ Julius l'a fait pour *Caesar III*) est en pause ; la carte du code, les fiches d
 
 | Version | Points forts |
 |---|---|
+| [**1.7.1**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.7.1) | plus fluide : une image à chaque tour de simulation, défilement fluide de la ville, Z Q S D et touches maintenues ; les curseurs du jeu ; menus et carte du monde centrés en mode large ([#159](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/159)) ; édition Steam trouvée dans les bouteilles CrossOver, Whisky et Wine (le tout par [@northdakota](https://github.com/northdakota)) |
 | [**1.7**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.7) | Mac plus anciens : les deux archives Mac fonctionnent dès macOS 11 (Big Sur), Mac Intel de 2013 compris ([#139](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/139)) |
 | [**1.6**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.6) | les applications Mac déballent de nouveau seules l'installateur GOG (innoextract embarqué, [#134](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/134), merci à [@MohammadBnei](https://github.com/MohammadBnei)) |
 | [**1.5**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.5) | édition Steam trouvée seule (bibliothèques Linux, Flatpak, Mac) ; `Zeus.exe` contrôlé au lancement, avec un avertissement pour une version inconnue |
