@@ -1,0 +1,48 @@
+title: "Works on "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you! Your report goes into the list of computers the game is known to run on.
+        Something wrong? Please open an [issue](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/new/choose) instead.
+  - type: input
+    id: computer
+    attributes:
+      label: Computer
+      description: Mac model and chip, or PC and processor
+      placeholder: MacBook Air M2, 2022
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: System
+      description: macOS version, or Linux distribution and version
+      placeholder: macOS 14.6, or Fedora 41 (arm64)
+    validations:
+      required: true
+  - type: dropdown
+    id: edition
+    attributes:
+      label: Edition of the game
+      options:
+        - GOG
+        - Steam
+        - Original CDs
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version of the application
+      placeholder: "1.7.1"
+  - type: textarea
+    id: played
+    attributes:
+      label: What you played
+      description: Tutorials, an adventure, Poseidon, the editor… and in which language
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything worth knowing
+      description: How it ran, a setting you changed, a small glitch
