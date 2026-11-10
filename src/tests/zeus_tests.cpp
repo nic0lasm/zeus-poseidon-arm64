@@ -184,6 +184,23 @@ void test_text() {
             std::printf("  octet %#x\n", b);
         }
     }
+    // Cyrillic pack (codage.txt = 1251): typed text and file names in Windows-1251.
+    CHECK(!set_code_page(866) && code_page() == 1252);
+    CHECK(set_code_page(1251) && code_page() == 1251);
+    CHECK(from_utf8("\xD0\x9F\xD0\xB5\xD1\x82\xD1\x80\xD0\xBE") == "\xCF\xE5\xF2\xF0\xEE");  // Петро
+    CHECK(from_utf8("\xD2\x90\xD2\x91\xD0\x84\xD1\x94\xD0\x86\xD1\x96\xD0\x87\xD1\x97") ==
+          "\xA5\xB4\xAA\xBA\xB2\xB3\xAF\xBF");                                             // ҐґЄєІіЇї
+    CHECK(to_utf8("\xDF") == "\xD0\xAF");                                                   // Я
+    CHECK(from_utf8("\xC3\xA9") == "?");                                                    // é: not in 1251
+    for (int b = 0x80; b < 256; ++b) {
+        if (b == 0x98) continue;  // the only unassigned byte of Windows-1251
+        const std::string one(1, static_cast<char>(b));
+        if (from_utf8(to_utf8(one)) != one) {
+            check(false, "round trip Windows-1251", __LINE__);
+            std::printf("  byte %#x\n", b);
+        }
+    }
+    set_code_page(1252);
 }
 
 // --- Vfs : recherche insensible à la casse ------------------------------------------------------

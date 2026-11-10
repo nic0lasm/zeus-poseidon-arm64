@@ -122,6 +122,10 @@ private:
 // Chaque module déclare les fonctions d'une bibliothèque Windows.
 // Adapte l'affichage du texte à un pack de langue ; à appeler après le chargement de l'exécutable.
 void apply_language_pack(Process& process, const std::filesystem::path& pack);
+// A pack whose fonts set each glyph's lift themselves (remontee.txt, language.cpp): true once the
+// pack is applied; glyph_anchor_lift then gives the lift of a character.
+bool glyph_lift_from_anchor();
+int32_t glyph_anchor_lift(Cpu& cpu, uint32_t image, uint32_t character);
 
 // Remplace le mode 1024x768 du jeu par un mode large ; à appeler après le chargement. La taille
 // est arrondie à ce que le jeu sait afficher ; renvoie faux si rien n'a été modifié.

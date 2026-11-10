@@ -365,6 +365,11 @@ constexpr uint32_t kPolishException = 0x00508C7F;       // dans FUN_00508b50 : e
 constexpr uint32_t kPanelGlyph = 0x004F59B0;            // FUN_004f59b0 : glyphe d'un texte de panneau
 constexpr uint32_t kPanelSubtract = 0x004F5A33;         // dans FUN_004f59b0 : « SUB ECX,0xB »
 constexpr uint32_t kPanelPolishException = 0x004F5ACF;  // dans FUN_004f59b0 : exceptions polonaises
+// The glyph's lift, just computed (ECX), right before the dispatcher is called: "PUSH 0 ; PUSH 0"
+// in FUN_00508b50 (image in EBP, character − 0x20 at [ESP+0x1C]) and "MOV EAX,[ESP+0x24]" in
+// FUN_004f59b0 (image in EDI, character − 0x20 in BL).
+constexpr uint32_t kGlyphLift = 0x00508C84;
+constexpr uint32_t kPanelGlyphLift = 0x004F5AD4;
 
 // --- Code : écran large (widescreen.cpp), valeurs immédiates du mode 1024x768 -----------------
 
