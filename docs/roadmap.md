@@ -50,8 +50,9 @@ The first outside contributions arrived, and the first player report since #134:
   the Steam edition found in Wine bottles. The same contributor sent the first report from a real Steam
   installation ([#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128)) and the
   description of the fonts ([#157](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/157),
-  part of [#30](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/30)); a guide to packs in
-  another alphabet is under review ([#158](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/158),
+  part of [#30](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/30)) and the tools to
+  translate the game into a new language, another alphabet included, with a Ukrainian example
+  ([#158](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/158),
   [#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24)).
 - **A player report, [#159](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/159)**: in a
   wide mode, the menus' backgrounds are shifted and cut under their buttons. Already fixed on

@@ -148,9 +148,10 @@ from players come first, and a fix ships as a 1.7.x release
 [@northdakota](https://github.com/northdakota): smoother motion (a frame for every simulation
 tick), smooth scrolling of the city, W A S D and steady
 held keys, the game's own cursors, the main menu and the world map centred in wide modes, and the
-Steam edition found by itself in CrossOver, Whisky or Wine bottles on a Mac
+Steam edition found by itself in CrossOver, Whisky or Wine bottles on a Mac, and the tools to
+translate the game into a new language, another alphabet included
 ([#148](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/148) to
-[#155](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/155); details in the
+[#158](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/158); details in the
 [changelog](CHANGELOG.md#171--2026-11-10)).
 
 What helps most now is a word from you: from a Mac on macOS 11 to 13
@@ -167,7 +168,7 @@ the bench stay ready for it. No dates are promised.
 
 | Version | Highlights |
 |---|---|
-| [**1.7.1**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.7.1) | smoother: a frame for every simulation tick, smooth scrolling of the city, W A S D and steady held keys; the game's own cursors; menus and world map centred in wide modes ([#159](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/159)); Steam edition found in CrossOver, Whisky and Wine bottles (all by [@northdakota](https://github.com/northdakota)) |
+| [**1.7.1**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.7.1) | smoother: a frame for every simulation tick, smooth scrolling of the city, W A S D and steady held keys; the game's own cursors; menus and world map centred in wide modes ([#159](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/159)); Steam edition found in CrossOver, Whisky and Wine bottles; tools to translate into a new language, another alphabet included (all by [@northdakota](https://github.com/northdakota)) |
 | [**1.7**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.7) | older Macs: both Mac archives run from macOS 11 (Big Sur), Intel Macs from 2013 included ([#139](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/139)) |
 | [**1.6**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.6) | Mac applications unpack the GOG installer by themselves again (innoextract bundled, [#134](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/134), thanks to [@MohammadBnei](https://github.com/MohammadBnei)) |
 | [**1.5**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.5) | Steam edition found by itself (Steam libraries on Linux, Flatpak and Mac); `Zeus.exe` checked at launch, with a warning for an unknown build |

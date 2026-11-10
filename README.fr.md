@@ -154,9 +154,10 @@ des joueurs passent d'abord, et un correctif sort en version 1.7.x
 [@northdakota](https://github.com/northdakota) : des mouvements plus fluides (une image à
 chaque tour de simulation), le défilement fluide de la ville, Z Q S D et les
 touches maintenues, les curseurs du jeu, le menu principal et la carte du monde centrés en mode
-large, et l'édition Steam trouvée seule dans les bouteilles CrossOver, Whisky ou Wine sur Mac
+large, et l'édition Steam trouvée seule dans les bouteilles CrossOver, Whisky ou Wine sur Mac, et les
+outils pour traduire le jeu dans une nouvelle langue, autre alphabet compris
 ([#148](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/148) à
-[#155](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/155) ; détails dans le
+[#158](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/158) ; détails dans le
 [journal des changements](CHANGELOG.md#171--2026-11-10), en anglais).
 
 Ce qui aide le plus maintenant, c'est votre retour : sur un Mac sous macOS 11 à 13
@@ -173,7 +174,7 @@ Julius l'a fait pour *Caesar III*) est en pause ; la carte du code, les fiches d
 
 | Version | Points forts |
 |---|---|
-| [**1.7.1**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.7.1) | plus fluide : une image à chaque tour de simulation, défilement fluide de la ville, Z Q S D et touches maintenues ; les curseurs du jeu ; menus et carte du monde centrés en mode large ([#159](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/159)) ; édition Steam trouvée dans les bouteilles CrossOver, Whisky et Wine (le tout par [@northdakota](https://github.com/northdakota)) |
+| [**1.7.1**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.7.1) | plus fluide : une image à chaque tour de simulation, défilement fluide de la ville, Z Q S D et touches maintenues ; les curseurs du jeu ; menus et carte du monde centrés en mode large ([#159](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/159)) ; édition Steam trouvée dans les bouteilles CrossOver, Whisky et Wine ; outils pour traduire dans une nouvelle langue, autre alphabet compris (le tout par [@northdakota](https://github.com/northdakota)) |
 | [**1.7**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.7) | Mac plus anciens : les deux archives Mac fonctionnent dès macOS 11 (Big Sur), Mac Intel de 2013 compris ([#139](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/139)) |
 | [**1.6**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.6) | les applications Mac déballent de nouveau seules l'installateur GOG (innoextract embarqué, [#134](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/134), merci à [@MohammadBnei](https://github.com/MohammadBnei)) |
 | [**1.5**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.5) | édition Steam trouvée seule (bibliothèques Linux, Flatpak, Mac) ; `Zeus.exe` contrôlé au lancement, avec un avertissement pour une version inconnue |

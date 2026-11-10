@@ -21,11 +21,18 @@
 //     ECX, et applique les exceptions en 0x004F5ACF.
 // Valeurs de l'exécutable français 2.1 : FUN_005760a9 pour la première routine ; FUN_0055bf09
 // pour la seconde, qui retranche 11 pour la police de rang 13 et 16 pour les autres.
+//
+// A pack may also bring its own fonts (another alphabet drawn in place of the accented letters)
+// and set each glyph's lift itself: with remontee.txt containing "ancre", the lift of a
+// character from 0x80 to 0xFF is the anchor y of its image (field +0x24, zero in the original
+// fonts) rather than the image's height minus the line height. Letters with a descender (Д, Ц,
+// Щ) can then go below the line, and a mark above a letter keeps the same place in both routines.
 
 #include <algorithm>
 #include <cstdio>
 #include <fstream>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "win32/game_gog.h"
@@ -48,7 +55,23 @@ int font_rank(Cpu& c, uint32_t font) {
     return -1;
 }
 
+bool lift_from_anchor = false;
+
+// Anchor y (+0x24) of image `id` of bank 0 (the fonts); 0 when out of range.
+int32_t anchor_y(Cpu& c, uint32_t id) {
+    if (id == 0 || id >= 16384) return 0;
+    const uint32_t entries = c.read_u32(kSpriteBanks + 0x1000);
+    if (static_cast<int32_t>(id) > static_cast<int32_t>(c.read_u32(kSpriteBanks + 0xDC34))) return 0;
+    return static_cast<int16_t>(c.read_u16(entries + id * 0x48 + 0x24));
+}
+
 }  // namespace
+
+bool glyph_lift_from_anchor() { return lift_from_anchor; }
+
+int32_t glyph_anchor_lift(Cpu& c, uint32_t image, uint32_t character) {
+    return character >= 0x80 ? anchor_y(c, image) : 0;
+}
 
 void apply_language_pack(Process& p, const std::filesystem::path& pack) {
     std::ifstream in(pack / "table-caracteres.bin", std::ios::binary);
@@ -83,6 +106,22 @@ void apply_language_pack(Process& p, const std::filesystem::path& pack) {
     cpu.add_code_hook(kPanelSubtract, [panel_font](Cpu& c) {
         if (font_rank(c, *panel_font) != 13) c.set_reg(Cpu::Reg::ECX, c.reg(Cpu::Reg::ECX) - 5);
     });
+    // Lift read from the image (the pack's fonts): it replaces the one both routines have just
+    // worked out in ECX.
+    std::ifstream lift(pack / "remontee.txt");
+    std::string mode;
+    if ((lift >> mode) && mode == "ancre" && matches(cpu, kGlyphLift, {0x6A, 0x00, 0x6A, 0x00}) &&
+        matches(cpu, kPanelGlyphLift, {0x8B, 0x44, 0x24, 0x24})) {
+        lift_from_anchor = true;
+        cpu.add_code_hook(kGlyphLift, [](Cpu& c) {
+            const uint32_t character = c.read_u8(c.reg(Cpu::Reg::ESP) + 0x1C) + 0x20u;
+            c.set_reg(Cpu::Reg::ECX, static_cast<uint32_t>(glyph_anchor_lift(c, c.reg(Cpu::Reg::EBP), character)));
+        });
+        cpu.add_code_hook(kPanelGlyphLift, [](Cpu& c) {
+            const uint32_t character = (c.reg(Cpu::Reg::EBX) & 0xFF) + 0x20u;
+            c.set_reg(Cpu::Reg::ECX, static_cast<uint32_t>(glyph_anchor_lift(c, c.reg(Cpu::Reg::EDI), character)));
+        });
+    }
 }
 
 }  // namespace zeus::win32
