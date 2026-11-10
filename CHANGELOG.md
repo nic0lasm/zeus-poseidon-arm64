@@ -5,6 +5,8 @@ pull request.
 
 ## Unreleased
 
+## 1.7.2 — 2026-11-10
+
 - **Nothing left around the menus in wide mode.** A menu's JPEG backdrop is 1024×768: in that mode it covers the whole screen, and with it whatever the previous screen left there. Centred in a wide mode, it leaves a band around it (150 pixels on each side and 67 at the bottom in 1324×903) that nothing draws, so the previous screen stayed in it: the city, its control panel and the open File menu around the ruler's menu after *File → New adventure*; the world map's frame and the editor's control panel around the adventure editor's dialog after editing the world map ([#159](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/159), its third screenshot). When the backdrop's position is chosen (`kBackdropPlaced`, `0x00505228`), the host now clears that band of the game's frame buffer to black, as the backdrop would have covered it; what the game draws after the backdrop (the editor's top bar, the buttons, the dialogs) is unchanged.
 
 ## 1.7.1 — 2026-11-10

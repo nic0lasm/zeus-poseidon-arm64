@@ -66,6 +66,11 @@
     <content_attribute id="violence-fantasy">mild</content_attribute>
   </content_rating>
   <releases>
+    <release version="1.7.2" date="2026-11-10">
+      <description>
+        <p>Wide modes: nothing left of the previous screen around the menus.</p>
+      </description>
+    </release>
     <release version="1.7.1" date="2026-11-10">
       <description>
         <p>Smoother motion and scrolling, the game's own cursors, menus and world map centred in wide modes, Steam edition found in Wine bottles.</p>
