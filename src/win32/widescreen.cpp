@@ -234,8 +234,26 @@ bool apply_wide_mode(Process& p, int& width, int& height) {
     // Fond JPEG de 1024 x 768 en mode 3 : centré dans l'écran large, au lieu de (0, 0).
     cpu.add_code_hook(kBackdropPlaced, [width, height](Cpu& c) {
         if (c.read_u32(kDisplayMode) != 3 || c.reg(Cpu::Reg::ESI) != 1024 || c.reg(Cpu::Reg::EBX) != 768) return;
-        c.write_u32(c.reg(Cpu::Reg::ESP) + 0xA8, static_cast<uint32_t>((width - 1024) / 2));
-        c.set_reg(Cpu::Reg::EBP, static_cast<uint32_t>((height - 768) / 2));
+        const int x0 = (width - 1024) / 2, y0 = (height - 768) / 2;
+        c.write_u32(c.reg(Cpu::Reg::ESP) + 0xA8, static_cast<uint32_t>(x0));
+        c.set_reg(Cpu::Reg::EBP, static_cast<uint32_t>(y0));
+        // In 1024 x 768 the backdrop covers the whole screen, and with it whatever the previous
+        // screen left there. Around it in a wide mode, the previous screen stayed: the world map's
+        // frame and the editor's control panel around the adventure editor's dialog, say (#159).
+        // The host clears that band to black, as the backdrop would have covered it.
+        const uint32_t buffer = c.read_u32(kFrameBuffer), pitch = static_cast<uint32_t>(width) * 2;
+        if (!buffer || c.read_u32(kScreenWidth) != static_cast<uint32_t>(width) ||
+            c.read_u32(kScreenHeight) != static_cast<uint32_t>(height))
+            return;
+        for (int y = 0; y < height; ++y) {
+            uint16_t* row = reinterpret_cast<uint16_t*>(c.host(buffer + static_cast<uint32_t>(y) * pitch));
+            if (y < y0 || y >= y0 + 768) {
+                std::fill(row, row + width, uint16_t{0});
+            } else {
+                std::fill(row, row + x0, uint16_t{0});
+                std::fill(row + x0 + 1024, row + width, uint16_t{0});
+            }
+        }
     });
     cpu.add_code_hook(kTopBarDrawn, [width](Cpu& c) {
         // Le tampon d'affichage du jeu fait la taille de l'écran, deux octets par pixel.
