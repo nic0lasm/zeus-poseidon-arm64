@@ -4,7 +4,7 @@
 original game, unmodified in behaviour, on the machines people actually own, and proven identical
 to the original.**
 
-The game is playable today (version 1.7.1: Apple Silicon and Intel Macs from macOS 11, Linux x86-64 and arm64, GOG and Steam editions). What follows replaces the original
+The game is playable today (version 1.7.2: Apple Silicon and Intel Macs from macOS 11, Linux x86-64 and arm64, GOG and Steam editions). What follows replaces the original
 code **piece by piece with an engine written by hand and documented**. The emulated original stays
 the reference and the judge: every rewritten part must prove, turn by turn, that it leaves the
 game in exactly the same state. No code is translated mechanically. The precedent is
@@ -24,7 +24,7 @@ flowchart LR
 
 | Step | Theme | State | Follow it |
 |---|---|---|---|
-| **1.x — Playable** | The game as it is: lighter on the machine, every language edition, a simpler first launch; Intel Macs and Linux with the same host | 1.7.1 (every Mac from macOS 11, Linux, GOG and Steam editions); now maintained: reports first, and telling players ([after 1.7](#after-17-review-of-24-october-2026)) | [#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24) · [#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128) |
+| **1.x — Playable** | The game as it is: lighter on the machine, every language edition, a simpler first launch; Intel Macs and Linux with the same host | 1.7.2 (every Mac from macOS 11, Linux, GOG and Steam editions); now maintained: reports first, and telling players ([after 1.7](#after-17-review-of-24-october-2026)) | [#24](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/24) · [#128](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/128) |
 | **Phase A — Instruments** | Equivalence harness on the full game state; code map; two public counters (functions understood out of 4,872, share of the computation done natively) | done; counters kept current | [#26](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/26) · [#69](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/69) |
 | **Phase B — Data** | Savegame `.sav` described in full, then maps and adventures, images, texts, tables; each format read then written back byte for byte | done for what the engine reads | [#70](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/70) · [#30](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/30) |
 | **Phase C — Native engine** | Rendering, interface and texts, terrain, movement and walkers, housing and buildings, economy, gods, heroes and monsters, army, events and adventures, savegame | rendering largely native, simulation and interface in part; beyond that, only lots with a measured gain in real play | [#71](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/71) |
@@ -59,7 +59,7 @@ The first outside contributions arrived, and the first player report since #134:
   `main` by #148, not yet released.
 
 That is the reason a player gives that step 4 waits for: **1.7.1** ships these changes, checked
-as for 1.3. The steps below are otherwise unchanged; steps 1 to 3 still need the maintainer.
+as for 1.3, and **1.7.2** the rest of the fix of #159 ([#165](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/165)). The steps below are otherwise unchanged; steps 1 to 3 still need the maintainer.
 
 ### What the review shows
 

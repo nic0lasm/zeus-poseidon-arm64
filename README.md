@@ -26,7 +26,7 @@ or on Linux: the original game, with no Windows, no Wine and no virtual machine.
 | | |
 |---|---|
 | **What it is** | The real *Zeus* + *Poseidon* (Impressions Games, 2000): the original, unmodified game code, run on a Mac. Same simulation, same rules, same save files. Not a remake. |
-| **Status** | Playable from start to finish. Latest version: **[1.7.1](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest)** (10 November 2026). |
+| **Status** | Playable from start to finish. Latest version: **[1.7.2](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/latest)** (10 November 2026). |
 | **Runs on** | Mac with Apple Silicon (M1 or later) or an Intel processor, macOS 11 (Big Sur) or later; Linux x86-64 and arm64. See [Download](#download). |
 | **You need** | Your own copy of the game, GOG edition (or Steam, [see below](#bought-it-on-steam)). This repository contains no game files ([Legal](#legal)). |
 | **Faithful** | Ten replayable scenarios compare every frame and the whole game state, tick by tick, with the original game. |
@@ -168,6 +168,7 @@ the bench stay ready for it. No dates are promised.
 
 | Version | Highlights |
 |---|---|
+| [**1.7.2**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.7.2) | wide modes: nothing left of the previous screen around the menus ([#159](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/159), [#165](https://github.com/nic0lasm/zeus-poseidon-arm64/pull/165) by [@northdakota](https://github.com/northdakota)) |
 | [**1.7.1**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.7.1) | smoother: a frame for every simulation tick, smooth scrolling of the city, W A S D and steady held keys; the game's own cursors; menus and world map centred in wide modes ([#159](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/159)); Steam edition found in CrossOver, Whisky and Wine bottles; tools to translate into a new language, another alphabet included (all by [@northdakota](https://github.com/northdakota)) |
 | [**1.7**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.7) | older Macs: both Mac archives run from macOS 11 (Big Sur), Intel Macs from 2013 included ([#139](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/139)) |
 | [**1.6**](https://github.com/nic0lasm/zeus-poseidon-arm64/releases/tag/v1.6) | Mac applications unpack the GOG installer by themselves again (innoextract bundled, [#134](https://github.com/nic0lasm/zeus-poseidon-arm64/issues/134), thanks to [@MohammadBnei](https://github.com/MohammadBnei)) |
