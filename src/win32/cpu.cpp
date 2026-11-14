@@ -542,7 +542,18 @@ void Cpu::on_thunk(uc_struct* uc, uint64_t address, uint32_t, void* user) {
 }
 
 void Cpu::run(uint32_t start, uint32_t until) {
-    if (!paging_) enable_paging();
+    if (!paging_) {
+        // Unicorn starts with an x87 control word of 0 (every floating-point exception unmasked);
+        // a Windows thread starts with 0x027F (all masked, 53-bit precision). The game's C library
+        // (Visual C++ 6) only changes the precision, so with 0 a maths function given an invalid
+        // argument goes through _except1 and _raise_exc (0x005D245F) to
+        // RaiseException(0xC0000090), which the host does not provide, instead of returning NaN.
+        // Rounding and precision are the same once the C library has set its own. (SSE stays off:
+        // CR4.OSFXSR is clear, so MXCSR does not matter.)
+        const uint16_t fpcw = 0x027F;
+        check(uc_reg_write(uc_, UC_X86_REG_FPCW, &fpcw), "mot de contrôle x87");
+        enable_paging();
+    }
     uint32_t pc = start;
     while (pc != until) {
         redirect_ = false;

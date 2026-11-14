@@ -328,6 +328,19 @@ void test_code_jump() {
     CHECK(throws([&] { cpu.add_code_jump(kCode + 8, 5, [](Cpu&) { return 0u; }); }));
 }
 
+// --- x87 control word at the first run: Windows' value ----------------------------------------
+
+void test_fpu_defaults() {
+    Cpu cpu;
+    constexpr uint32_t kCode = 0x00400000, kData = 0x00500000;
+    cpu.map(kCode, 0x1000, true);
+    cpu.map(kData, 0x1000);
+    const uint8_t code[] = {0xD9, 0x3D, 0x00, 0x00, 0x50, 0x00};  // fnstcw [0x500000]
+    cpu.write(kCode, code, sizeof code);
+    cpu.run(kCode, kCode + sizeof code);
+    CHECK((cpu.read_u32(kData) & 0xFFFF) == 0x027F);  // all exceptions masked, 53-bit precision
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -339,6 +352,7 @@ int main(int argc, char** argv) {
         {"Vfs", [&] { test_vfs(dir / "vfs"); }},
         {"rognage des sprites", test_clip},
         {"aiguillage de code", test_code_jump},
+        {"x87 control word", test_fpu_defaults},
     };
     for (const auto& [name, test] : groups) {
         const int before = failures;
