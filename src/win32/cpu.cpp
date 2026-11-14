@@ -25,6 +25,7 @@ constexpr uint32_t kThunkStride = 4;
 constexpr uint32_t kTrampolineBase = kThunkBase + kThunkSize, kTrampolineSize = 0x1000;
 constexpr uint32_t kPage = 0x1000;
 constexpr size_t kAddressSpace = size_t{1} << 32;
+[[maybe_unused]] constexpr uint32_t kTranslationBuffer = 128u << 20;  // Unicorn's buffer of translated code (see Cpu())
 
 void check(uc_err err, const char* what) {
     if (err != UC_ERR_OK) throw std::runtime_error(std::string(what) + " : " + uc_strerror(err));
@@ -53,6 +54,17 @@ CpuContext::~CpuContext() {
 
 Cpu::Cpu() {
     check(uc_open(UC_ARCH_X86, UC_MODE_32, &uc_), "ouverture du processeur émulé");
+    // The translated code goes into one buffer that Unicorn maps at its first use, 1 GB by
+    // default, wherever the kernel finds room (mmap without an address). On macOS a whole
+    // gigabyte often does not fit next to the libraries and lands at 0x400000000, 12 GB from
+    // Unicorn's own code, beyond the reach of a pc-relative address: the `adventure` scenario
+    // then took 47 G cycles instead of 41 G for the same 200 G instructions (5 launches out of
+    // 10, 11.5 s of CPU instead of 9.9 s). 128 MB fits next to the libraries (10 launches out
+    // of 10); the game translates a few megabytes, and a full buffer is emptied and filled again.
+    // The control exists from Unicorn 2.1; 2.0 (Ubuntu 24.04's package) keeps its default.
+#ifdef uc_ctl_set_tcg_buffer_size
+    check(uc_ctl_set_tcg_buffer_size(uc_, kTranslationBuffer), "taille du tampon de code traduit");
+#endif
     // Modèle de processeur 32 bits qui connaît les pages non exécutables (voir enable_paging).
     check(uc_ctl_set_cpu_model(uc_, UC_CPU_X86_N270), "modèle de processeur");
     // Les 4 Go d'adresses du programme, réservés d'un bloc (les pages ne sont réellement
