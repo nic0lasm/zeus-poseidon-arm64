@@ -322,7 +322,9 @@ void install_user32(Process& p) {
         return 1u;
     });
     def("GetAsyncKeyState", 1, [&p] {
-        return p.desktop().key_down(static_cast<int>(p.arg(0))) ? 0x8000u : 0u;
+        // The game rotates a footprint when GetAsyncKeyState('R') is exactly 0x8001 (pressed since
+        // its last look and still down): 0x0001 matters.
+        return static_cast<uint32_t>(p.desktop().async_key_state(static_cast<int>(p.arg(0))));
     });
     def("RegisterWindowMessageA", 1, [st] { return st->next_message_id++; });
 
