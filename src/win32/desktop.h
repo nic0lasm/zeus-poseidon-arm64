@@ -95,6 +95,9 @@ public:
     uint32_t wndproc = 0;
     int mouse_x = 0, mouse_y = 0;
     bool key_down(int virtual_key) const;
+    // GetAsyncKeyState: 0x8000 while the key is down, plus 0x0001 if it went down since the
+    // previous call for that key (which this call clears), as Windows does.
+    uint16_t async_key_state(int virtual_key);
     bool should_stop() const { return stop_; }
     // True on the city screens: W A S D act there as the arrows, and the host repeats held
     // scrolling keys itself. Without an answer, neither happens.
@@ -135,6 +138,7 @@ private:
     uint32_t mouse_buttons_ = 0;
     std::vector<uint8_t> last_frame_;  // RGB24 de la dernière image, pour la capture
     std::vector<bool> keys_;
+    std::vector<bool> pressed_since_poll_ = std::vector<bool>(256);  // for async_key_state()
     bool wasd_arrow_[4] = {};  // W A S D: arrow chosen when the key goes down, kept until it is released
     // Arrows (and W A S D) held on the city screens: the game takes one scrolling step per
     // WM_KEYDOWN, and the system's repeat starts only after a long delay (a step, a pause, then the
@@ -146,6 +150,13 @@ private:
         uint32_t next = 0;  // time of the next repeated WM_KEYDOWN
     };
     HeldScroll held_scroll_[4];  // left, up, right and down arrows (0x25 to 0x28)
+    // R rotates a building's footprint, but the game looks at R (GetAsyncKeyState, 0x8001: pressed
+    // since its last look and still down) only when the tile under the pointer changes. On Windows
+    // a hand on a mouse moves it a little anyway; on a Mac the pointer stays still. When R goes down
+    // on a city screen, the host moves the game's pointer one tile aside and back.
+    int rotate_nudge_ = 0;          // 0: none, 1: go aside, 2: come back
+    uint32_t rotate_nudge_at_ = 0;  // time of the next step
+    void start_rotate_nudge(uint32_t now);
     uint64_t start_ticks_ = 0;
     uint32_t first_now_ = 0;
     bool has_first_now_ = false;

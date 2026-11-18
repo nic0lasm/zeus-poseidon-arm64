@@ -492,6 +492,20 @@ void Desktop::save_screenshot_to(const std::string& path) {
     }
 }
 
+void Desktop::start_rotate_nudge(uint32_t now) {
+    if (!(city_screen && city_screen())) return;
+    rotate_nudge_ = 1;
+    rotate_nudge_at_ = now;
+}
+
+uint16_t Desktop::async_key_state(int virtual_key) {
+    if (virtual_key < 0 || virtual_key >= 256) return 0;
+    const size_t k = static_cast<size_t>(virtual_key);
+    const uint16_t state = static_cast<uint16_t>((key_down(virtual_key) ? 0x8000 : 0) | (pressed_since_poll_[k] ? 1 : 0));
+    pressed_since_poll_[k] = false;
+    return state;
+}
+
 bool Desktop::key_down(int virtual_key) const {
     if (virtual_key == 1) return mouse_buttons_ & MK_LBUTTON;
     if (virtual_key == 2) return mouse_buttons_ & MK_RBUTTON;
@@ -560,7 +574,11 @@ bool Desktop::pump(uint32_t now) {
             case Kind::Wheel: wheel(s.key); break;
             case Kind::Blur: tell_active(false, now); break;
             case Kind::Focus: tell_active(true, now); break;
-            case Kind::KeyDown: if (vk < 256) keys_[vk] = true; post(WM_KEYDOWN, vk, 1); break;
+            case Kind::KeyDown:
+                if (vk < 256) keys_[vk] = pressed_since_poll_[vk] = true;
+                post(WM_KEYDOWN, vk, 1);
+                if (vk == 'R') start_rotate_nudge(now);
+                break;
             case Kind::KeyUp: if (vk < 256) keys_[vk] = false; post(WM_KEYUP, vk, 0xC0000001u); break;
             case Kind::Char: post(WM_CHAR, vk, 1); break;
             case Kind::Shot: save_screenshot_to(s.path); break;
@@ -631,6 +649,16 @@ bool Desktop::pump(uint32_t now) {
                     break;
                 }
                 int vk = virtual_key(e.key.keysym.sym);
+                // With a layout that is not Latin (Ukrainian, Russian, Greek…), Windows still gives
+                // the letter and digit keys the virtual key of their US position (VK_R for the key
+                // that types « к »); only WM_CHAR carries the layout's character. SDL gives the
+                // layout's own character, which virtual_key() does not know: take the position.
+                if (!vk) {
+                    const SDL_Scancode position = e.key.keysym.scancode;
+                    if (position >= SDL_SCANCODE_A && position <= SDL_SCANCODE_Z) vk = 'A' + (position - SDL_SCANCODE_A);
+                    else if (position >= SDL_SCANCODE_1 && position <= SDL_SCANCODE_9) vk = '1' + (position - SDL_SCANCODE_1);
+                    else if (position == SDL_SCANCODE_0) vk = '0';
+                }
                 const bool down = e.type == SDL_KEYDOWN;
                 // W A S D (by key position, whatever the keyboard layout): the arrows on the city
                 // screens. The choice is made when the key goes down and kept until it is released,
@@ -655,6 +683,10 @@ bool Desktop::pump(uint32_t now) {
                         held.next = now + kScrollFirstRepeatMs;
                     }
                     if (!down) held.on = false;
+                }
+                if (down && !keys_[static_cast<size_t>(vk)]) {
+                    pressed_since_poll_[static_cast<size_t>(vk)] = true;
+                    if (vk == 'R') start_rotate_nudge(now);
                 }
                 keys_[static_cast<size_t>(vk)] = down;
                 post(down ? WM_KEYDOWN : WM_KEYUP, static_cast<uint32_t>(vk), down ? 1u : 0xC0000001u);
@@ -689,6 +721,16 @@ bool Desktop::pump(uint32_t now) {
         }
         post(WM_KEYDOWN, static_cast<uint32_t>(0x25 + i), 0x40000001u);  // bit 30: the key was already down
         held.next = now + kScrollRepeatMs;
+    }
+    // R pressed on a city screen (start_rotate_nudge): the pointer one tile aside (60 pixels, away
+    // from the control panel), then back two frames later.
+    if (rotate_nudge_ && static_cast<int32_t>(now - rotate_nudge_at_) >= 0) {
+        const int aside = mouse_x + 60 < width_ - 184 ? mouse_x + 60 : mouse_x - 60;
+        const int x = rotate_nudge_ == 1 ? aside : mouse_x;
+        queue.push_back({hwnd, WM_MOUSEMOVE, static_cast<uint32_t>(mouse_buttons_),
+                         static_cast<uint32_t>(mouse_y) << 16 | (static_cast<uint32_t>(x) & 0xFFFF), now, x, mouse_y});
+        rotate_nudge_ = rotate_nudge_ == 1 ? 2 : 0;
+        rotate_nudge_at_ = now + 40;
     }
     if (focus_lost_ && !inactive_told_ && SDL_GetTicks64() - focus_lost_at_ >= kFocusDelayMs) tell_active(false, now);
     return !stop_;
